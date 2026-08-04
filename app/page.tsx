@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Frame from '@/components/Frame';
 import SysBar from '@/components/SysBar';
+import Starfield from '@/components/Starfield';
 import { useArcadeKeys } from '@/lib/useArcadeKeys';
 import site from '@/data/site.json';
 import styles from './home.module.css';
@@ -23,16 +24,22 @@ export default function HomePage() {
   useArcadeKeys({ onEnter: start, allowSpace: true });
 
   return (
-    <Frame badge={site.badge} header={<SysBar />}>
+    <Frame
+      badge={site.badge}
+      header={<SysBar />}
+      background={<Starfield className={styles.bg} />}
+    >
       <div className={styles.stage}>
-        <h1 className={styles.title}>{site.title}</h1>
-        <p className={styles.tagline}>{site.tagline}</p>
-        <button type="button" className={styles.start} onClick={start}>
-          <span className={styles.caret} aria-hidden="true">
-            ▸
-          </span>
-          {site.startLabel}
-        </button>
+        <div className={styles.content}>
+          <h1 className={styles.title}>{site.title}</h1>
+          <p className={styles.tagline}>{site.tagline}</p>
+          <button type="button" className={styles.start} onClick={start}>
+            <span className={styles.caret} aria-hidden="true">
+              ▸
+            </span>
+            {site.startLabel}
+          </button>
+        </div>
       </div>
     </Frame>
   );

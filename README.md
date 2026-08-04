@@ -23,13 +23,16 @@ npm run build
 
 | 경로 | 화면 | 설명 |
 |---|---|---|
-| `/` | 타이틀 | `PRESS START` — 클릭 또는 Enter/Space |
-| `/select` | SELECT MODE | 3개 모드 카드 캐러셀 (← → 이동, Enter 진입, 스와이프) |
+| `/` | 타이틀 | `PRESS START` — 클릭 또는 Enter/Space. 배경에 반짝이는 스타필드 + 우주선 |
+| `/select` | SELECT MODE | 모드 카드 캐러셀 (← → 이동, Enter 진입, 스와이프). 실제 4개 + 잠긴 예고 카드 |
 | `/about` | ABOUT | 매니페스토 히어로 · SEASON 1 · HISTORY · ACTIVITIES · CONTACT |
 | `/showcase` | SHOWCASE | 프로젝트 슬롯 6칸 (← → 이동, 스와이프) |
 | `/join` | JOIN THE PARTY | RPG 캐릭터 생성 컨셉 지원 폼 (실시간 카드 미리보기) |
+| `/play` | PLAY | "달려라 우왕이" 미니게임 — 교실 탈출 + 횡스크롤 러닝 |
 
 프레임은 항상 뷰포트를 가득 채우며, 내부 콘텐츠만 `--content-max` 로 폭이 제한됩니다.
+`/play` 처럼 그 제한 없이 패널 폭 전체를 써야 하는 화면은 `<Frame fullBleedBody>` 를 씁니다.
+홈 화면의 스타필드처럼 헤더까지 포함해 패널 전체를 채우는 배경은 `<Frame background={...}>` 로 넣습니다.
 
 ## 콘텐츠 수정 — `data/*.json`
 
@@ -42,6 +45,7 @@ npm run build
 | `data/about.json` | 히어로 문구, SEASON 1 매니페스토, HISTORY, ACTIVITIES, CONTACT |
 | `data/showcase.json` | 프로젝트 슬롯 목록과 NO DATA 안내 문구 |
 | `data/join.json` | 캐릭터 생성 필드, CLASS/장르 목록, Formspree 엔드포인트, 완료 메시지 |
+| `data/play.json` | 미니게임 인트로 문구, 조작법, 페이즈 설명, 가로모드 안내, 게임오버 문구 |
 
 ### ABOUT 히어로 문구
 
@@ -79,7 +83,7 @@ npm run build
 
 ### 캐릭터 카드 이미지
 
-`data/modes.json` 의 `image` 가 `null` 이면 `components/Sprite.tsx` 의 내장 픽셀 스프라이트(기사 · 마법사 · 궁수)가 렌더링됩니다.
+`data/modes.json` 의 `image` 가 `null` 이면 `components/Sprite.tsx` 의 내장 픽셀 스프라이트(기사 · 마법사 · 엘프 아처 · 우왕이)가 렌더링됩니다.
 직접 만든 도트 아트를 쓰려면 `public/images/` 에 넣고 경로를 지정하세요.
 
 ```json
@@ -87,6 +91,15 @@ npm run build
 ```
 
 이미지 로딩에 실패하면 자동으로 내장 스프라이트로 되돌아갑니다.
+
+### SELECT MODE 잠긴("예고") 카드
+
+`data/modes.json` 의 모드 항목에 `"locked": true` 를 주면 실루엣 + `???` + 호버 시
+`comingSoonLabel` 문구만 보여주고 클릭해도 진입하지 않는 카드가 됩니다. `href` 는 `null` 로 둡니다.
+
+```json
+{ "id": "locked-3", "no": "07", "label": "???", "href": null, "image": null, "sprite": "mystery", "alt": "잠긴 모드", "locked": true }
+```
 
 ## 지원 폼 (Formspree)
 
@@ -101,6 +114,28 @@ npm run build
 
 전송되는 키는 `name` · `playerId` · `class` · `favoriteGame` · `genre` · `originStory` · `inventory` 입니다.
 INVENTORY 는 파일 업로드가 아니라 **URL 텍스트**로만 전송됩니다 (무료 플랜은 첨부를 지원하지 않음).
+
+## 미니게임 — 달려라 우왕이 (`/play`)
+
+Canvas 2D 로 그리는 두 페이즈 구성 미니게임입니다. 무거운 라이브러리 없이
+저해상도 가상 캔버스(320×180)를 CSS/JS 로 화면에 맞춰 확대하는 방식이라 가볍습니다.
+
+- **페이즈 1 — 교실 탈출**: 교수님이 칠판을 보는 동안(SAFE)에만 `Space`/탭을
+  누른 채로 왼쪽 문까지 이동. 학생 쪽을 볼 때(DANGER) 이동하면 처음부터 다시.
+- **페이즈 2 — 횡스크롤 러닝**: 자동 스크롤, `Space`/탭으로 점프, `↓`/아래로
+  스와이프로 숙이기. 장애물 3종(점프용 · 숙이기용 · 하트) 랜덤 생성, 시간이
+  지날수록 스크롤 속도 상승. 목숨 3개.
+- **게임오버**: 점수 · 최고기록을 캔버스에 직접 그려서 `▸ CAPTURE RECORD` 버튼으로
+  `canvas.toDataURL()` 캡처 이미지를 다운로드할 수 있습니다(서버 저장 없음).
+- **최고기록**: `localStorage` 키 `gdevfc_woowang_best` 에 로컬로만 저장됩니다.
+  전체 공개 리더보드는 없습니다.
+- **모바일**: 세로로 들면 `components/play/RotateGate.tsx` 가 "가로모드로
+  돌려주세요" 안내로 콘텐츠를 대체합니다(`@media (orientation: portrait)`).
+  Screen Orientation Lock API 는 iOS Safari 가 지원하지 않아 쓰지 않았습니다.
+
+물리감(점프 높이, 장애물 간격, 난이도 상승 속도)은 `components/play/WoowangGame.tsx`
+상단의 상수(`JUMP_V`, `GRAVITY`, `BASE_SPEED`, `ACCEL` 등)로 1차로 대략 맞춰둔
+값입니다. 플레이해보고 조정하면 됩니다.
 
 ## 디자인 토큰
 
@@ -144,20 +179,26 @@ INVENTORY 는 파일 업로드가 아니라 **URL 텍스트**로만 전송됩니
 
 ```
 app/
-  page.tsx            타이틀
+  page.tsx            타이틀 (배경: Starfield)
   select/             SELECT MODE
   about/              ABOUT
   showcase/           SHOWCASE
   join/               JOIN THE PARTY
+  play/               PLAY 미니게임 (fullBleedBody)
   globals.css         디자인 토큰
 components/
   Frame.tsx             패널 · 배지 · 스캔라인 셸 (뷰포트 전체를 채움)
   SysBar.tsx            상단 시스템 바
   ScreenHeader.tsx      BACK / 타이틀 / 상태
-  ModeCarousel.tsx      모드 선택 캐러셀
+  ModeCarousel.tsx      모드 선택 캐러셀 (잠긴 카드 포함)
   AboutHero.tsx         매니페스토 순차 등장 + 클릭 스킵
   CharacterCreator.tsx  캐릭터 생성 폼 + 실시간 카드 미리보기
-  Sprite.tsx            내장 픽셀 스프라이트 (기사 · 마법사 · 엘프 아처)
+  Sprite.tsx            내장 픽셀 스프라이트 (기사 · 마법사 · 엘프 아처 · 우왕이 · 미스터리)
+  Starfield.tsx         홈 화면 배경 — 반짝이는 스타필드 + 우주선
+  play/
+    IntroScreen.tsx     레트로 타이틀 카드 (스크롤 끝까지 내려야 시작 활성화)
+    WoowangGame.tsx     Canvas 게임 엔진 (페이즈1·2 + 게임오버 + 캡처)
+    RotateGate.tsx      모바일 세로 방향일 때 "가로로 돌려주세요" 안내
 data/                 모든 콘텐츠 (JSON)
 lib/
   types.ts            JSON 스키마 타입

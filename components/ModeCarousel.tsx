@@ -4,25 +4,23 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import { useRouter } from 'next/navigation';
 import Sprite from './Sprite';
 import { useArcadeKeys } from '@/lib/useArcadeKeys';
+import type { Mode } from '@/lib/types';
 import styles from './ModeCarousel.module.css';
-
-type Mode = {
-  id: string;
-  no: string;
-  label: string;
-  href: string;
-  image: string | null;
-  sprite: string;
-  alt: string;
-};
 
 type ModeCarouselProps = {
   heading: string;
   hint: string;
   modes: Mode[];
+  /** 잠긴 카드 호버 시 표시할 문구 (예: "COMING SOON") */
+  comingSoonLabel: string;
 };
 
-export default function ModeCarousel({ heading, hint, modes }: ModeCarouselProps) {
+export default function ModeCarousel({
+  heading,
+  hint,
+  modes,
+  comingSoonLabel,
+}: ModeCarouselProps) {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [failed, setFailed] = useState<Record<string, boolean>>({});
@@ -38,15 +36,18 @@ export default function ModeCarousel({ heading, hint, modes }: ModeCarouselProps
   );
 
   const enter = useCallback(() => {
+    if (current.locked || !current.href) return;
     router.push(current.href);
-  }, [router, current.href]);
+  }, [router, current]);
 
   const prev = useCallback(() => move(-1), [move]);
   const next = useCallback(() => move(1), [move]);
 
-  // 선택된 모드는 미리 로드해 진입을 매끄럽게
+  // 선택된 모드는 미리 로드해 진입을 매끄럽게 (잠긴 슬롯은 href 가 없음)
   useEffect(() => {
-    modes.forEach((m) => router.prefetch(m.href));
+    modes.forEach((m) => {
+      if (m.href) router.prefetch(m.href);
+    });
   }, [modes, router]);
 
   // 키보드: ← → 로 이동, Enter 로 진입
@@ -86,18 +87,32 @@ export default function ModeCarousel({ heading, hint, modes }: ModeCarouselProps
           >
             {modes.map((mode, i) => {
               const isActive = i === index;
-              const showImage = Boolean(mode.image) && !failed[mode.id];
+              const showImage = Boolean(mode.image) && !failed[mode.id] && !mode.locked;
 
               return (
                 <button
                   key={mode.id}
                   type="button"
-                  className={`${styles.card} ${isActive ? styles.active : ''}`}
+                  className={`${styles.card} ${isActive ? styles.active : ''} ${
+                    mode.locked ? styles.locked : ''
+                  }`}
                   aria-current={isActive}
+                  aria-disabled={mode.locked || undefined}
                   tabIndex={isActive ? 0 : -1}
-                  onClick={() => (isActive ? enter() : setIndex(i))}
+                  onClick={() => {
+                    if (!isActive) {
+                      setIndex(i);
+                      return;
+                    }
+                    enter();
+                  }}
                 >
-                  {showImage ? (
+                  {mode.locked ? (
+                    <>
+                      <Sprite name={mode.sprite} silhouette className={styles.sprite} />
+                      <span className={styles.comingSoon}>{comingSoonLabel}</span>
+                    </>
+                  ) : showImage ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       className={styles.art}

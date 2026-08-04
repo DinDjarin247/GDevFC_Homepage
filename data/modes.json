@@ -1,6 +1,7 @@
 {
   "heading": "SELECT MODE",
   "hint": "PRESS START TO ENTER",
+  "comingSoonLabel": "COMING SOON",
   "modes": [
     {
       "id": "about",
@@ -28,6 +29,35 @@
       "image": null,
       "sprite": "archer",
       "alt": "엘프 아처 캐릭터 - 지원하기 모드"
+    },
+    {
+      "id": "play",
+      "no": "04",
+      "label": "달려라 우왕이",
+      "href": "/play",
+      "image": null,
+      "sprite": "woowang",
+      "alt": "우왕이 캐릭터 - 미니게임 모드"
+    },
+    {
+      "id": "locked-1",
+      "no": "05",
+      "label": "???",
+      "href": null,
+      "image": null,
+      "sprite": "mystery",
+      "alt": "잠긴 모드",
+      "locked": true
+    },
+    {
+      "id": "locked-2",
+      "no": "06",
+      "label": "???",
+      "href": null,
+      "image": null,
+      "sprite": "mystery",
+      "alt": "잠긴 모드",
+      "locked": true
     }
   ]
 }

@@ -27,6 +27,16 @@
   flex-direction: column;
 }
 
+/* 패널 전체(헤더 포함)를 채우는 배경 레이어 — 홈 화면 스타필드 등 */
+.bgLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+  pointer-events: none;
+}
+
 /* 패널 위에 얹히는 스캔라인 오버레이 */
 .panel::after {
   content: '';
@@ -60,6 +70,8 @@
 }
 
 .header {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -71,6 +83,8 @@
 }
 
 .body {
+  position: relative;
+  z-index: 1;
   flex: 1 1 auto;
   width: 100%;
   max-width: var(--content-max);
@@ -84,6 +98,13 @@
      "실제" 폭을 기준으로 삼도록 쿼리 컨테이너로 만든다. */
   container-type: inline-size;
   container-name: shell;
+}
+
+/* 게임 화면처럼 패널 폭 전체를 써야 하는 페이지용 — 여백/폭 제한 해제 */
+.bodyFullBleed {
+  max-width: none;
+  padding-left: clamp(10px, 1.4vw, 20px);
+  padding-right: clamp(10px, 1.4vw, 20px);
 }
 
 /* ---------- 반응형 ---------- */

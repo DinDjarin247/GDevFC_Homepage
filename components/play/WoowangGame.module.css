@@ -1,0 +1,91 @@
+.wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 0;
+}
+
+/* 화면(패널) 을 최대한 채우고, 종횡비는 안쪽 canvas 가 레터박스로 유지한다 */
+.canvasBox {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.canvas {
+  /* 표시 크기는 JS 가 ResizeObserver 로 컨테이너에 맞춰 letterbox 계산한다 */
+  display: block;
+  image-rendering: pixelated;
+  /* 스와이프 제스처를 우리가 직접 처리하므로 브라우저 스크롤/줌 제스처를 끈다 */
+  touch-action: none;
+  cursor: pointer;
+}
+
+.overActions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 640px;
+}
+
+.retry,
+.capture {
+  flex: 1 1 160px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 16px;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: clamp(10px, 0.85vw, 13px);
+  letter-spacing: 0.06em;
+  border-radius: var(--radius);
+  transition:
+    filter 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.retry {
+  background: none;
+  border: 1px solid #565656;
+  color: var(--muted);
+}
+
+.retry:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.capture {
+  background: var(--lime);
+  border: 0;
+  color: #0b0b0b;
+}
+
+.capture:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 16px rgba(201, 247, 61, 0.32);
+}
+
+/* ▸ 는 픽셀 폰트에 없는 글리프라 본문 폰트로 렌더링한다 */
+.caret {
+  font-family: var(--font-kr);
+  font-size: 0.95em;
+  line-height: 1;
+}

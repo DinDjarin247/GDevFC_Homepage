@@ -1,0 +1,47 @@
+{
+  "badge": "미니게임",
+  "heading": "PLAY",
+  "rotate": {
+    "title": "가로모드로 돌려주세요",
+    "desc": "휴대폰을 옆으로 눕히면 게임이 시작됩니다."
+  },
+  "intro": {
+    "titleMain": "달려라",
+    "titleSub": "우왕이",
+    "subtitle": "RUN, WOOWANG, RUN!",
+    "controlsHeading": "CONTROLS",
+    "controls": [
+      { "key": "SPACE / TAP", "desc": "점프" },
+      { "key": "↓ / SWIPE DOWN", "desc": "숙이기" }
+    ],
+    "phasesHeading": "PHASES",
+    "phases": [
+      {
+        "no": "PHASE 1",
+        "title": "교실 탈출",
+        "desc": "교수님이 칠판을 볼 때만 이동하세요. 학생 쪽을 보실 때 움직이면 들켜서 처음부터 다시 시작합니다."
+      },
+      {
+        "no": "PHASE 2",
+        "title": "질주",
+        "desc": "자동으로 달립니다. 장애물을 점프·숙이기로 피하고 하트를 모아 최대한 멀리 가세요."
+      }
+    ],
+    "scrollHint": "▾ 아래로 스크롤",
+    "startHint": "▸ TOUCH TO START"
+  },
+  "phase1": {
+    "safeLabel": "SAFE — 이동 가능",
+    "dangerLabel": "DANGER",
+    "caughtMessage": "들켰다!"
+  },
+  "gameOver": {
+    "title": "GAME OVER",
+    "scoreLabel": "SCORE",
+    "bestLabel": "BEST",
+    "newBestLabel": "NEW BEST!",
+    "retryLabel": "RETRY",
+    "captureLabel": "CAPTURE RECORD",
+    "backLabel": "BACK TO SELECT"
+  }
+}

@@ -4,11 +4,14 @@ export type Mode = {
   id: string;
   no: string;
   label: string;
-  href: string;
+  /** locked 슬롯은 href 가 없다 */
+  href: string | null;
   /** public/ 기준 경로. null 이면 내장 픽셀 스프라이트로 대체된다. */
   image: string | null;
   sprite: string;
   alt: string;
+  /** true 면 실루엣 + "COMING SOON" 만 보여주고 진입은 막는다 */
+  locked?: boolean;
 };
 
 export type ShowcaseSlot = {

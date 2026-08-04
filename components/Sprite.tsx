@@ -33,7 +33,27 @@ const PALETTE: Record<string, string> = {
   C: '#47996a', // 망토 그림자
   l: '#e8f7d0', // 아이보리 튜닉
   q: '#7fe3c0', // 청록 액센트
+  // 우왕이(마스코트) 전용 — 뿔 달린 주황 소, 버건디 재킷
+  y: '#e8935a', // 털(주황)
+  Y: '#c96f3d', // 털 그림자
+  v: '#f5f0e0', // 뿔 / 단추 / 바지 줄무늬 (오프화이트)
+  z: '#f7dfb0', // 얼굴 패치(탠)
+  j: '#7a2438', // 재킷(버건디)
+  J: '#5c1b2a', // 재킷 그림자
+  x: '#f2a6b0', // 볼터치
+  // 잠긴 슬롯 실루엣은 기존 'm'(보석 보라) 을 재사용한다
 };
+
+/** 수동으로 16글자를 세는 실수를 막기 위한 그리드 빌더 (인덱스 → 문자) */
+function buildRow(width: number, marks: Record<number, string>, base = '.'): string {
+  return Array.from({ length: width }, (_, i) => marks[i] ?? base).join('');
+}
+
+function markRange(from: number, to: number, ch: string): Record<number, string> {
+  const m: Record<number, string> = {};
+  for (let i = from; i <= to; i++) m[i] = ch;
+  return m;
+}
 
 const KNIGHT = [
   '................',
@@ -114,18 +134,79 @@ const ARCHER = [
   '................',
 ];
 
+const W = 16;
+
+/**
+ * 우왕이 — 뿔 달린 주황 소 마스코트. 버건디 재킷(단추 줄) + 주황 바지.
+ * 얼굴은 주황 바탕에 탠 색 얼굴 패치, 큰 눈, 볼터치로 구성.
+ */
+const WOOWANG = [
+  buildRow(W, {}),
+  buildRow(W, { 6: 'v', 9: 'v' }),
+  buildRow(W, { ...markRange(5, 6, 'v'), ...markRange(9, 10, 'v') }),
+  buildRow(W, markRange(4, 11, 'y')),
+  buildRow(W, { ...markRange(3, 12, 'y'), 3: 'Y', 12: 'Y' }),
+  buildRow(W, { ...markRange(2, 13, 'y'), ...markRange(5, 10, 'z'), 6: 'k', 9: 'k' }),
+  buildRow(W, { ...markRange(2, 13, 'y'), ...markRange(5, 10, 'z'), 3: 'x', 12: 'x' }),
+  buildRow(W, { ...markRange(2, 13, 'y'), ...markRange(6, 9, 'z'), 7: 'k', 8: 'k' }),
+  buildRow(W, markRange(3, 12, 'Y')),
+  buildRow(W, { ...markRange(2, 13, 'j'), 7: 'v' }),
+  buildRow(W, { ...markRange(2, 13, 'j'), 2: 'J', 13: 'J', 8: 'v' }),
+  buildRow(W, { ...markRange(2, 13, 'j'), 2: 'J', 13: 'J', 7: 'v' }),
+  buildRow(W, { ...markRange(2, 13, 'j'), 2: 'J', 13: 'J', 8: 'v' }),
+  buildRow(W, { ...markRange(3, 12, 'j'), 7: 'v' }),
+  buildRow(W, markRange(4, 11, 'J')),
+  buildRow(W, { ...markRange(4, 11, 'Y'), 4: 'v', 11: 'v' }),
+  buildRow(W, { ...markRange(4, 11, 'Y'), 4: 'v', 11: 'v' }),
+  buildRow(W, { ...markRange(4, 11, 'Y'), 4: 'v', 11: 'v' }),
+  buildRow(W, { 4: 'Y', 5: 'Y', 10: 'Y', 11: 'Y' }),
+  buildRow(W, { 4: 'k', 5: 'k', 10: 'k', 11: 'k' }),
+  buildRow(W, {}),
+  buildRow(W, {}),
+];
+
+/** 잠긴 SELECT MODE 슬롯용 — 후드를 쓴 정체불명의 실루엣 */
+const MYSTERY = [
+  buildRow(W, {}),
+  buildRow(W, markRange(7, 8, 'm')),
+  buildRow(W, markRange(6, 9, 'm')),
+  buildRow(W, markRange(5, 10, 'm')),
+  buildRow(W, markRange(4, 11, 'm')),
+  buildRow(W, markRange(4, 11, 'm')),
+  buildRow(W, markRange(3, 12, 'm')),
+  buildRow(W, markRange(3, 12, 'm')),
+  buildRow(W, markRange(2, 13, 'm')),
+  buildRow(W, markRange(2, 13, 'm')),
+  buildRow(W, markRange(2, 13, 'm')),
+  buildRow(W, markRange(2, 13, 'm')),
+  buildRow(W, markRange(2, 13, 'm')),
+  buildRow(W, markRange(2, 13, 'm')),
+  buildRow(W, markRange(2, 13, 'm')),
+  buildRow(W, markRange(2, 13, 'm')),
+  buildRow(W, markRange(2, 13, 'm')),
+  buildRow(W, { ...markRange(2, 5, 'm'), ...markRange(10, 13, 'm') }),
+  buildRow(W, { ...markRange(2, 5, 'm'), ...markRange(10, 13, 'm') }),
+  buildRow(W, { ...markRange(2, 5, 'm'), ...markRange(10, 13, 'm') }),
+  buildRow(W, {}),
+  buildRow(W, {}),
+];
+
 const SPRITES: Record<string, string[]> = {
   knight: KNIGHT,
   mage: MAGE,
   archer: ARCHER,
+  woowang: WOOWANG,
+  mystery: MYSTERY,
 };
 
 type SpriteProps = {
   name: string;
   className?: string;
+  /** true 면 팔레트를 무시하고 단색 실루엣으로 렌더링한다 (잠긴 슬롯용) */
+  silhouette?: boolean;
 };
 
-export default function Sprite({ name, className }: SpriteProps) {
+export default function Sprite({ name, className, silhouette = false }: SpriteProps) {
   const grid = SPRITES[name] ?? KNIGHT;
 
   return (
@@ -138,7 +219,8 @@ export default function Sprite({ name, className }: SpriteProps) {
     >
       {grid.flatMap((row, y) =>
         row.split('').map((ch, x) => {
-          const fill = PALETTE[ch];
+          if (ch === '.') return null;
+          const fill = silhouette ? '#050505' : PALETTE[ch];
           if (!fill) return null;
           return (
             <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={fill} />

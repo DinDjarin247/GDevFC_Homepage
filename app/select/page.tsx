@@ -13,6 +13,7 @@ export default function SelectPage() {
         heading={modesData.heading}
         hint={modesData.hint}
         modes={modesData.modes}
+        comingSoonLabel={modesData.comingSoonLabel}
       />
     </Frame>
   );

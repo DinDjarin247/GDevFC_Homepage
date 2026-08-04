@@ -1,0 +1,217 @@
+.wrap {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 4px clamp(20px, 3vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 3vw, 44px);
+}
+
+/* ---------- 타이틀 카드 ---------- */
+
+.titleCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  padding: clamp(20px, 3vw, 36px) 0 clamp(8px, 1.4vw, 16px);
+}
+
+.titleMain {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: clamp(26px, 4.6cqw, 62px);
+  line-height: 1.25;
+  color: var(--lime);
+  text-shadow: -3px 0 0 var(--magenta);
+}
+
+.titleSub {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: clamp(26px, 4.6cqw, 62px);
+  line-height: 1.25;
+  color: var(--lime);
+  text-shadow: -3px 0 0 var(--magenta);
+}
+
+.subtitle {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(10px, 1vw, 14px);
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+/* ---------- 섹션 공통 ---------- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: clamp(11px, 1vw, 14px);
+  letter-spacing: 0.08em;
+  color: var(--magenta);
+}
+
+/* ---------- 조작법 ---------- */
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.controlRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+}
+
+.key {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: clamp(10.5px, 0.8vw, 13px);
+  letter-spacing: 0.04em;
+  color: var(--lime);
+  border: 1px solid var(--lime);
+  border-radius: var(--radius);
+  padding: 5px 9px;
+  white-space: nowrap;
+}
+
+.desc {
+  font-size: clamp(12px, 0.85vw, 15px);
+  color: var(--text);
+}
+
+/* ---------- 페이즈 소개 ---------- */
+
+.phases {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.phaseCard {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--lime);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phaseNo {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--lime);
+}
+
+.phaseTitle {
+  margin: 0;
+  font-size: clamp(13px, 0.95vw, 16px);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.phaseDesc {
+  margin: 0;
+  font-size: clamp(11.5px, 0.8vw, 14px);
+  color: var(--muted);
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+/* ---------- 하단 시작 트리거 ---------- */
+
+.footer {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.scrollHint {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+  animation: hintBob 1.4s ease-in-out infinite;
+}
+
+@keyframes hintBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+.startButton {
+  width: 100%;
+  max-width: 420px;
+  background: none;
+  border: 1px solid #4d4d4d;
+  border-radius: var(--radius);
+  padding: 15px 16px;
+  cursor: not-allowed;
+  font-family: var(--font-pixel);
+  font-size: clamp(11px, 0.9vw, 14px);
+  letter-spacing: 0.08em;
+  color: var(--dim);
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.startButton.ready {
+  cursor: pointer;
+  border-color: var(--lime);
+  color: var(--lime);
+  animation: readyBlink 1.15s steps(1) infinite;
+}
+
+.startButton.ready:hover,
+.startButton.ready:focus-visible {
+  animation: none;
+  box-shadow: 0 0 16px rgba(201, 247, 61, 0.3);
+}
+
+@keyframes readyBlink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0.4;
+  }
+}
