@@ -25,9 +25,11 @@ npm run build
 |---|---|---|
 | `/` | 타이틀 | `PRESS START` — 클릭 또는 Enter/Space |
 | `/select` | SELECT MODE | 3개 모드 카드 캐러셀 (← → 이동, Enter 진입, 스와이프) |
-| `/about` | ABOUT | 동아리 소개 · HISTORY · ACTIVITIES · CONTACT |
+| `/about` | ABOUT | 매니페스토 히어로 · SEASON 1 · HISTORY · ACTIVITIES · CONTACT |
 | `/showcase` | SHOWCASE | 프로젝트 슬롯 6칸 (← → 이동, 스와이프) |
-| `/join` | JOIN THE PARTY | Formspree 연동 지원 폼 |
+| `/join` | JOIN THE PARTY | RPG 캐릭터 생성 컨셉 지원 폼 (실시간 카드 미리보기) |
+
+프레임은 항상 뷰포트를 가득 채우며, 내부 콘텐츠만 `--content-max` 로 폭이 제한됩니다.
 
 ## 콘텐츠 수정 — `data/*.json`
 
@@ -37,9 +39,25 @@ npm run build
 |---|---|
 | `data/site.json` | 사이트 타이틀, 태그라인, 상단 시스템 바 문구, 메타 정보 |
 | `data/modes.json` | SELECT MODE 카드 3종 (라벨 · 링크 · 이미지 · 스프라이트) |
-| `data/about.json` | 소개 문구, HISTORY 연혁, ACTIVITIES 태그, CONTACT 링크 |
+| `data/about.json` | 히어로 문구, SEASON 1 매니페스토, HISTORY, ACTIVITIES, CONTACT |
 | `data/showcase.json` | 프로젝트 슬롯 목록과 NO DATA 안내 문구 |
-| `data/join.json` | 지원 자격/절차 안내, 폼 필드, Formspree 엔드포인트, 완료 메시지 |
+| `data/join.json` | 캐릭터 생성 필드, CLASS/장르 목록, Formspree 엔드포인트, 완료 메시지 |
+
+### ABOUT 히어로 문구
+
+`data/about.json` 의 `hero.lines` 가 순차 등장하는 매니페스토입니다.
+`text` 배열의 각 원소가 한 줄이 되고, `tone` 이 색을 결정합니다 (`off` 오프화이트 · `lime` · `magenta`).
+화면을 클릭하면 애니메이션을 건너뛰고 전체가 즉시 표시됩니다.
+
+### 지원 폼 CLASS 추가
+
+`data/join.json` 의 `classes` 배열에 항목을 넣으면 카드형 버튼과 미리보기 색이 함께 늘어납니다.
+
+```json
+{ "id": "writer", "label": "시나리오", "en": "WRITER", "icon": "✎", "color": "#ffb347" }
+```
+
+`color` 는 선택 시 카드 테두리 · 아바타 · 장르 칩에 그대로 반영됩니다.
 
 ### 프로젝트 슬롯 채우기
 
@@ -78,16 +96,11 @@ npm run build
 "formspreeEndpoint": "https://formspree.io/f/xoeaaddw"
 ```
 
-제출은 `fetch` 로 비동기 전송되며, 페이지 이동 없이 **`▸ ENTRY SAVED`** 확인 화면으로 전환됩니다.
+제출은 `fetch` 로 비동기 전송되며, 페이지 이동 없이 **`▸ CHARACTER SAVED`** 확인 화면으로 전환됩니다.
 전송 실패 시 에러 문구가 뜨고 입력값은 유지됩니다.
 
-폼 필드는 `data/join.json` 의 `form.fields` 배열로 정의합니다. 항목을 추가하면 그대로 렌더링됩니다.
-
-```json
-{ "name": "portfolio", "label": "포트폴리오 링크", "type": "url", "placeholder": "https://", "required": false }
-```
-
-`type: "select"` 인 경우 `options` 배열이 선택지가 됩니다.
+전송되는 키는 `name` · `playerId` · `class` · `favoriteGame` · `genre` · `originStory` · `inventory` 입니다.
+INVENTORY 는 파일 업로드가 아니라 **URL 텍스트**로만 전송됩니다 (무료 플랜은 첨부를 지원하지 않음).
 
 ## 디자인 토큰
 
@@ -106,10 +119,15 @@ npm run build
 ## 폰트
 
 - **Press Start 2P** (Google Fonts) — 영문 픽셀 헤딩
+- **Galmuri** (jsDelivr) — 한글 픽셀 폰트. Press Start 2P 에 한글 글리프가 없어 필요합니다
 - **DM Mono** (Google Fonts) — 시스템 바, 캡션
-- 한글은 Pretendard → 시스템 고딕 순으로 폴백
+- 본문 한글은 Pretendard → 시스템 고딕 순으로 폴백
 
-`▸` `▪` `【 】` 같은 글리프는 Press Start 2P에 없어 본문 폰트로 따로 렌더링합니다.
+`--font-pixel` 은 `'Press Start 2P', 'Galmuri11'` 순으로 지정돼 있어, 글리프 단위 폴백으로
+영문은 Press Start 2P · 한글은 Galmuri 로 각각 렌더링됩니다. 히어로처럼 큰 텍스트는
+`--font-pixel-lg` (Galmuri14) 를 씁니다.
+
+`▸` `▪` `◂` `【 】` 같은 글리프는 어느 픽셀 폰트에도 없어 본문 폰트로 따로 렌더링합니다.
 
 ## 조작
 
@@ -133,12 +151,13 @@ app/
   join/               JOIN THE PARTY
   globals.css         디자인 토큰
 components/
-  Frame.tsx           패널 · 배지 · 스캔라인 셸
-  SysBar.tsx          상단 시스템 바
-  ScreenHeader.tsx    BACK / 타이틀 / 상태
-  ModeCarousel.tsx    모드 선택 캐러셀
-  JoinForm.tsx        Formspree 폼
-  Sprite.tsx          내장 픽셀 스프라이트
+  Frame.tsx             패널 · 배지 · 스캔라인 셸 (뷰포트 전체를 채움)
+  SysBar.tsx            상단 시스템 바
+  ScreenHeader.tsx      BACK / 타이틀 / 상태
+  ModeCarousel.tsx      모드 선택 캐러셀
+  AboutHero.tsx         매니페스토 순차 등장 + 클릭 스킵
+  CharacterCreator.tsx  캐릭터 생성 폼 + 실시간 카드 미리보기
+  Sprite.tsx            내장 픽셀 스프라이트 (기사 · 마법사 · 엘프 아처)
 data/                 모든 콘텐츠 (JSON)
 lib/
   types.ts            JSON 스키마 타입

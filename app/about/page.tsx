@@ -1,5 +1,6 @@
 import Frame from '@/components/Frame';
 import ScreenHeader from '@/components/ScreenHeader';
+import AboutHero from '@/components/AboutHero';
 import about from '@/data/about.json';
 import site from '@/data/site.json';
 import styles from './about.module.css';
@@ -12,7 +13,21 @@ export default function AboutPage() {
       badge={about.badge}
       header={<ScreenHeader title={about.heading} aside={site.statusLabel} />}
     >
-      <p className={styles.intro}>{about.intro}</p>
+      <AboutHero lines={about.hero.lines} skipHint={about.hero.skipHint} />
+
+      <section className={styles.manifesto}>
+        <span className={styles.seasonBadge}>
+          <i className={styles.pulse} aria-hidden="true" />
+          {about.manifesto.badge}
+        </span>
+        <div className={styles.manifestoBody}>
+          {about.manifesto.body.map((line) => (
+            <p className={styles.manifestoLine} key={line}>
+              {line}
+            </p>
+          ))}
+        </div>
+      </section>
 
       <div className={styles.grid}>
         <section>

@@ -26,6 +26,13 @@ const PALETTE: Record<string, string> = {
   t: '#cbb98c', // 밝은 갈색 머리
   o: '#6b4a2a', // 나무(활/지팡이)
   O: '#3d2a16', // 활시위
+  // 엘프 아처용 밝은 팔레트
+  f: '#f7e7a8', // 플래티넘 블론드
+  F: '#d9c274', // 블론드 그림자
+  c: '#6fc98a', // 민트 그린 망토
+  C: '#47996a', // 망토 그림자
+  l: '#e8f7d0', // 아이보리 튜닉
+  q: '#7fe3c0', // 청록 액센트
 };
 
 const KNIGHT = [
@@ -78,28 +85,32 @@ const MAGE = [
   '................',
 ];
 
+/**
+ * 엘프 아처 — 뾰족한 귀, 플래티넘 블론드, 민트 망토.
+ * 몸통은 col 1~9, 리커브 활은 col 11~15 (시위 O 는 col 11 직선).
+ */
 const ARCHER = [
   '................',
-  '.....ttttt......',
-  '....ttttttt.....',
-  '...nntttttnn.o..',
-  '...nsssssssnO.o.',
-  '...nsEsEsssnO..o',
-  '....sssssss.O..o',
-  '.....SSSSS..O..o',
-  '...nnnnnnnnnO..o',
-  '..nntttttnn.O..o',
-  '..nnttttnnn.O..o',
-  '..nnnnnnnnn.O..o',
-  '..nNnnnnnNn.O..o',
-  '..nnnnnnnnn.O..o',
-  '..nnnnnnnnn.O..o',
-  '..nnnnnnnnn.O..o',
-  '..nnnnnnnnn.O.o.',
-  '..nnn...nnn.o...',
-  '..noo...oon.....',
-  '..koo...ook.....',
-  '..kkk...kkk.....',
+  '....fff.........',
+  '...fffff........',
+  '..fFfffFf..o....',
+  '.sffsssffs.Oo...',
+  '..fsEsEsf..O.o..',
+  '...sssss...O.o..',
+  '....SSS....O..o.',
+  '..ccccccc..O..o.',
+  '.ccclllccc.O..o.',
+  '.ccqlllqcc.O..o.',
+  '.cCclllcCc.O..o.',
+  '.cqqqqqqqc.O..o.',
+  '.ccclllccc.O..o.',
+  '.cCclllcCc.O.o..',
+  '.ccclllccc.O.o..',
+  '.cccclcccc.Oo...',
+  '.ccc...ccc.o....',
+  '.CCC...CCC......',
+  '.kCC...CCk......',
+  '.kkk...kkk......',
   '................',
 ];
 

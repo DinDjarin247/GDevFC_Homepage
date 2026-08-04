@@ -24,15 +24,18 @@
   --muted: #8d8d8d;
   --dim: #666666;
 
-  /* type */
-  --font-pixel: 'Press Start 2P', 'Courier New', monospace;
+  /* type
+     Press Start 2P 에는 한글 글리프가 없어 Galmuri(한글 픽셀 폰트)로 폴백된다.
+     글리프 단위 폴백이라 영문은 PS2P, 한글은 Galmuri 로 각각 렌더링된다. */
+  --font-pixel: 'Press Start 2P', 'Galmuri11', 'Courier New', monospace;
+  --font-pixel-lg: 'Press Start 2P', 'Galmuri14', 'Courier New', monospace;
   --font-kr: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
   --font-mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  /* layout */
-  --shell-max: 1000px;
-  --shell-pad: 28px;
+  /* layout — 프레임은 화면을 꽉 채우고, 내부 콘텐츠만 폭을 제한한다 */
+  --content-max: 1180px;
+  --shell-pad: 24px;
   --radius: 2px;
 }
 

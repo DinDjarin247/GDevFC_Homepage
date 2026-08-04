@@ -23,7 +23,7 @@ export default function HomePage() {
   useArcadeKeys({ onEnter: start, allowSpace: true });
 
   return (
-    <Frame badge="1a" header={<SysBar />}>
+    <Frame badge={site.badge} header={<SysBar />}>
       <div className={styles.stage}>
         <h1 className={styles.title}>{site.title}</h1>
         <p className={styles.tagline}>{site.tagline}</p>

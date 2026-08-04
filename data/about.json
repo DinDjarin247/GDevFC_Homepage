@@ -1,14 +1,30 @@
 {
   "badge": "소개",
   "heading": "ABOUT",
-  "intro": "[동아리 한줄 소개 / 미션 문구가 여기에 들어갑니다]",
+  "hero": {
+    "skipHint": "화면을 클릭하면 전체 문구가 바로 표시됩니다",
+    "lines": [
+      { "id": "l1", "tone": "off", "text": ["우리는 아직", "아무것도 만들지 않았다."] },
+      { "id": "l2", "tone": "off", "text": ["그래서", "무엇이든 될 수 있다."] },
+      {
+        "id": "l3",
+        "tone": "lime",
+        "text": ["▸ SEASON 1", "G DEV. F.C. — 지금, 첫 번째 로딩이 시작된다."]
+      },
+      { "id": "l4", "tone": "magenta", "text": ["TO BE CONTINUED..."] }
+    ]
+  },
+  "manifesto": {
+    "badge": "SEASON 1 · NOW LOADING",
+    "body": [
+      "이 동아리엔 아직 선배도, 전통도, 완성작도 없습니다.",
+      "있는 건 딱 하나 — 게임을 만들고 싶다는 마음.",
+      "첫 줄을 쓰는 사람이 곧 역사가 됩니다."
+    ]
+  },
   "history": {
     "heading": "HISTORY",
-    "items": [
-      { "year": "20XX", "text": "[창설 / 주요 연혁]" },
-      { "year": "20XX", "text": "[주요 활동/수상 내역]" },
-      { "year": "20XX", "text": "[주요 활동/수상 내역]" }
-    ]
+    "items": [{ "year": "2026", "text": "05.26 — G DEV. F.C. 창설" }]
   },
   "activities": {
     "heading": "ACTIVITIES",
@@ -17,9 +33,8 @@
   "contact": {
     "heading": "CONTACT",
     "items": [
-      { "label": "Discord", "href": "https://discord.gg/" },
-      { "label": "Instagram", "href": "https://instagram.com/" },
-      { "label": "Email", "href": "mailto:hello@example.com" }
+      { "label": "Discord", "href": "https://discord.gg/6nmNddqNc" },
+      { "label": "Email", "href": "mailto:space1429@gmail.com" }
     ]
   }
 }

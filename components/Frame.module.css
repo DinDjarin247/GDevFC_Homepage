@@ -2,7 +2,8 @@
   min-height: 100dvh;
   padding: var(--shell-pad);
   display: flex;
-  align-items: flex-start;
+  /* 프레임이 뷰포트를 세로로 꽉 채우도록 */
+  align-items: stretch;
   justify-content: center;
   /* 바깥 배경의 미세한 스캔라인 */
   background-image: repeating-linear-gradient(
@@ -17,8 +18,8 @@
 .panel {
   position: relative;
   width: 100%;
-  max-width: var(--shell-max);
-  min-height: 478px;
+  /* 가로도 꽉 채운다. 가독성은 .body 의 내부 폭 제한이 담당 */
+  flex: 1 1 auto;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -64,27 +65,26 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 15px 22px 14px;
+  padding: 15px clamp(22px, 4vw, 48px) 14px;
   border-bottom: 1px solid var(--line-soft);
   min-height: 46px;
 }
 
 .body {
   flex: 1 1 auto;
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
-  padding: 26px 34px 46px;
+  padding: 30px clamp(18px, 3vw, 40px) 48px;
 }
 
 /* ---------- 반응형 ---------- */
 
 @media (max-width: 720px) {
   .page {
-    padding: 18px 14px;
-  }
-
-  .panel {
-    min-height: calc(100dvh - 36px);
+    padding: 14px 12px;
   }
 
   .badge {

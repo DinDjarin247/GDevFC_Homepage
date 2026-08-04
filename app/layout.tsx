@@ -25,6 +25,11 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DM+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
+        {/* 한글 픽셀 폰트 — Press Start 2P 에 없는 한글 글리프를 담당 */}
+        <link
+          href="https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css"
+          rel="stylesheet"
+        />
       </head>
       <body>{children}</body>
     </html>

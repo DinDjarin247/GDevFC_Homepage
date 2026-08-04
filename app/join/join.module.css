@@ -1,91 +1,67 @@
 .grid {
   flex: 1 1 auto;
   display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
-  gap: 30px 52px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
+  gap: clamp(24px, 3.4vw, 44px);
   align-items: start;
   padding-top: 4px;
 }
 
-/* ---------- 좌측 안내 ---------- */
-
-.info {
+.panelTitle {
   display: flex;
-  flex-direction: column;
-  gap: 26px;
-}
-
-.blockTitle {
-  margin: 0 0 10px;
-  font-size: 13.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 22px;
+  font-family: var(--font-pixel);
+  font-size: clamp(11px, 1.5vw, 13px);
+  letter-spacing: 0.06em;
   color: var(--lime);
   line-height: 1;
 }
 
-.slash {
-  color: var(--magenta);
-  margin: 0 5px;
-}
-
-.blockText {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1.6;
-  word-break: keep-all;
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 14px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.tag {
-  border: 1px solid var(--lime);
-  border-radius: var(--radius);
-  padding: 9px 14px;
-  font-size: 12.5px;
-  color: var(--lime);
+.panelMark {
+  font-family: var(--font-kr);
+  font-size: 1.1em;
   line-height: 1;
-  white-space: nowrap;
 }
 
-.note {
-  margin: 0;
-  font-size: 12px;
-  color: var(--dim);
-  line-height: 1.6;
-}
-
-/* ---------- 우측 폼 ---------- */
+/* ---------- 좌: 입력 패널 ---------- */
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 9px;
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  flex-wrap: wrap;
 }
 
 .label {
-  font-size: 12.5px;
-  color: #cfcfcf;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  color: var(--lime);
+  line-height: 1;
+}
+
+.sub {
+  font-size: 11.5px;
+  color: var(--dim);
   line-height: 1;
 }
 
 .input,
-.select {
+.textarea {
   width: 100%;
   background: var(--field);
   border: 1px solid #565656;
@@ -93,43 +69,126 @@
   padding: 13px 14px;
   font-size: 13.5px;
   color: var(--text);
-  line-height: 1.3;
+  line-height: 1.5;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
 }
 
-.input::placeholder {
+.textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.input::placeholder,
+.textarea::placeholder {
   color: #6b6b6b;
 }
 
 .input:focus,
-.select:focus {
+.textarea:focus {
   outline: none;
   border-color: var(--lime);
   box-shadow: 0 0 0 1px rgba(201, 247, 61, 0.28);
 }
 
-.select {
-  appearance: none;
-  cursor: pointer;
-  /* 커스텀 화살표 */
-  background-image: linear-gradient(45deg, transparent 50%, #9a9a9a 50%),
-    linear-gradient(135deg, #9a9a9a 50%, transparent 50%);
-  background-position:
-    calc(100% - 18px) calc(50% - 2px),
-    calc(100% - 13px) calc(50% - 2px);
-  background-size:
-    5px 5px,
-    5px 5px;
-  background-repeat: no-repeat;
-  padding-right: 36px;
+.hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--dim);
+  line-height: 1.5;
 }
 
-.select option {
-  background: #1c1c1c;
-  color: var(--text);
+/* ---------- CLASS 카드 버튼 ---------- */
+
+.classGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 10px;
 }
+
+.classCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  background: var(--field);
+  border: 1px solid #4d4d4d;
+  border-radius: var(--radius);
+  padding: 14px 8px 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.classCard:hover {
+  transform: translateY(-2px);
+}
+
+.classCard.on {
+  border-color: var(--class-color, var(--lime));
+  background: color-mix(in srgb, var(--class-color, #c9f73d) 12%, var(--field));
+  box-shadow: 0 0 14px
+    color-mix(in srgb, var(--class-color, #c9f73d) 26%, transparent);
+}
+
+.classIcon {
+  font-size: 19px;
+  line-height: 1;
+  color: var(--class-color, var(--lime));
+}
+
+.classLabel {
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1;
+}
+
+.classEn {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+  line-height: 1;
+}
+
+/* ---------- 장르 태그 ---------- */
+
+.genreRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.genre {
+  background: none;
+  border: 1px solid #565656;
+  border-radius: var(--radius);
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.genre:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.genre.on {
+  border-color: var(--lime);
+  background: var(--lime);
+  color: #0b0b0b;
+}
+
+/* ---------- 제출 ---------- */
 
 .submit {
   margin-top: 6px;
@@ -177,19 +236,143 @@
   line-height: 1.5;
 }
 
-/* ---------- 제출 완료 ---------- */
+/* ---------- 우: 캐릭터 카드 미리보기 ---------- */
+
+.cardCol {
+  position: sticky;
+  top: 20px;
+}
+
+.card {
+  border: 1px solid var(--class-color, var(--line));
+  border-radius: var(--radius);
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--class-color, #c9f73d) 9%, transparent),
+      transparent 42%
+    ),
+    #141414;
+  overflow: hidden;
+  transition: border-color 0.25s ease;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 18px 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.cardAvatar {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--class-color, #4d4d4d);
+  border-radius: var(--radius);
+  background: #0e0e0e;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--class-color, var(--dim));
+}
+
+.cardNames {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cardName {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.cardClass {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--class-color, var(--dim));
+  line-height: 1;
+}
+
+.cardRows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+}
+
+.cardRow {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cardKey {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.11em;
+  color: var(--dim);
+  line-height: 1;
+}
+
+.cardVal {
+  margin: 0;
+  font-size: 12.5px;
+  color: #dcdcdc;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.cardVal.empty {
+  color: #5a5a5a;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.cardStory {
+  white-space: pre-wrap;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chip {
+  border: 1px solid var(--class-color, var(--lime));
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 11px;
+  color: var(--class-color, var(--lime));
+  line-height: 1;
+}
+
+/* ---------- 저장 완료 ---------- */
 
 .success {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  min-height: 260px;
+  gap: 15px;
+  min-height: 320px;
   border: 1px solid rgba(201, 247, 61, 0.5);
   border-radius: var(--radius);
   background: rgba(201, 247, 61, 0.05);
-  padding: 30px 24px;
+  padding: 40px 24px;
   text-align: center;
 }
 
@@ -199,7 +382,7 @@
   gap: 10px;
   margin: 0;
   font-family: var(--font-pixel);
-  font-size: clamp(12px, 2.2vw, 15px);
+  font-size: clamp(12px, 2.2vw, 16px);
   letter-spacing: 0.08em;
   color: var(--lime);
   line-height: 1.4;
@@ -208,7 +391,7 @@
 
 .successText {
   margin: 0;
-  max-width: 32ch;
+  max-width: 34ch;
   font-size: 12.5px;
   color: var(--muted);
   line-height: 1.7;
@@ -219,7 +402,7 @@
   background: none;
   border: 1px solid #565656;
   border-radius: var(--radius);
-  padding: 9px 15px;
+  padding: 10px 16px;
   cursor: pointer;
   font-size: 12px;
   color: var(--muted);
@@ -235,10 +418,15 @@
 
 /* ---------- 반응형 ---------- */
 
-@media (max-width: 860px) {
+@media (max-width: 900px) {
   .grid {
     grid-template-columns: 1fr;
-    gap: 32px;
+  }
+
+  .cardCol {
+    position: static;
+    /* 모바일에서는 카드가 입력 패널 위로 */
+    order: -1;
   }
 }
 
@@ -246,9 +434,5 @@
   .submit {
     font-size: 11px;
     padding: 16px 14px;
-  }
-
-  .blockText {
-    font-size: 13px;
   }
 }
