@@ -33,8 +33,9 @@
     'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
   --font-mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  /* layout — 프레임은 화면을 꽉 채우고, 내부 콘텐츠만 폭을 제한한다 */
-  --content-max: 1180px;
+  /* layout — 프레임은 화면을 꽉 채우고, 내부 콘텐츠만 폭을 제한한다.
+     1600px 를 넘는 초와이드에서도 콘텐츠가 계속 커지도록 clamp 로 상한을 둔다 */
+  --content-max: clamp(1180px, 78vw, 1600px);
   --shell-pad: 24px;
   --radius: 2px;
 }
@@ -62,7 +63,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-kr);
-  font-size: 14px;
+  font-size: clamp(14px, 0.62vw + 12px, 17px);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;

@@ -1,20 +1,21 @@
 .wrap {
-  --card-w: 148px;
-  --card-gap: 26px;
+  /* 와이드 화면에서 기존 148px 대비 최소 1.5~2배 (최대 300px) */
+  --card-w: clamp(148px, 13vw, 300px);
+  --card-gap: clamp(26px, 2.4vw, 52px);
 
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 22px;
+  gap: clamp(22px, 2vw, 40px);
   padding: 6px 0 8px;
 }
 
 .heading {
   margin: 0;
   font-family: var(--font-pixel);
-  font-size: clamp(13px, 2.4vw, 19px);
+  font-size: clamp(14px, 2.4vw, 30px);
   letter-spacing: 0.08em;
   color: var(--text);
   text-align: center;
@@ -123,7 +124,7 @@
 
 .no {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: clamp(9px, 0.62vw, 13px);
   letter-spacing: 0.1em;
   color: var(--lime);
   opacity: 0.85;
@@ -131,7 +132,7 @@
 }
 
 .label {
-  font-size: 11px;
+  font-size: clamp(11px, 0.85vw, 17px);
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--text);
@@ -154,7 +155,7 @@
   border: 0;
   padding: 12px 8px;
   cursor: pointer;
-  font-size: 24px;
+  font-size: clamp(22px, 1.7vw, 36px);
   line-height: 1;
   color: #7d7d7d;
   transition:
@@ -219,7 +220,7 @@
   gap: 9px;
   margin: 0;
   font-family: var(--font-pixel);
-  font-size: clamp(9px, 1.6vw, 12px);
+  font-size: clamp(10px, 1.4vw, 18px);
   letter-spacing: 0.1em;
   color: var(--text);
   opacity: 0.9;

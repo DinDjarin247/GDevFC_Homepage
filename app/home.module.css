@@ -4,7 +4,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 34px;
+  gap: clamp(34px, 3.6vw, 64px);
   text-align: center;
   padding: 20px 0 40px;
 }
@@ -12,22 +12,26 @@
 .title {
   margin: 0;
   font-family: var(--font-pixel);
-  font-size: clamp(21px, 5.4vw, 42px);
+  /* 와이드 화면에서 기존 대비 2.5~3배 (42px → 최대 118px).
+     content-max 캡에 걸려도 줄바꿈되지 않도록 뷰포트(vw)가 아닌
+     실제 본문 컨테이너 폭(cqw) 기준으로 스케일한다. */
+  font-size: clamp(22px, 8.5cqw, 118px);
   letter-spacing: 0.04em;
   line-height: 1.2;
   color: var(--lime);
-  /* 시안의 마젠타 색수차 */
-  text-shadow: -3px 0 0 var(--magenta);
-  word-break: keep-all;
+  /* 시안의 마젠타 색수차 — 폰트가 커질수록 오프셋도 비례해서 키운다 */
+  text-shadow: clamp(-6px, -0.24vw, -3px) 0 0 var(--magenta);
+  white-space: nowrap;
 }
 
 .tagline {
   margin: 0;
   font-family: var(--font-pixel);
-  font-size: clamp(9px, 1.5vw, 12px);
+  font-size: clamp(10px, 1.6cqw, 26px);
   letter-spacing: 0.16em;
   color: var(--text);
   opacity: 0.9;
+  white-space: nowrap;
 }
 
 .start {
@@ -39,9 +43,10 @@
   padding: 8px 10px;
   cursor: pointer;
   font-family: var(--font-pixel);
-  font-size: clamp(11px, 1.9vw, 16px);
+  font-size: clamp(12px, 2cqw, 32px);
   letter-spacing: 0.1em;
   color: var(--lime);
+  white-space: nowrap;
   animation: blink 1.15s steps(1) infinite;
   transition: text-shadow 0.15s ease;
 }

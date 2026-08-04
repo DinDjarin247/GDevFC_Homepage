@@ -3,7 +3,7 @@
 .sysLabel {
   position: relative;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: clamp(11px, 0.62vw, 14px);
   letter-spacing: 0.04em;
   color: var(--muted);
   white-space: nowrap;
@@ -45,7 +45,7 @@
   align-items: center;
   gap: 7px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: clamp(11px, 0.62vw, 14px);
   letter-spacing: 0.08em;
   color: var(--muted);
   white-space: nowrap;
@@ -86,7 +86,7 @@
   align-items: center;
   gap: 6px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: clamp(11px, 0.62vw, 14px);
   letter-spacing: 0.06em;
   color: var(--muted);
   transition: color 0.15s ease;
@@ -102,7 +102,7 @@
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-pixel);
-  font-size: 17px;
+  font-size: clamp(17px, 1.35vw, 30px);
   letter-spacing: 0.06em;
   line-height: 1;
   white-space: nowrap;
@@ -121,7 +121,7 @@
 
 .aside {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: clamp(11px, 0.62vw, 14px);
   letter-spacing: 0.08em;
   color: var(--muted);
   white-space: nowrap;

@@ -4,7 +4,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: clamp(20px, 1.8vw, 36px);
   padding: 4px 0 6px;
 }
 
@@ -21,7 +21,9 @@
 
 .slot {
   position: relative;
-  width: min(420px, 100%);
+  /* 화면 폭의 50~60% 를 차지하도록 뷰포트 기준으로 스케일 (최대 1100px) */
+  width: clamp(320px, 58vw, 1100px);
+  max-width: 100%;
   aspect-ratio: 420 / 236;
   border: 1px solid rgba(201, 247, 61, 0.55);
   border-radius: var(--radius);
@@ -58,14 +60,14 @@
   align-items: center;
   gap: 7px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: clamp(11px, 0.85vw, 16px);
   letter-spacing: 0.14em;
   color: var(--lime);
 }
 
 .slotStatus {
   font-family: var(--font-pixel);
-  font-size: clamp(13px, 2.6vw, 18px);
+  font-size: clamp(15px, 2.8vw, 34px);
   letter-spacing: 0.1em;
   color: rgba(201, 247, 61, 0.75);
   line-height: 1;
@@ -73,9 +75,9 @@
 }
 
 .slotMessage {
-  max-width: 30ch;
+  max-width: 34ch;
   margin: 0;
-  font-size: 12px;
+  font-size: clamp(12px, 1vw, 17px);
   line-height: 1.7;
   color: var(--muted);
   word-break: keep-all;
@@ -87,7 +89,7 @@
   border: 0;
   padding: 12px 6px;
   cursor: pointer;
-  font-size: 20px;
+  font-size: clamp(20px, 1.6vw, 32px);
   line-height: 1;
   color: #6f6f6f;
   transition:
@@ -123,7 +125,7 @@
   gap: 8px;
   margin: 0;
   font-family: var(--font-pixel);
-  font-size: clamp(11px, 2vw, 14px);
+  font-size: clamp(12px, 1.4vw, 20px);
   letter-spacing: 0.06em;
   color: var(--lime);
   line-height: 1.4;
@@ -138,7 +140,7 @@
 
 .summary {
   margin: 0;
-  font-size: 12.5px;
+  font-size: clamp(12.5px, 0.85vw, 16px);
   color: var(--muted);
   line-height: 1.5;
   word-break: keep-all;
@@ -146,7 +148,7 @@
 
 .meta {
   margin: 0;
-  font-size: 12px;
+  font-size: clamp(12px, 0.75vw, 15px);
   color: var(--magenta);
   letter-spacing: 0.02em;
 }

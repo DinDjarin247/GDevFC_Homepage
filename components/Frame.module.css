@@ -46,15 +46,15 @@
 .badge {
   position: absolute;
   top: -11px;
-  left: 32px;
+  left: clamp(24px, 2.2vw, 40px);
   z-index: 2;
   background: var(--lime);
   color: #0b0b0b;
-  font-size: 11px;
+  font-size: clamp(11px, 0.62vw, 13px);
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
-  padding: 5px 9px;
+  padding: clamp(5px, 0.4vw, 7px) clamp(9px, 0.7vw, 12px);
   border-radius: var(--radius);
   white-space: nowrap;
 }
@@ -65,7 +65,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 15px clamp(22px, 4vw, 48px) 14px;
+  padding: clamp(15px, 1.2vw, 22px) clamp(22px, 4vw, 60px) clamp(14px, 1vw, 20px);
   border-bottom: 1px solid var(--line-soft);
   min-height: 46px;
 }
@@ -77,7 +77,13 @@
   margin-inline: auto;
   display: flex;
   flex-direction: column;
-  padding: 30px clamp(18px, 3vw, 40px) 48px;
+  padding: clamp(30px, 3vw, 56px) clamp(18px, 3.6vw, 60px) clamp(48px, 4vw, 72px);
+  /* --content-max 는 78vw 로 상한을 갖는 vw 기반 clamp 라, 자식이 순수 vw 로
+     폰트를 키우면 (뷰포트는 넓은데 본문 폭은 캡에 걸린 경우) 실제 가용 폭을
+     넘어서 줄바꿈이 생길 수 있다. cqw 를 쓰는 자식들이 이 컨테이너의
+     "실제" 폭을 기준으로 삼도록 쿼리 컨테이너로 만든다. */
+  container-type: inline-size;
+  container-name: shell;
 }
 
 /* ---------- 반응형 ---------- */
