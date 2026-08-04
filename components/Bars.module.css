@@ -1,0 +1,170 @@
+/* ---------- SysBar (홈 / 셀렉트 화면 상단) ---------- */
+
+.sysLabel {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* 시안의 겹쳐 보이는 글리치 표현 */
+.sysLabel.glitch::before {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--muted);
+  opacity: 0.65;
+  animation: sysGlitch 3.2s steps(1) infinite;
+}
+
+@keyframes sysGlitch {
+  0%,
+  92% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  93% {
+    transform: translateX(-4px);
+    opacity: 0.7;
+  }
+  96% {
+    transform: translateX(3px);
+    opacity: 0.5;
+  }
+  99% {
+    transform: translateX(-2px);
+    opacity: 0.6;
+  }
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 6px var(--lime-soft);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---------- ScreenHeader (하위 페이지 상단) ---------- */
+
+.screenHeader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  transition: color 0.15s ease;
+  white-space: nowrap;
+}
+
+.back:hover {
+  color: var(--lime);
+}
+
+.title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-pixel);
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.title.lime {
+  color: var(--lime);
+  text-shadow: -2px 0 0 var(--magenta);
+}
+
+.title.magenta {
+  color: var(--magenta);
+  text-shadow: -2px 0 0 var(--lime-soft);
+}
+
+.aside {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+/* ---------- 반응형 ---------- */
+
+@media (max-width: 720px) {
+  .sysLabel,
+  .status,
+  .back,
+  .aside {
+    font-size: 10px;
+  }
+
+  .title {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 460px) {
+  /* 좁은 화면에서는 타이틀을 흐름 안으로 되돌려 겹침 방지 */
+  .screenHeader {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 8px;
+  }
+
+  .title {
+    position: static;
+    transform: none;
+    order: -1;
+    flex: 1 0 100%;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .back {
+    order: 1;
+  }
+
+  .aside {
+    order: 2;
+  }
+}

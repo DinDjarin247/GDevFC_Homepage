@@ -1,0 +1,25 @@
+{
+  "badge": "소개",
+  "heading": "ABOUT",
+  "intro": "[동아리 한줄 소개 / 미션 문구가 여기에 들어갑니다]",
+  "history": {
+    "heading": "HISTORY",
+    "items": [
+      { "year": "20XX", "text": "[창설 / 주요 연혁]" },
+      { "year": "20XX", "text": "[주요 활동/수상 내역]" },
+      { "year": "20XX", "text": "[주요 활동/수상 내역]" }
+    ]
+  },
+  "activities": {
+    "heading": "ACTIVITIES",
+    "items": ["정기모임", "게임잼", "스터디", "발표회"]
+  },
+  "contact": {
+    "heading": "CONTACT",
+    "items": [
+      { "label": "Discord", "href": "https://discord.gg/" },
+      { "label": "Instagram", "href": "https://instagram.com/" },
+      { "label": "Email", "href": "mailto:hello@example.com" }
+    ]
+  }
+}

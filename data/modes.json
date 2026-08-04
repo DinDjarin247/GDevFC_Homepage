@@ -1,0 +1,33 @@
+{
+  "heading": "SELECT MODE",
+  "hint": "PRESS START TO ENTER",
+  "modes": [
+    {
+      "id": "about",
+      "no": "01",
+      "label": "소개",
+      "href": "/about",
+      "image": null,
+      "sprite": "knight",
+      "alt": "기사 캐릭터 - 소개 모드"
+    },
+    {
+      "id": "showcase",
+      "no": "02",
+      "label": "쇼케이스",
+      "href": "/showcase",
+      "image": null,
+      "sprite": "mage",
+      "alt": "마법사 캐릭터 - 쇼케이스 모드"
+    },
+    {
+      "id": "join",
+      "no": "03",
+      "label": "지원하기",
+      "href": "/join",
+      "image": null,
+      "sprite": "archer",
+      "alt": "궁수 캐릭터 - 지원하기 모드"
+    }
+  ]
+}

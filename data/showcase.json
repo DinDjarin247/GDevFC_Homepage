@@ -1,0 +1,19 @@
+{
+  "badge": "쇼케이스",
+  "heading": "SHOWCASE",
+  "empty": {
+    "slotPrefix": "SLOT",
+    "status": "NO DATA",
+    "message": "아직 저장된 데이터가 없습니다. 첫 번째 기록은 당신의 것이 될 수 있습니다.",
+    "summary": "[등록된 프로젝트가 없습니다]",
+    "meta": "[장르] · [개발기간]"
+  },
+  "slots": [
+    { "id": "slot-01", "title": null, "summary": null, "genre": null, "period": null, "image": null },
+    { "id": "slot-02", "title": null, "summary": null, "genre": null, "period": null, "image": null },
+    { "id": "slot-03", "title": null, "summary": null, "genre": null, "period": null, "image": null },
+    { "id": "slot-04", "title": null, "summary": null, "genre": null, "period": null, "image": null },
+    { "id": "slot-05", "title": null, "summary": null, "genre": null, "period": null, "image": null },
+    { "id": "slot-06", "title": null, "summary": null, "genre": null, "period": null, "image": null }
+  ]
+}

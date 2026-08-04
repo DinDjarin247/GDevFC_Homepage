@@ -1,0 +1,12 @@
+# 저장소에는 LF로 저장하고, 체크아웃 시 OS에 맞춰 변환
+* text=auto eol=lf
+
+# 바이너리는 변환하지 않음
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary

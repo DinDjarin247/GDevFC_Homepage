@@ -1,0 +1,103 @@
+.page {
+  min-height: 100dvh;
+  padding: var(--shell-pad);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  /* 바깥 배경의 미세한 스캔라인 */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.014) 0px,
+    rgba(255, 255, 255, 0.014) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  max-width: var(--shell-max);
+  min-height: 478px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 패널 위에 얹히는 스캔라인 오버레이 */
+.panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.022) 0px,
+    rgba(255, 255, 255, 0.022) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
+/* 좌측 상단, 테두리에 걸쳐 있는 라임 배지 */
+.badge {
+  position: absolute;
+  top: -11px;
+  left: 32px;
+  z-index: 2;
+  background: var(--lime);
+  color: #0b0b0b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding: 5px 9px;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+
+.header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 22px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  min-height: 46px;
+}
+
+.body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 34px 46px;
+}
+
+/* ---------- 반응형 ---------- */
+
+@media (max-width: 720px) {
+  .page {
+    padding: 18px 14px;
+  }
+
+  .panel {
+    min-height: calc(100dvh - 36px);
+  }
+
+  .badge {
+    left: 18px;
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .header {
+    padding: 13px 16px 12px;
+  }
+
+  .body {
+    padding: 22px 18px 34px;
+  }
+}

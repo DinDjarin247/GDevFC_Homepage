@@ -1,0 +1,125 @@
+/* ==========================================================================
+   G DEV. F.C. — design tokens & base
+   시안 기준: 딥 차콜 배경 + 라임/마젠타 액센트 + 픽셀 폰트 + 스캔라인
+   ========================================================================== */
+
+:root {
+  /* surface */
+  --bg: #0b0b0b;
+  --panel: #191919;
+  --panel-2: #1e1e1e;
+  --field: #212121;
+  --line: #2f2f2f;
+  --line-soft: #262626;
+
+  /* accent */
+  --lime: #c9f73d;
+  --lime-soft: rgba(201, 247, 61, 0.55);
+  --lime-faint: rgba(201, 247, 61, 0.12);
+  --magenta: #ff2f8f;
+  --magenta-soft: rgba(255, 47, 143, 0.5);
+
+  /* text */
+  --text: #e8e8e8;
+  --muted: #8d8d8d;
+  --dim: #666666;
+
+  /* type */
+  --font-pixel: 'Press Start 2P', 'Courier New', monospace;
+  --font-kr: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* layout */
+  --shell-max: 1000px;
+  --shell-pad: 28px;
+  --radius: 2px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--bg);
+  /* iOS 가로 회전 시 폰트 자동 확대 방지 */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-kr);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* ---------- 공통 타이포 유틸 ---------- */
+
+.pixel {
+  font-family: var(--font-pixel);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+}
+
+/* 라임 글자 + 마젠타 색수차(chromatic aberration) — 시안의 타이틀 표현 */
+.glitchText {
+  color: var(--lime);
+  text-shadow: -3px 0 0 var(--magenta);
+}
+
+/* ---------- 접근성 ---------- */
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+}
+
+/* 모션 최소화 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

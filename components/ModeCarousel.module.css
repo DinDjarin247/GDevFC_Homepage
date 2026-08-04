@@ -1,0 +1,295 @@
+.wrap {
+  --card-w: 148px;
+  --card-gap: 26px;
+
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 6px 0 8px;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: clamp(13px, 2.4vw, 19px);
+  letter-spacing: 0.08em;
+  color: var(--text);
+  text-align: center;
+}
+
+/* ---------- 캐러셀 ---------- */
+
+.carousel {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.viewport {
+  overflow: hidden;
+  width: 100%;
+  padding: 26px 0;
+  /* 좌우 가장자리 페이드 */
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 12%,
+    #000 88%,
+    transparent 100%
+  );
+}
+
+.track {
+  display: flex;
+  gap: var(--card-gap);
+  /* 첫 카드가 뷰포트 중앙에서 시작하도록 */
+  padding-inline: calc(50% - var(--card-w) / 2);
+  transform: translateX(
+    calc(-1 * var(--index) * (var(--card-w) + var(--card-gap)))
+  );
+  transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ---------- 카드 ---------- */
+
+.card {
+  flex: 0 0 var(--card-w);
+  width: var(--card-w);
+  aspect-ratio: 4 / 5;
+  position: relative;
+  padding: 0;
+  background: #0e0e0e;
+  border: 1px solid rgba(201, 247, 61, 0.3);
+  border-radius: var(--radius);
+  cursor: pointer;
+  overflow: hidden;
+  opacity: 0.42;
+  transform: scale(0.87);
+  transition:
+    transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.32s ease,
+    border-color 0.32s ease,
+    box-shadow 0.32s ease;
+}
+
+.card.active {
+  opacity: 1;
+  transform: scale(1.16);
+  border: 2px solid var(--lime);
+  box-shadow:
+    0 0 0 1px rgba(201, 247, 61, 0.25),
+    0 0 22px rgba(201, 247, 61, 0.28);
+  z-index: 1;
+}
+
+.art {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 픽셀 아트 선명하게 */
+  image-rendering: pixelated;
+}
+
+.sprite {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 8%;
+  object-fit: contain;
+}
+
+/* 카드 하단 라벨 스크림 */
+.meta {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 16px 6px 7px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.88), transparent);
+}
+
+.no {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--lime);
+  opacity: 0.85;
+  line-height: 1;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.card.active .label {
+  color: #fff;
+}
+
+/* ---------- 화살표 ---------- */
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: none;
+  border: 0;
+  padding: 12px 8px;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  color: #7d7d7d;
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.arrow:hover:not(:disabled) {
+  color: var(--lime);
+}
+
+.arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.prev {
+  left: clamp(4px, 6%, 62px);
+}
+
+.next {
+  right: clamp(4px, 6%, 62px);
+}
+
+.prev:hover:not(:disabled) {
+  transform: translate(-2px, -50%);
+}
+
+.next:hover:not(:disabled) {
+  transform: translate(2px, -50%);
+}
+
+/* ---------- 도트 & 힌트 ---------- */
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #4a4a4a;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dot.on {
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime-soft);
+}
+
+.hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: clamp(9px, 1.6vw, 12px);
+  letter-spacing: 0.1em;
+  color: var(--text);
+  opacity: 0.9;
+  animation: hintBlink 1.6s steps(1) infinite;
+}
+
+/* ▪ 는 픽셀 폰트에 없는 글리프라 본문 폰트로 렌더링한다 */
+.hintMark {
+  font-family: var(--font-kr);
+  color: var(--lime);
+  font-size: 0.85em;
+  line-height: 1;
+}
+
+@keyframes hintBlink {
+  0%,
+  70% {
+    opacity: 0.9;
+  }
+  71%,
+  100% {
+    opacity: 0.35;
+  }
+}
+
+/* ---------- 반응형 ---------- */
+
+@media (max-width: 720px) {
+  .wrap {
+    --card-w: 122px;
+    --card-gap: 20px;
+    gap: 18px;
+  }
+
+  .card.active {
+    transform: scale(1.1);
+  }
+
+  .arrow {
+    font-size: 17px;
+  }
+}
+
+/* 좁은 화면에서는 화살표가 카드 위에 겹치므로 스크림을 깐다 */
+@media (max-width: 560px) {
+  .arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(8, 8, 8, 0.78);
+    backdrop-filter: blur(2px);
+    color: #a5a5a5;
+  }
+
+  .prev {
+    left: 0;
+  }
+
+  .next {
+    right: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .wrap {
+    --card-w: 104px;
+    --card-gap: 16px;
+  }
+}

@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+.DS_Store
+Thumbs.db
+.env*.local
+.vercel
+
+# 머신별 로컬 설정 (launch.json 은 공유)
+.claude/settings.local.json

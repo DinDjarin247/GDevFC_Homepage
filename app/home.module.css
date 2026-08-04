@@ -1,0 +1,82 @@
+.stage {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  text-align: center;
+  padding: 20px 0 40px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: clamp(21px, 5.4vw, 42px);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: var(--lime);
+  /* 시안의 마젠타 색수차 */
+  text-shadow: -3px 0 0 var(--magenta);
+  word-break: keep-all;
+}
+
+.tagline {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: clamp(9px, 1.5vw, 12px);
+  letter-spacing: 0.16em;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+.start {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: 0;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: clamp(11px, 1.9vw, 16px);
+  letter-spacing: 0.1em;
+  color: var(--lime);
+  animation: blink 1.15s steps(1) infinite;
+  transition: text-shadow 0.15s ease;
+}
+
+.start:hover,
+.start:focus-visible {
+  animation: none;
+  text-shadow: 0 0 12px var(--lime-soft);
+}
+
+/* ▸ 는 픽셀 폰트에 없는 글리프라 본문 폰트로 렌더링한다 */
+.caret {
+  font-family: var(--font-kr);
+  font-size: 0.9em;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+@keyframes blink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0.18;
+  }
+}
+
+@media (max-width: 720px) {
+  .stage {
+    gap: 26px;
+  }
+
+  .title {
+    text-shadow: -2px 0 0 var(--magenta);
+  }
+}

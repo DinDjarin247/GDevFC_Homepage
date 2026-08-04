@@ -1,0 +1,200 @@
+.stage {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 4px 0 6px;
+}
+
+/* ---------- 슬롯 박스 + 화살표 ---------- */
+
+.viewer {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.slot {
+  position: relative;
+  width: min(420px, 100%);
+  aspect-ratio: 420 / 236;
+  border: 1px solid rgba(201, 247, 61, 0.55);
+  border-radius: var(--radius);
+  background-color: #14170e;
+  /* 시안의 사선 스트라이프 */
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(201, 247, 61, 0.09) 0px,
+    rgba(201, 247, 61, 0.09) 7px,
+    transparent 7px,
+    transparent 15px
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 18px 22px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.shot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.slotTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--lime);
+}
+
+.slotStatus {
+  font-family: var(--font-pixel);
+  font-size: clamp(13px, 2.6vw, 18px);
+  letter-spacing: 0.1em;
+  color: rgba(201, 247, 61, 0.75);
+  line-height: 1;
+  text-shadow: 0 0 14px rgba(201, 247, 61, 0.22);
+}
+
+.slotMessage {
+  max-width: 30ch;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+  word-break: keep-all;
+}
+
+.arrow {
+  flex: 0 0 auto;
+  background: none;
+  border: 0;
+  padding: 12px 6px;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  color: #6f6f6f;
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.arrow:hover {
+  color: var(--lime);
+}
+
+.arrow:first-child:hover {
+  transform: translateX(-2px);
+}
+
+.arrow:last-child:hover {
+  transform: translateX(2px);
+}
+
+/* ---------- 캡션 ---------- */
+
+.caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  text-align: center;
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: clamp(11px, 2vw, 14px);
+  letter-spacing: 0.06em;
+  color: var(--lime);
+  line-height: 1.4;
+}
+
+/* 【 】 는 픽셀 폰트에 없는 글리프라 본문 폰트로 렌더링한다 */
+.bracket {
+  font-family: var(--font-kr);
+  font-size: 1.25em;
+  line-height: 1;
+}
+
+.summary {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--magenta);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 도트 ---------- */
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #4a4a4a;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dot.on {
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime-soft);
+}
+
+/* ---------- 반응형 ---------- */
+
+@media (max-width: 720px) {
+  .stage {
+    gap: 16px;
+  }
+
+  .viewer {
+    gap: 4px;
+  }
+
+  .arrow {
+    font-size: 16px;
+    padding: 10px 2px;
+  }
+
+  .slotMessage {
+    font-size: 11.5px;
+  }
+}
