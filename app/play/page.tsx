@@ -14,7 +14,12 @@ export default function PlayPage() {
   const [started, setStarted] = useState(false);
 
   return (
-    <Frame badge={play.badge} header={<ScreenHeader title={play.heading} />} fullBleedBody>
+    <Frame
+      badge={play.badge}
+      header={<ScreenHeader title={play.heading} />}
+      fullBleedBody
+      immersiveMobile={started}
+    >
       <RotateGate>
         {started ? (
           <WoowangGame onExit={() => router.push('/select')} />

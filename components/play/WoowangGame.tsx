@@ -212,11 +212,13 @@ export default function WoowangGame({ onExit }: WoowangGameProps) {
 
     // ---------- 페이즈2: 횡스크롤 러닝 ----------
     const BASE_SPEED = 92;
-    const ACCEL = 2.6;
-    const MAX_SPEED = 230;
+    const ACCEL = 4.4; // 갈수록 빠르게 가속
+    const MAX_SPEED = 280;
     const GRAVITY = 950;
     const JUMP_V = -300;
     const PLAYER_X = 46;
+    /** 40초에 걸쳐 0→1 로 포화되는 난이도 계수. 스폰 간격/장애물 구성에 쓴다 */
+    const DIFFICULTY_RAMP_SEC = 40;
 
     let scrollSpeed = BASE_SPEED;
     let elapsed = 0;
@@ -293,19 +295,30 @@ export default function WoowangGame({ onExit }: WoowangGameProps) {
       return { x: PLAYER_X, y: py - bh, w: bw, h: bh };
     }
 
-    function spawnObstacle(now: number) {
+    function makeObstacle(type: ObstacleType, x: number): Obstacle {
+      if (type === 'low') return { type, x, y: FLOOR_Y - 16, w: 14, h: 16 };
+      if (type === 'high') return { type, x, y: 126, w: 18, h: 11 };
+      return { type, x, y: FLOOR_Y - 34, w: 10, h: 10 };
+    }
+
+    /** 장애물 스폰. 난이도가 오를수록 간격이 좁아지고, 하트는 줄고,
+     * 일정 확률로 바로 뒤에 두 번째 장애물이 따라붙는 콤보가 나온다 */
+    function spawnObstacle(now: number, difficulty: number) {
+      const heartChance = Math.max(0.1, 0.25 - difficulty * 0.15);
+      const lowChance = 0.4;
       const r = Math.random();
-      const type: ObstacleType = r < 0.4 ? 'low' : r < 0.75 ? 'high' : 'heart';
-      let ob: Obstacle;
-      if (type === 'low') {
-        ob = { type, x: VIRTUAL_W + 10, y: FLOOR_Y - 16, w: 14, h: 16 };
-      } else if (type === 'high') {
-        ob = { type, x: VIRTUAL_W + 10, y: 126, w: 18, h: 11 };
-      } else {
-        ob = { type, x: VIRTUAL_W + 10, y: FLOOR_Y - 34, w: 10, h: 10 };
+      const type: ObstacleType = r < heartChance ? 'heart' : r < heartChance + lowChance ? 'low' : 'high';
+
+      obstacles.push(makeObstacle(type, VIRTUAL_W + 10));
+
+      if (type !== 'heart' && difficulty > 0.25 && Math.random() < difficulty * 0.4) {
+        const comboType: ObstacleType = Math.random() < 0.5 ? 'low' : 'high';
+        obstacles.push(makeObstacle(comboType, VIRTUAL_W + 10 + rand(38, 56)));
       }
-      obstacles.push(ob);
-      nextSpawnAt = now + rand(900, 1900);
+
+      const minGap = 900 - difficulty * 420;
+      const maxGap = 1900 - difficulty * 750;
+      nextSpawnAt = now + rand(minGap, maxGap);
     }
 
     // ---------- update ----------
@@ -360,7 +373,8 @@ export default function WoowangGame({ onExit }: WoowangGameProps) {
         legPhase = legPhase === 0 ? 1 : 0;
       }
 
-      if (now >= nextSpawnAt) spawnObstacle(now);
+      const difficulty = Math.min(1, elapsed / DIFFICULTY_RAMP_SEC);
+      if (now >= nextSpawnAt) spawnObstacle(now, difficulty);
 
       const hitbox = playerHitbox();
       for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -651,6 +665,19 @@ export default function WoowangGame({ onExit }: WoowangGameProps) {
     <div className={styles.wrap}>
       <div className={styles.canvasBox}>
         <canvas ref={canvasRef} className={styles.canvas} />
+        {/* 모바일 전체화면 모드에서는 헤더의 BACK 링크가 사라지므로,
+            언제든 빠져나갈 수 있게 캔버스 위에 작은 나가기 버튼을 둔다.
+            데스크톱에서는 헤더 BACK 이 이미 있어 CSS 로 숨긴다 */}
+        {!gameOverUI && (
+          <button
+            type="button"
+            className={styles.exitBtn}
+            onClick={onExit}
+            aria-label={play.gameOver.backLabel}
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {gameOverUI && (

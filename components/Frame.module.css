@@ -15,11 +15,26 @@
   );
 }
 
+/* fullBleedBody 페이지(예: 게임 화면) 전용 — min-height 는 "바닥"일 뿐
+   실제 상한(height)이 없으면 내부에 스크롤 영역(.scroll 등)이 있어도
+   그 안에서 스크롤되는 대신 페이지 전체가 늘어나 버린다. 이 화면들만
+   실제 뷰포트 높이로 캡을 씌워, min-height:0 이 적용된 하위 flex 체인이
+   비로소 제대로 "가용 높이 안에서 줄어들며" 내부 스크롤을 만들 수 있게 한다.
+   다른 페이지는 원래대로 문서 자체가 자연스럽게 길어지며 스크롤된다 */
+.fixedHeight {
+  height: 100dvh;
+}
+
 .panel {
   position: relative;
   width: 100%;
   /* 가로도 꽉 채운다. 가독성은 .body 의 내부 폭 제한이 담당 */
   flex: 1 1 auto;
+  /* min-height:0 이 없으면 flex 자식(.body 이하)이 콘텐츠 높이만큼 그냥
+     늘어나 버려서, 내부 스크롤(.scroll 등)이 있는 화면에서 그 내부 스크롤
+     대신 페이지 전체가 스크롤되는 문제가 생긴다 (모바일 가로 방향처럼
+     세로 공간이 좁을 때 특히 두드러짐) */
+  min-height: 0;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -86,6 +101,7 @@
   position: relative;
   z-index: 1;
   flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   max-width: var(--content-max);
   margin-inline: auto;
@@ -105,6 +121,30 @@
   max-width: none;
   padding-left: clamp(10px, 1.4vw, 20px);
   padding-right: clamp(10px, 1.4vw, 20px);
+}
+
+/* ---------- 모바일 전체화면 모드 (예: 인게임 플레이 중) ---------- */
+/* 데스크톱에는 영향 없음 — 좁은 화면에서만 배지/헤더/여백/테두리를 없애고
+   패널이 화면 전체를 그대로 채우도록 한다 */
+
+@media (max-width: 820px) {
+  .page.immersive {
+    padding: 0;
+  }
+
+  .page.immersive .panel {
+    border: 0;
+    border-radius: 0;
+  }
+
+  .page.immersive .badge,
+  .page.immersive .header {
+    display: none;
+  }
+
+  .page.immersive .body {
+    padding: 0;
+  }
 }
 
 /* ---------- 반응형 ---------- */

@@ -32,6 +32,9 @@ npm run build
 
 프레임은 항상 뷰포트를 가득 채우며, 내부 콘텐츠만 `--content-max` 로 폭이 제한됩니다.
 `/play` 처럼 그 제한 없이 패널 폭 전체를 써야 하는 화면은 `<Frame fullBleedBody>` 를 씁니다.
+`fullBleedBody` 는 동시에 `.page` 에 실제 높이(`height:100dvh`)를 씌워, 내부에 자체
+스크롤 영역(예: 인트로 화면)이 있는 페이지에서 그 스크롤이 문서 전체 스크롤로 새는
+문제를 막습니다 — `min-height` 만으로는 상한이 없어 flex 자식들이 그냥 늘어나 버립니다.
 홈 화면의 스타필드처럼 헤더까지 포함해 패널 전체를 채우는 배경은 `<Frame background={...}>` 로 넣습니다.
 
 ## 콘텐츠 수정 — `data/*.json`
@@ -123,15 +126,21 @@ Canvas 2D 로 그리는 두 페이즈 구성 미니게임입니다. 무거운 �
 - **페이즈 1 — 교실 탈출**: 교수님이 칠판을 보는 동안(SAFE)에만 `Space`/탭을
   누른 채로 왼쪽 문까지 이동. 학생 쪽을 볼 때(DANGER) 이동하면 처음부터 다시.
 - **페이즈 2 — 횡스크롤 러닝**: 자동 스크롤, `Space`/탭으로 점프, `↓`/아래로
-  스와이프로 숙이기. 장애물 3종(점프용 · 숙이기용 · 하트) 랜덤 생성, 시간이
-  지날수록 스크롤 속도 상승. 목숨 3개.
+  스와이프로 숙이기. 장애물 3종(점프용 · 숙이기용 · 하트) 랜덤 생성, 목숨 3개.
+  시간이 지날수록(약 40초에 걸쳐) 스크롤 속도가 오르고, 스폰 간격이 좁아지며,
+  일정 확률로 장애물이 바로 이어 붙는 콤보가 나와 갈수록 빡빡해집니다.
 - **게임오버**: 점수 · 최고기록을 캔버스에 직접 그려서 `▸ CAPTURE RECORD` 버튼으로
   `canvas.toDataURL()` 캡처 이미지를 다운로드할 수 있습니다(서버 저장 없음).
 - **최고기록**: `localStorage` 키 `gdevfc_woowang_best` 에 로컬로만 저장됩니다.
   전체 공개 리더보드는 없습니다.
-- **모바일**: 세로로 들면 `components/play/RotateGate.tsx` 가 "가로모드로
-  돌려주세요" 안내로 콘텐츠를 대체합니다(`@media (orientation: portrait)`).
+- **모바일 가로모드 안내**: 세로로 들면 `components/play/RotateGate.tsx` 가
+  "가로모드로 돌려주세요" 안내로 콘텐츠를 대체합니다(`@media (orientation: portrait)`).
   Screen Orientation Lock API 는 iOS Safari 가 지원하지 않아 쓰지 않았습니다.
+- **모바일 전체화면**: 게임이 시작되면(`started === true`) `<Frame immersiveMobile>`
+  이 좁은 화면(≤820px)에서만 배지·헤더·여백·테두리를 없애 캔버스가 뷰포트를
+  그대로 채웁니다. 헤더의 BACK 링크가 사라지므로 캔버스 좌상단에 별도의
+  `✕` 나가기 버튼(`.exitBtn`, 같은 breakpoint 에서만 보임)을 둡니다.
+  데스크톱은 전혀 영향받지 않습니다.
 
 물리감(점프 높이, 장애물 간격, 난이도 상승 속도)은 `components/play/WoowangGame.tsx`
 상단의 상수(`JUMP_V`, `GRAVITY`, `BASE_SPEED`, `ACCEL` 등)로 1차로 대략 맞춰둔

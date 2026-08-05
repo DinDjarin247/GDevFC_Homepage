@@ -10,6 +10,7 @@
 
 /* 화면(패널) 을 최대한 채우고, 종횡비는 안쪽 canvas 가 레터박스로 유지한다 */
 .canvasBox {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
@@ -20,6 +21,33 @@
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--bg);
+}
+
+/* 모바일 전체화면 모드에서 헤더의 BACK 링크를 대신하는 나가기 버튼.
+   데스크톱은 헤더 BACK 이 이미 있으니 숨긴다 */
+.exitBtn {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  .exitBtn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid rgba(232, 232, 232, 0.4);
+    background: rgba(11, 11, 11, 0.55);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+  }
 }
 
 .canvas {
