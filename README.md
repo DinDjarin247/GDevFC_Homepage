@@ -28,7 +28,7 @@ npm run build
 | `/about` | ABOUT | 매니페스토 히어로 · SEASON 1 · HISTORY · ACTIVITIES · CONTACT |
 | `/showcase` | SHOWCASE | 프로젝트 슬롯 6칸 (← → 이동, 스와이프) |
 | `/join` | JOIN THE PARTY | RPG 캐릭터 생성 컨셉 지원 폼 (실시간 카드 미리보기) |
-| `/play` | PLAY | "달려라 우왕이" 미니게임 — 교실 탈출 + 횡스크롤 러닝 |
+| `/play` | PLAY | "달려라 우왕이" 미니게임 — 교실 탈출 + 횡스크롤 러닝 + 공개 오락실 랭킹 |
 | `/gallery` | GALLERY | 회원 전용 갤러리 — 여러 장 업로드, 목록은 대표사진만, 클릭 시 상세 페이지에서 전체 스크롤 |
 | `/board` | BOARD | 회원 전용 게시판 — 카테고리(자유·공지·정보공유·프로젝트 구인), 사진/파일 첨부, 댓글 |
 
@@ -188,8 +188,14 @@ Canvas 2D 로 그리는 두 페이즈 구성 미니게임입니다. 무거운 �
   일정 확률로 장애물이 바로 이어 붙는 콤보가 나와 갈수록 빡빡해집니다.
 - **게임오버**: 점수 · 최고기록을 캔버스에 직접 그려서 `▸ CAPTURE RECORD` 버튼으로
   `canvas.toDataURL()` 캡처 이미지를 다운로드할 수 있습니다(서버 저장 없음).
-- **최고기록**: `localStorage` 키 `gdevfc_woowang_best` 에 로컬로만 저장됩니다.
-  전체 공개 리더보드는 없습니다.
+- **개인 최고기록**: `localStorage` 키 `gdevfc_woowang_best` 에 로컬로만 저장되고,
+  타이틀 화면 캡처와 무관하게 기기별로 별도 관리됩니다.
+- **공개 오락실 랭킹**: 게임오버 화면에서 이름만 입력하면(로그인 불필요) `arcade_scores`
+  테이블(Supabase, 공개 select/insert RLS)에 기록이 남습니다. `components/play/ScoreSubmit.tsx`
+  가 등록 폼 + 등록 직후 TOP 10을 보여주고, `components/play/Leaderboard.tsx`(재사용 컴포넌트)가
+  인트로 화면에도 TOP 5를 상시 노출합니다. 이 테이블만 다른 회원 전용 테이블들과 달리
+  `to authenticated` 제한 없이 누구나 읽고 쓸 수 있게 열어뒀습니다 — 옛날 오락실 하이스코어
+  방식이라 악의적 스팸에 대한 서버측 방지책은 없습니다(이름 1~12자, 점수 0~999999 체크 제약만 존재).
 - **모바일 가로모드 안내**: 세로로 들면 `components/play/RotateGate.tsx` 가
   "가로모드로 돌려주세요" 안내로 콘텐츠를 대체합니다(`@media (orientation: portrait)`).
   Screen Orientation Lock API 는 iOS Safari 가 지원하지 않아 쓰지 않았습니다.

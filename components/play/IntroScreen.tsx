@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import play from '@/data/play.json';
+import Leaderboard from './Leaderboard';
 import styles from './IntroScreen.module.css';
 
 type IntroScreenProps = {
@@ -62,6 +63,11 @@ export default function IntroScreen({ onStart }: IntroScreenProps) {
               </div>
             ))}
           </div>
+        </section>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>{play.intro.rankingHeading}</h2>
+          <Leaderboard limit={5} />
         </section>
       </div>
 

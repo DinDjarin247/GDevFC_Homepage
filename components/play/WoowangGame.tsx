@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import play from '@/data/play.json';
+import ScoreSubmit from './ScoreSubmit';
 import styles from './WoowangGame.module.css';
 
 const VIRTUAL_W = 320;
@@ -161,6 +162,7 @@ type WoowangGameProps = {
 export default function WoowangGame({ onExit }: WoowangGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameOverUI, setGameOverUI] = useState(false);
+  const [scoreForUI, setScoreForUI] = useState(0);
   const retryRef = useRef<() => void>(() => {});
   const captureRef = useRef<() => void>(() => {});
 
@@ -286,6 +288,7 @@ export default function WoowangGame({ onExit }: WoowangGameProps) {
         bestScore = finalScore;
         localStorage.setItem(BEST_KEY, String(bestScore));
       }
+      setScoreForUI(finalScore);
       setGameOverUI(true);
     }
 
@@ -682,6 +685,7 @@ export default function WoowangGame({ onExit }: WoowangGameProps) {
 
       {gameOverUI && (
         <div className={styles.overActions}>
+          <ScoreSubmit score={scoreForUI} />
           <button type="button" className={styles.capture} onClick={() => captureRef.current()}>
             <span className={styles.caret} aria-hidden="true">
               ▸
