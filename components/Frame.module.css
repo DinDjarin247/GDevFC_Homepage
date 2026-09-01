@@ -84,6 +84,14 @@
   white-space: nowrap;
 }
 
+/* 우측 상단, 배지처럼 테두리에 걸쳐 있는 로그인/로그아웃 위젯 — 모든 화면 공통 */
+.authCorner {
+  position: absolute;
+  top: -11px;
+  right: clamp(24px, 2.2vw, 40px);
+  z-index: 3;
+}
+
 .header {
   position: relative;
   z-index: 1;
@@ -138,6 +146,7 @@
   }
 
   .page.immersive .badge,
+  .page.immersive .authCorner,
   .page.immersive .header {
     display: none;
   }
@@ -158,6 +167,10 @@
     left: 18px;
     font-size: 10px;
     padding: 4px 8px;
+  }
+
+  .authCorner {
+    right: 18px;
   }
 
   .header {

@@ -1,0 +1,76 @@
+.loginBtn {
+  background: var(--lime);
+  color: #0b0b0b;
+  border: 0;
+  border-radius: var(--radius);
+  padding: clamp(5px, 0.4vw, 7px) clamp(10px, 0.8vw, 14px);
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: clamp(10px, 0.6vw, 12px);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    filter 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.loginBtn:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 14px rgba(201, 247, 61, 0.32);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(5px, 0.35vw, 6px) clamp(8px, 0.6vw, 10px);
+  font-family: var(--font-mono);
+  font-size: clamp(10px, 0.6vw, 12px);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 6px var(--lime-soft);
+}
+
+.name {
+  color: var(--lime);
+}
+
+.logout {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin-left: 2px;
+  cursor: pointer;
+  color: var(--dim);
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+}
+
+.logout:hover {
+  color: var(--magenta);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(6, 5, 10, 0.8);
+}

@@ -1,0 +1,10 @@
+/* 게시판 배경 — Frame 의 bgLayer 를 패널 전체(헤더 포함)에 채운다.
+   저해상도 가상 캔버스를 CSS 로 늘리는 방식이라 크기에 관계없이 반응형이다.
+   글/댓글 카드는 전부 불투명 배경(var(--panel-2))이라 가독성에는 영향이 없다 */
+.bg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  opacity: 0.42;
+}

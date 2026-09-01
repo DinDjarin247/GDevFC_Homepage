@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import GlobalAuthCorner from './GlobalAuthCorner';
 import styles from './Frame.module.css';
 
 type FrameProps = {
@@ -38,6 +39,9 @@ export default function Frame({
       <div className={styles.panel}>
         {background && <div className={styles.bgLayer}>{background}</div>}
         <span className={styles.badge}>{badge}</span>
+        <div className={styles.authCorner}>
+          <GlobalAuthCorner />
+        </div>
         <div className={styles.header}>{header}</div>
         <div className={`${styles.body} ${fullBleedBody ? styles.bodyFullBleed : ''}`}>
           {children}

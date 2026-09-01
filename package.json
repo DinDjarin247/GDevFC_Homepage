@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "npx serve out",
-    "lint": "next lint"
+    "lint": "next lint",
+    "gen:members": "node scripts/generate-members.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
     "next": "^15.5.22",
     "react": "19.1.1",
     "react-dom": "19.1.1"
@@ -17,6 +19,7 @@
     "@types/node": "22.10.2",
     "@types/react": "19.0.2",
     "@types/react-dom": "19.0.2",
+    "dotenv": "^17.4.2",
     "typescript": "5.7.2"
   }
 }

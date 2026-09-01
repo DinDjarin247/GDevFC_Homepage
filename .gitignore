@@ -9,5 +9,8 @@ Thumbs.db
 .env*.local
 .vercel
 
+# 회원 계정 생성 스크립트 결과물 (코드네임/비밀번호 평문) — 절대 커밋 금지
+scripts/output/
+
 # 머신별 로컬 설정 (launch.json 은 공유)
 .claude/settings.local.json

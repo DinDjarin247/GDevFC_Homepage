@@ -42,6 +42,12 @@ const PALETTE: Record<string, string> = {
   J: '#5c1b2a', // 재킷 그림자
   x: '#f2a6b0', // 볼터치
   // 잠긴 슬롯 실루엣은 기존 'm'(보석 보라) 을 재사용한다
+  // 카메라(갤러리) / 터미널(게시판) 아이콘 전용
+  d: '#4a4a4a', // 밝은 그레이 (뷰파인더)
+  D: '#2c2c2c', // 어두운 그레이 (본체)
+  I: '#1d5a73', // 렌즈 링
+  i: '#8fe3ff', // 렌즈 하이라이트
+  G: '#6dfca0', // 터미널 커서 그린
 };
 
 /** 수동으로 16글자를 세는 실수를 막기 위한 그리드 빌더 (인덱스 → 문자) */
@@ -191,12 +197,66 @@ const MYSTERY = [
   buildRow(W, {}),
 ];
 
+/** 갤러리 모드용 — 뷰파인더가 달린 레트로 카메라 */
+const CAMERA = [
+  '................',
+  '................',
+  '................',
+  '.......kk.......',
+  '......kddk......',
+  '....kkkkkkkk....',
+  '..kDDDDDDDDDDk..',
+  '..kDDDDDDDDDDk..',
+  '..kDDIIIIIIDDk..',
+  '..kDDIiiiiIDDk..',
+  '..kDDIwiiiIDDk..',
+  '..kDDIiiiiIDDk..',
+  '..kDDIIIIIIDDk..',
+  '..kDDDDDDDDDDk..',
+  '..kDDDDDDDDDDk..',
+  '..kkkkkkkkkkkk..',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+];
+
+/** 게시판 모드용 — ">_" 프롬프트가 떠 있는 CRT 모니터 */
+const TERMINAL = [
+  '................',
+  '................',
+  '................',
+  '................',
+  '....kkkkkkkk....',
+  '...kDDDDDDDDk...',
+  '...kDDDDDDDDk...',
+  '...kDGDDDDDDk...',
+  '...kDGGDDDDDk...',
+  '...kDGDDGGDDk...',
+  '...kDDDDDDDDk...',
+  '...kDDDDDDDDk...',
+  '....kkkkkkkk....',
+  '......kkkk......',
+  '......kAAk......',
+  '.....kkkkkk.....',
+  '.....kAAAAk.....',
+  '.....kkkkkk.....',
+  '................',
+  '................',
+  '................',
+  '................',
+];
+
 const SPRITES: Record<string, string[]> = {
   knight: KNIGHT,
   mage: MAGE,
   archer: ARCHER,
   woowang: WOOWANG,
   mystery: MYSTERY,
+  camera: CAMERA,
+  terminal: TERMINAL,
 };
 
 type SpriteProps = {

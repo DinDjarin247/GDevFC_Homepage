@@ -29,6 +29,8 @@ npm run build
 | `/showcase` | SHOWCASE | 프로젝트 슬롯 6칸 (← → 이동, 스와이프) |
 | `/join` | JOIN THE PARTY | RPG 캐릭터 생성 컨셉 지원 폼 (실시간 카드 미리보기) |
 | `/play` | PLAY | "달려라 우왕이" 미니게임 — 교실 탈출 + 횡스크롤 러닝 |
+| `/gallery` | GALLERY | 회원 전용 이미지 갤러리 (업로드 · 삭제) — 로그인 필요 |
+| `/board` | BOARD | 회원 전용 게시판 (글/댓글 작성 · 삭제) — 로그인 필요 |
 
 프레임은 항상 뷰포트를 가득 채우며, 내부 콘텐츠만 `--content-max` 로 폭이 제한됩니다.
 `/play` 처럼 그 제한 없이 패널 폭 전체를 써야 하는 화면은 `<Frame fullBleedBody>` 를 씁니다.
@@ -36,6 +38,58 @@ npm run build
 스크롤 영역(예: 인트로 화면)이 있는 페이지에서 그 스크롤이 문서 전체 스크롤로 새는
 문제를 막습니다 — `min-height` 만으로는 상한이 없어 flex 자식들이 그냥 늘어나 버립니다.
 홈 화면의 스타필드처럼 헤더까지 포함해 패널 전체를 채우는 배경은 `<Frame background={...}>` 로 넣습니다.
+
+## 회원 로그인 · 갤러리 · 게시판 (Supabase)
+
+`/gallery`, `/board` 는 회원가입 없이 운영자가 미리 발급한 "요원 코드네임" 계정(예: `PIXEL-07`)으로만
+접근할 수 있는 회원 전용 화면입니다. 정적 export(`output: 'export'`)는 그대로 유지하고, 브라우저에서
+[Supabase](https://supabase.com)의 Auth · Postgres · Storage API를 직접 호출하는 구조입니다 — Next.js
+서버가 없어도 동작합니다. 실제 접근 제어는 페이지 라우트가 아니라 Supabase Row Level Security가
+담당하므로 (`supabase/schema.sql`), 로그인하지 않으면 어떤 데이터 쿼리도 빈 값이 돌아옵니다.
+
+### 1. Supabase 프로젝트 준비
+
+1. [supabase.com](https://supabase.com)에서 무료 프로젝트를 생성합니다.
+2. **SQL Editor**에서 `supabase/schema.sql` 전체 내용을 실행합니다 (테이블 + RLS 정책).
+3. **Storage**에서 `gallery` 버킷을 **Private**으로 생성합니다.
+4. **Project Settings → API**에서 값을 확인합니다.
+
+### 2. 환경변수
+
+`.env.local` (git에 커밋되지 않음, 브라우저에 노출되어도 안전한 anon key만 사용):
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+```
+
+Vercel에 배포한다면 **Project Settings → Environment Variables**에도 동일하게 등록해야
+정적 빌드에 값이 반영됩니다.
+
+`.env.script.local` (계정 생성 스크립트 전용, **service_role key는 절대 커밋/공유 금지**):
+
+```bash
+SUPABASE_URL=https://xxxxxxxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+```
+
+### 3. 회원 100계정 일괄 생성
+
+```bash
+npm run gen:members
+```
+
+- 첫 계정은 항상 `CHESS-01` (마스터 어드민 — 다른 회원의 글/댓글/업로드도 삭제 가능).
+- 나머지는 게임/게임업계 용어 기반 코드네임(`PIXEL-07`, `RESPAWN-19`, `GLITCH-42` 등)으로 최대 99개 생성.
+- 결과는 `scripts/output/members-credentials.csv` (codename, password, role)로 저장됩니다 —
+  이 파일은 `.gitignore`에 포함되어 있으니, 동아리원에게 개별 배포한 뒤 로컬에서 지우세요.
+- 이미 존재하는 코드네임은 건너뛰므로 재실행해도 안전합니다 (인원이 늘면 다시 실행).
+
+### 4. 로그인 방식
+
+로그인 폼은 "코드네임 + 비밀번호"만 받고, 내부적으로 `codename@members.gdevfc.local` 형태의
+합성 이메일로 Supabase Auth에 로그인합니다 (`lib/auth.ts`, `components/AuthProvider.tsx`).
+세션은 Supabase가 브라우저 localStorage에 자동으로 저장·갱신합니다.
 
 ## 콘텐츠 수정 — `data/*.json`
 

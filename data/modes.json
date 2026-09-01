@@ -40,24 +40,22 @@
       "alt": "우왕이 캐릭터 - 미니게임 모드"
     },
     {
-      "id": "locked-1",
+      "id": "gallery",
       "no": "05",
-      "label": "???",
-      "href": null,
+      "label": "갤러리",
+      "href": "/gallery",
       "image": null,
-      "sprite": "mystery",
-      "alt": "잠긴 모드",
-      "locked": true
+      "sprite": "camera",
+      "alt": "카메라 - 갤러리 모드"
     },
     {
-      "id": "locked-2",
+      "id": "board",
       "no": "06",
-      "label": "???",
-      "href": null,
+      "label": "게시판",
+      "href": "/board",
       "image": null,
-      "sprite": "mystery",
-      "alt": "잠긴 모드",
-      "locked": true
+      "sprite": "terminal",
+      "alt": "터미널 - 게시판 모드"
     }
   ]
 }
