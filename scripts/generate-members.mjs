@@ -16,6 +16,13 @@ import { fileURLToPath } from 'node:url';
 
 loadEnv({ path: '.env.script.local' });
 
+// @supabase/supabase-js는 생성자에서 항상 RealtimeClient를 초기화하는데, Node 20 이하는
+// 전역 WebSocket이 없어 그 초기화만으로 즉시 예외를 던진다. 이 스크립트는 realtime
+// 채널을 전혀 쓰지 않으므로, 검사를 통과시킬 더미 클래스만 등록해준다.
+if (typeof globalThis.WebSocket === 'undefined') {
+  globalThis.WebSocket = class {};
+}
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
