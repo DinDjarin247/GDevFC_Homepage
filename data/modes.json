@@ -31,13 +31,13 @@
       "alt": "엘프 아처 캐릭터 - 지원하기 모드"
     },
     {
-      "id": "play",
+      "id": "board",
       "no": "04",
-      "label": "달려라 우왕이",
-      "href": "/play",
+      "label": "게시판",
+      "href": "/board",
       "image": null,
-      "sprite": "woowang",
-      "alt": "우왕이 캐릭터 - 미니게임 모드"
+      "sprite": "rogue",
+      "alt": "도적 캐릭터 - 게시판 모드"
     },
     {
       "id": "gallery",
@@ -45,17 +45,17 @@
       "label": "갤러리",
       "href": "/gallery",
       "image": null,
-      "sprite": "camera",
-      "alt": "카메라 - 갤러리 모드"
+      "sprite": "bard",
+      "alt": "바드 캐릭터 - 갤러리 모드"
     },
     {
-      "id": "board",
+      "id": "play",
       "no": "06",
-      "label": "게시판",
-      "href": "/board",
+      "label": "달려라 우왕이",
+      "href": "/play",
       "image": null,
-      "sprite": "terminal",
-      "alt": "터미널 - 게시판 모드"
+      "sprite": "woowang",
+      "alt": "우왕이 캐릭터 - 미니게임 모드"
     }
   ]
 }

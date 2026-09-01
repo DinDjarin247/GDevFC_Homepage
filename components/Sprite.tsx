@@ -42,12 +42,12 @@ const PALETTE: Record<string, string> = {
   J: '#5c1b2a', // 재킷 그림자
   x: '#f2a6b0', // 볼터치
   // 잠긴 슬롯 실루엣은 기존 'm'(보석 보라) 을 재사용한다
-  // 카메라(갤러리) / 터미널(게시판) 아이콘 전용
-  d: '#4a4a4a', // 밝은 그레이 (뷰파인더)
-  D: '#2c2c2c', // 어두운 그레이 (본체)
-  I: '#1d5a73', // 렌즈 링
-  i: '#8fe3ff', // 렌즈 하이라이트
-  G: '#6dfca0', // 터미널 커서 그린
+  // 바드(갤러리) 전용
+  u: '#7a3b5e', // 챙 넓은 모자(보라)
+  U: '#4d2340', // 모자 그림자
+  // 도적(게시판) 전용
+  B: '#2a2a30', // 후드/망토(어두운 남보라)
+  L: '#1a1a1f', // 망토 그림자
 };
 
 /** 수동으로 16글자를 세는 실수를 막기 위한 그리드 빌더 (인덱스 → 문자) */
@@ -197,56 +197,56 @@ const MYSTERY = [
   buildRow(W, {}),
 ];
 
-/** 갤러리 모드용 — 뷰파인더가 달린 레트로 카메라 */
-const CAMERA = [
-  '................',
-  '................',
-  '................',
-  '.......kk.......',
-  '......kddk......',
-  '....kkkkkkkk....',
-  '..kDDDDDDDDDDk..',
-  '..kDDDDDDDDDDk..',
-  '..kDDIIIIIIDDk..',
-  '..kDDIiiiiIDDk..',
-  '..kDDIwiiiIDDk..',
-  '..kDDIiiiiIDDk..',
-  '..kDDIIIIIIDDk..',
-  '..kDDDDDDDDDDk..',
-  '..kDDDDDDDDDDk..',
-  '..kkkkkkkkkkkk..',
-  '................',
-  '................',
-  '................',
-  '................',
-  '................',
-  '................',
+/** 갤러리 모드용 — 챙 넓은 모자에 깃털, 류트를 든 바드(중세 음악가) */
+const BARD = [
+  buildRow(W, {}),
+  buildRow(W, { 12: 'h' }),
+  buildRow(W, { ...markRange(5, 10, 'u'), 11: 'H' }),
+  buildRow(W, markRange(5, 10, 'u')),
+  buildRow(W, markRange(4, 11, 'U')),
+  buildRow(W, { 4: 'r', ...markRange(5, 10, 's'), 11: 'r' }),
+  buildRow(W, { 4: 'r', 5: 's', 6: 'e', 7: 's', 8: 's', 9: 'e', 10: 's', 11: 'r' }),
+  buildRow(W, markRange(5, 10, 'S')),
+  buildRow(W, markRange(4, 11, 'n')),
+  buildRow(W, { ...markRange(3, 12, 'n'), 13: 'O' }),
+  buildRow(W, { ...markRange(3, 12, 'n'), 13: 'O', 14: 'v' }),
+  buildRow(W, { ...markRange(3, 10, 'n'), ...markRange(11, 15, 'o') }),
+  buildRow(W, { ...markRange(3, 10, 'o'), 11: 'o', 12: 'k', 13: 'k', 14: 'o', 15: 'o' }),
+  buildRow(W, { ...markRange(3, 10, 'n'), ...markRange(11, 15, 'o') }),
+  buildRow(W, markRange(3, 12, 'n')),
+  buildRow(W, markRange(3, 12, 'n')),
+  buildRow(W, { ...markRange(4, 7, 'N'), ...markRange(8, 11, 'n') }),
+  buildRow(W, { ...markRange(4, 7, 'N'), ...markRange(8, 11, 'n') }),
+  buildRow(W, { ...markRange(4, 7, 'N'), ...markRange(8, 11, 'n') }),
+  buildRow(W, { 4: 'k', 5: 'k', 10: 'k', 11: 'k' }),
+  buildRow(W, {}),
+  buildRow(W, {}),
 ];
 
-/** 게시판 모드용 — ">_" 프롬프트가 떠 있는 CRT 모니터 */
-const TERMINAL = [
-  '................',
-  '................',
-  '................',
-  '................',
-  '....kkkkkkkk....',
-  '...kDDDDDDDDk...',
-  '...kDDDDDDDDk...',
-  '...kDGDDDDDDk...',
-  '...kDGGDDDDDk...',
-  '...kDGDDGGDDk...',
-  '...kDDDDDDDDk...',
-  '...kDDDDDDDDk...',
-  '....kkkkkkkk....',
-  '......kkkk......',
-  '......kAAk......',
-  '.....kkkkkk.....',
-  '.....kAAAAk.....',
-  '.....kkkkkk.....',
-  '................',
-  '................',
-  '................',
-  '................',
+/** 게시판 모드용 — 후드를 눌러쓰고 단검을 찬 도적. 눈만 어둠 속에서 빛난다 */
+const ROGUE = [
+  buildRow(W, {}),
+  buildRow(W, markRange(6, 9, 'B')),
+  buildRow(W, markRange(5, 10, 'B')),
+  buildRow(W, markRange(4, 11, 'B')),
+  buildRow(W, { ...markRange(4, 11, 'B'), 6: 'k', 9: 'k' }),
+  buildRow(W, { ...markRange(4, 11, 'L'), 6: 'e', 9: 'e' }),
+  buildRow(W, markRange(4, 11, 'L')),
+  buildRow(W, markRange(3, 12, 'B')),
+  buildRow(W, { ...markRange(3, 12, 'B'), 13: 'o' }),
+  buildRow(W, { ...markRange(3, 12, 'B'), 13: 'O', 14: 'w' }),
+  buildRow(W, { ...markRange(3, 12, 'B'), 14: 'w', 15: 'w' }),
+  buildRow(W, markRange(3, 12, 'B')),
+  buildRow(W, markRange(3, 12, 'L')),
+  buildRow(W, markRange(3, 12, 'B')),
+  buildRow(W, markRange(3, 12, 'B')),
+  buildRow(W, markRange(4, 11, 'B')),
+  buildRow(W, { ...markRange(4, 6, 'L'), ...markRange(9, 11, 'L') }),
+  buildRow(W, { ...markRange(4, 6, 'L'), ...markRange(9, 11, 'L') }),
+  buildRow(W, { ...markRange(4, 6, 'L'), ...markRange(9, 11, 'L') }),
+  buildRow(W, { 4: 'k', 5: 'k', 10: 'k', 11: 'k' }),
+  buildRow(W, {}),
+  buildRow(W, {}),
 ];
 
 const SPRITES: Record<string, string[]> = {
@@ -255,8 +255,8 @@ const SPRITES: Record<string, string[]> = {
   archer: ARCHER,
   woowang: WOOWANG,
   mystery: MYSTERY,
-  camera: CAMERA,
-  terminal: TERMINAL,
+  bard: BARD,
+  rogue: ROGUE,
 };
 
 type SpriteProps = {
