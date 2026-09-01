@@ -29,8 +29,8 @@ npm run build
 | `/showcase` | SHOWCASE | 프로젝트 슬롯 6칸 (← → 이동, 스와이프) |
 | `/join` | JOIN THE PARTY | RPG 캐릭터 생성 컨셉 지원 폼 (실시간 카드 미리보기) |
 | `/play` | PLAY | "달려라 우왕이" 미니게임 — 교실 탈출 + 횡스크롤 러닝 |
-| `/gallery` | GALLERY | 회원 전용 이미지 갤러리 (업로드 · 삭제) — 로그인 필요 |
-| `/board` | BOARD | 회원 전용 게시판 (글/댓글 작성 · 삭제) — 로그인 필요 |
+| `/gallery` | GALLERY | 회원 전용 갤러리 — 여러 장 업로드, 목록은 대표사진만, 클릭 시 상세 페이지에서 전체 스크롤 |
+| `/board` | BOARD | 회원 전용 게시판 — 카테고리(자유·공지·정보공유·프로젝트 구인), 사진/파일 첨부, 댓글 |
 
 프레임은 항상 뷰포트를 가득 채우며, 내부 콘텐츠만 `--content-max` 로 폭이 제한됩니다.
 `/play` 처럼 그 제한 없이 패널 폭 전체를 써야 하는 화면은 `<Frame fullBleedBody>` 를 씁니다.
@@ -51,8 +51,11 @@ npm run build
 
 1. [supabase.com](https://supabase.com)에서 무료 프로젝트를 생성합니다.
 2. **SQL Editor**에서 `supabase/schema.sql` 전체 내용을 실행합니다 (테이블 + RLS 정책).
-3. **Storage**에서 `gallery` 버킷을 **Private**으로 생성합니다.
-4. **Project Settings → API**에서 값을 확인합니다.
+3. 이어서 `supabase/migrations/` 폴더의 파일들을 **번호 순서대로** SQL Editor에서 실행합니다
+   (게시판 카테고리/첨부파일, 갤러리 다중 이미지, `board-attachments` 버킷을 추가합니다 —
+   `gallery` 버킷과 달리 이 버킷은 마이그레이션 SQL이 자동으로 만듭니다).
+4. **Storage**에서 `gallery` 버킷을 **Private**으로 생성합니다 (`board-attachments`는 3번에서 이미 생성됨).
+5. **Project Settings → API**에서 값을 확인합니다.
 
 ### 2. 환경변수
 

@@ -6,6 +6,53 @@
   padding: 4px 0 6px;
 }
 
+/* ---------- 카테고리 탭 ---------- */
+
+.categoryTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab {
+  background: none;
+  border: 1px solid #565656;
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.tab:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.tab.tabOn {
+  border-color: var(--lime);
+  background: var(--lime);
+  color: #0b0b0b;
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--lime-soft);
+  border-radius: var(--radius);
+  padding: 2px 7px;
+  margin-right: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--lime);
+  vertical-align: middle;
+}
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -42,7 +89,8 @@
 }
 
 .input,
-.textarea {
+.textarea,
+.select {
   width: 100%;
   background: var(--field);
   border: 1px solid #565656;
@@ -52,15 +100,84 @@
   color: var(--text);
 }
 
+.select {
+  cursor: pointer;
+}
+
 .textarea {
   min-height: 140px;
   resize: vertical;
 }
 
 .input:focus,
-.textarea:focus {
+.textarea:focus,
+.select:focus {
   outline: none;
   border-color: var(--lime);
+}
+
+/* ---------- 첨부파일 ---------- */
+
+.fileField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fileLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--dim);
+}
+
+.fileHint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  word-break: break-all;
+}
+
+.postImages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.postImage {
+  width: 100%;
+  max-width: 520px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+}
+
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text);
+  width: fit-content;
+}
+
+.fileItem:hover {
+  border-color: var(--lime-soft);
+}
+
+.fileSize {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--dim);
 }
 
 .composeActions {

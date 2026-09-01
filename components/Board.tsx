@@ -1,14 +1,33 @@
 'use client';
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/useAuth';
 import styles from './Board.module.css';
 
+const ATTACHMENTS_BUCKET = 'board-attachments';
+const SIGNED_URL_TTL = 60 * 60; // 1시간
+const MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_ATTACHMENTS = 5;
+
+const CATEGORIES = [
+  { id: 'free', label: '자유게시판' },
+  { id: 'notice', label: '공지' },
+  { id: 'info', label: '정보공유' },
+  { id: 'recruit', label: '프로젝트 구인' },
+] as const;
+
+type Category = (typeof CATEGORIES)[number]['id'];
+
+function categoryLabel(id: string) {
+  return CATEGORIES.find((c) => c.id === id)?.label ?? id;
+}
+
 type PostRow = {
   id: string;
   title: string;
+  category: Category;
   author_id: string;
   created_at: string;
   profiles: { codename: string } | null;
@@ -19,6 +38,7 @@ type PostDetail = {
   id: string;
   title: string;
   content: string;
+  category: Category;
   author_id: string;
   created_at: string;
   updated_at: string;
@@ -33,6 +53,16 @@ type CommentRow = {
   profiles: { codename: string } | null;
 };
 
+type AttachmentRow = {
+  id: string;
+  file_path: string;
+  file_name: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+  sort_order: number;
+  url: string | null;
+};
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('ko-KR', {
     year: 'numeric',
@@ -41,6 +71,41 @@ function formatDate(iso: string) {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+function formatSize(bytes: number | null) {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
+async function uploadAttachments(files: File[], uid: string, postId: string) {
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
+    const path = `${uid}/${postId}/${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from(ATTACHMENTS_BUCKET)
+      .upload(path, file);
+    if (uploadError) throw uploadError;
+    const { error: insertError } = await supabase.from('post_attachments').insert({
+      post_id: postId,
+      file_path: path,
+      file_name: file.name,
+      mime_type: file.type || null,
+      size_bytes: file.size,
+      sort_order: i,
+    });
+    if (insertError) throw insertError;
+  }
+}
+
+function validateFiles(files: File[]): string | null {
+  if (files.length > MAX_ATTACHMENTS) return `첨부파일은 최대 ${MAX_ATTACHMENTS}개까지 가능합니다.`;
+  const tooBig = files.find((f) => f.size > MAX_ATTACHMENT_SIZE);
+  if (tooBig) return `${tooBig.name} 파일이 5MB를 초과합니다.`;
+  return null;
 }
 
 export default function Board() {
@@ -63,17 +128,21 @@ function BoardList({
   const { profile } = useAuth();
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<Category | 'all'>('all');
   const [composing, setComposing] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [category, setCategory] = useState<Category>('free');
+  const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
       .from('posts')
-      .select('id, title, author_id, created_at, profiles(codename), comments(count)')
+      .select('id, title, category, author_id, created_at, profiles(codename), comments(count)')
       .order('created_at', { ascending: false });
     setPosts((data as unknown as PostRow[]) ?? []);
     setLoading(false);
@@ -83,6 +152,16 @@ function BoardList({
     if (sessionReady) load();
   }, [sessionReady, load]);
 
+  const visiblePosts = filter === 'all' ? posts : posts.filter((p) => p.category === filter);
+
+  function resetCompose() {
+    setTitle('');
+    setContent('');
+    setCategory('free');
+    setFiles([]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!profile) return;
@@ -90,28 +169,63 @@ function BoardList({
       setError('제목과 내용을 입력하세요.');
       return;
     }
+    const fileError = validateFiles(files);
+    if (fileError) {
+      setError(fileError);
+      return;
+    }
+
     setError('');
     setSubmitting(true);
-    const { error: insertError } = await supabase.from('posts').insert({
-      author_id: profile.id,
-      title: title.trim(),
-      content: content.trim(),
-    });
-    setSubmitting(false);
-    if (insertError) {
+
+    const { data: inserted, error: insertError } = await supabase
+      .from('posts')
+      .insert({ author_id: profile.id, title: title.trim(), content: content.trim(), category })
+      .select('id')
+      .single();
+
+    if (insertError || !inserted) {
+      setSubmitting(false);
       setError('글 등록에 실패했습니다.');
       return;
     }
-    setTitle('');
-    setContent('');
+
+    try {
+      if (files.length > 0) await uploadAttachments(files, profile.id, inserted.id);
+    } catch {
+      setError('글은 등록됐지만 첨부파일 업로드에 실패했습니다.');
+    }
+
+    setSubmitting(false);
+    resetCompose();
     setComposing(false);
     await load();
   }
 
   return (
     <div className={styles.wrap}>
+      <div className={styles.categoryTabs}>
+        <button
+          type="button"
+          className={`${styles.tab} ${filter === 'all' ? styles.tabOn : ''}`}
+          onClick={() => setFilter('all')}
+        >
+          전체
+        </button>
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            className={`${styles.tab} ${filter === c.id ? styles.tabOn : ''}`}
+            onClick={() => setFilter(c.id)}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
       <div className={styles.toolbar}>
-        <span className={styles.commentsTitle}>▸ ALL POSTS</span>
+        <span className={styles.commentsTitle}>▸ {filter === 'all' ? 'ALL POSTS' : categoryLabel(filter).toUpperCase()}</span>
         <button
           type="button"
           className={styles.newBtn}
@@ -123,6 +237,17 @@ function BoardList({
 
       {composing && (
         <form className={styles.composeForm} onSubmit={onSubmit}>
+          <select
+            className={styles.select}
+            value={category}
+            onChange={(e) => setCategory(e.target.value as Category)}
+          >
+            {CATEGORIES.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
           <input
             className={styles.input}
             value={title}
@@ -135,6 +260,22 @@ function BoardList({
             onChange={(e) => setContent(e.target.value)}
             placeholder="내용을 입력하세요."
           />
+          <div className={styles.fileField}>
+            <label className={styles.fileLabel}>
+              첨부파일 (선택, 최대 {MAX_ATTACHMENTS}개 · 파일당 5MB)
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+            />
+            {files.length > 0 && (
+              <p className={styles.fileHint}>
+                {files.map((f) => f.name).join(', ')}
+              </p>
+            )}
+          </div>
           {error && <p className={styles.error}>{error}</p>}
           <div className={styles.composeActions}>
             <button type="submit" className={styles.submit} disabled={submitting}>
@@ -143,7 +284,10 @@ function BoardList({
             <button
               type="button"
               className={styles.cancel}
-              onClick={() => setComposing(false)}
+              onClick={() => {
+                resetCompose();
+                setComposing(false);
+              }}
             >
               취소
             </button>
@@ -153,18 +297,21 @@ function BoardList({
 
       {loading ? (
         <p className={styles.empty}>불러오는 중...</p>
-      ) : posts.length === 0 ? (
+      ) : visiblePosts.length === 0 ? (
         <p className={styles.empty}>아직 등록된 글이 없습니다.</p>
       ) : (
         <div className={styles.list}>
-          {posts.map((post) => (
+          {visiblePosts.map((post) => (
             <button
               key={post.id}
               type="button"
               className={styles.row}
               onClick={() => onOpen(post.id)}
             >
-              <span className={styles.rowTitle}>{post.title}</span>
+              <span className={styles.rowTitle}>
+                <span className={styles.categoryBadge}>{categoryLabel(post.category)}</span>
+                {post.title}
+              </span>
               <span className={styles.rowMeta}>
                 {post.profiles?.codename ?? '???'} · {formatDate(post.created_at)} · 댓글{' '}
                 {post.comments?.[0]?.count ?? 0}
@@ -182,6 +329,7 @@ function PostDetailView({ postId }: { postId: string }) {
   const router = useRouter();
 
   const [post, setPost] = useState<PostDetail | null>(null);
+  const [attachments, setAttachments] = useState<AttachmentRow[]>([]);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
@@ -190,25 +338,44 @@ function PostDetailView({ postId }: { postId: string }) {
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
+  const [editCategory, setEditCategory] = useState<Category>('free');
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: postData }, { data: commentData }] = await Promise.all([
+    const [{ data: postData }, { data: attachmentData }, { data: commentData }] = await Promise.all([
       supabase
         .from('posts')
-        .select('id, title, content, author_id, created_at, updated_at, profiles(codename)')
+        .select('id, title, content, category, author_id, created_at, updated_at, profiles(codename)')
         .eq('id', postId)
         .single(),
+      supabase
+        .from('post_attachments')
+        .select('id, file_path, file_name, mime_type, size_bytes, sort_order')
+        .eq('post_id', postId)
+        .order('sort_order', { ascending: true }),
       supabase
         .from('comments')
         .select('id, content, author_id, created_at, profiles(codename)')
         .eq('post_id', postId)
         .order('created_at', { ascending: true }),
     ]);
+
     setPost((postData as unknown as PostDetail) ?? null);
     setComments((commentData as unknown as CommentRow[]) ?? []);
+
+    const rawAttachments = (attachmentData as unknown as AttachmentRow[]) ?? [];
+    const withUrls = await Promise.all(
+      rawAttachments.map(async (a) => {
+        const isImage = a.mime_type?.startsWith('image/');
+        const { data: signed } = await supabase.storage
+          .from(ATTACHMENTS_BUCKET)
+          .createSignedUrl(a.file_path, SIGNED_URL_TTL, isImage ? undefined : { download: a.file_name });
+        return { ...a, url: signed?.signedUrl ?? null };
+      })
+    );
+    setAttachments(withUrls);
     setLoading(false);
   }, [postId]);
 
@@ -217,6 +384,9 @@ function PostDetailView({ postId }: { postId: string }) {
   }, [load]);
 
   async function onDeletePost() {
+    if (attachments.length > 0) {
+      await supabase.storage.from(ATTACHMENTS_BUCKET).remove(attachments.map((a) => a.file_path));
+    }
     await supabase.from('posts').delete().eq('id', postId);
     router.push('/board');
   }
@@ -225,6 +395,7 @@ function PostDetailView({ postId }: { postId: string }) {
     if (!post) return;
     setEditTitle(post.title);
     setEditContent(post.content);
+    setEditCategory(post.category);
     setEditError('');
     setEditing(true);
   }
@@ -242,6 +413,7 @@ function PostDetailView({ postId }: { postId: string }) {
       .update({
         title: editTitle.trim(),
         content: editContent.trim(),
+        category: editCategory,
         updated_at: new Date().toISOString(),
       })
       .eq('id', postId);
@@ -279,6 +451,9 @@ function PostDetailView({ postId }: { postId: string }) {
   if (loading) return <p className={styles.empty}>불러오는 중...</p>;
   if (!post) return <p className={styles.empty}>글을 찾을 수 없습니다.</p>;
 
+  const images = attachments.filter((a) => a.mime_type?.startsWith('image/'));
+  const files = attachments.filter((a) => !a.mime_type?.startsWith('image/'));
+
   return (
     <div className={styles.wrap}>
       <button
@@ -292,6 +467,17 @@ function PostDetailView({ postId }: { postId: string }) {
       <div className={styles.detail}>
         {editing ? (
           <form className={styles.composeForm} onSubmit={onSaveEdit}>
+            <select
+              className={styles.select}
+              value={editCategory}
+              onChange={(e) => setEditCategory(e.target.value as Category)}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
             <input
               className={styles.input}
               value={editTitle}
@@ -316,6 +502,7 @@ function PostDetailView({ postId }: { postId: string }) {
           </form>
         ) : (
           <div className={styles.postHead}>
+            <span className={styles.categoryBadge}>{categoryLabel(post.category)}</span>
             <h2 className={styles.postTitle}>{post.title}</h2>
             <div className={styles.postMeta}>
               <span>
@@ -336,7 +523,39 @@ function PostDetailView({ postId }: { postId: string }) {
           </div>
         )}
 
-        {!editing && <p className={styles.postBody}>{post.content}</p>}
+        {!editing && (
+          <>
+            <p className={styles.postBody}>{post.content}</p>
+
+            {images.length > 0 && (
+              <div className={styles.postImages}>
+                {images.map(
+                  (img) =>
+                    img.url && (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img key={img.id} src={img.url} alt={img.file_name} className={styles.postImage} />
+                    )
+                )}
+              </div>
+            )}
+
+            {files.length > 0 && (
+              <div className={styles.fileList}>
+                {files.map((f) => (
+                  <a
+                    key={f.id}
+                    href={f.url ?? '#'}
+                    className={styles.fileItem}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    📎 {f.file_name} <span className={styles.fileSize}>{formatSize(f.size_bytes)}</span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </>
+        )}
 
         <div className={styles.comments}>
           <p className={styles.commentsTitle}>▸ COMMENTS ({comments.length})</p>
