@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/useAuth';
+import PollView from './PollView';
 import styles from './Board.module.css';
 
 const ATTACHMENTS_BUCKET = 'board-attachments';
@@ -23,6 +24,16 @@ type Category = (typeof CATEGORIES)[number]['id'];
 function categoryLabel(id: string) {
   return CATEGORIES.find((c) => c.id === id)?.label ?? id;
 }
+
+const CATEGORY_BADGE_CLASS: Record<Category, string> = {
+  free: 'badgeFree',
+  notice: 'badgeNotice',
+  info: 'badgeInfo',
+  recruit: 'badgeRecruit',
+};
+
+const MIN_POLL_OPTIONS = 2;
+const MAX_POLL_OPTIONS = 6;
 
 type PostRow = {
   id: string;
@@ -108,6 +119,19 @@ function validateFiles(files: File[]): string | null {
   return null;
 }
 
+async function createPoll(postId: string, question: string, options: string[]) {
+  const { data: poll, error: pollError } = await supabase
+    .from('polls')
+    .insert({ post_id: postId, question })
+    .select('id')
+    .single();
+  if (pollError || !poll) throw pollError;
+
+  const rows = options.map((label, i) => ({ poll_id: poll.id, label, sort_order: i }));
+  const { error: optionsError } = await supabase.from('poll_options').insert(rows);
+  if (optionsError) throw optionsError;
+}
+
 export default function Board() {
   const { session } = useAuth();
   const router = useRouter();
@@ -134,6 +158,9 @@ function BoardList({
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<Category>('free');
   const [files, setFiles] = useState<File[]>([]);
+  const [pollEnabled, setPollEnabled] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState(['', '']);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -152,14 +179,32 @@ function BoardList({
     if (sessionReady) load();
   }, [sessionReady, load]);
 
-  const visiblePosts = filter === 'all' ? posts : posts.filter((p) => p.category === filter);
+  // 전체 보기에서는 공지를 맨 위에 고정하고, 그 안/나머지는 기존 최신순을 유지한다.
+  const visiblePosts = (filter === 'all' ? posts : posts.filter((p) => p.category === filter))
+    .slice()
+    .sort((a, b) => Number(b.category === 'notice') - Number(a.category === 'notice'));
 
   function resetCompose() {
     setTitle('');
     setContent('');
     setCategory('free');
     setFiles([]);
+    setPollEnabled(false);
+    setPollQuestion('');
+    setPollOptions(['', '']);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  function updatePollOption(i: number, value: string) {
+    setPollOptions((prev) => prev.map((o, idx) => (idx === i ? value : o)));
+  }
+
+  function addPollOption() {
+    setPollOptions((prev) => (prev.length < MAX_POLL_OPTIONS ? [...prev, ''] : prev));
+  }
+
+  function removePollOption(i: number) {
+    setPollOptions((prev) => (prev.length > MIN_POLL_OPTIONS ? prev.filter((_, idx) => idx !== i) : prev));
   }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -172,6 +217,11 @@ function BoardList({
     const fileError = validateFiles(files);
     if (fileError) {
       setError(fileError);
+      return;
+    }
+    const trimmedOptions = pollOptions.map((o) => o.trim()).filter(Boolean);
+    if (pollEnabled && (!pollQuestion.trim() || trimmedOptions.length < MIN_POLL_OPTIONS)) {
+      setError(`투표를 추가하려면 질문과 선택지 ${MIN_POLL_OPTIONS}개 이상이 필요합니다.`);
       return;
     }
 
@@ -192,8 +242,9 @@ function BoardList({
 
     try {
       if (files.length > 0) await uploadAttachments(files, profile.id, inserted.id);
+      if (pollEnabled) await createPoll(inserted.id, pollQuestion.trim(), trimmedOptions);
     } catch {
-      setError('글은 등록됐지만 첨부파일 업로드에 실패했습니다.');
+      setError('글은 등록됐지만 첨부파일/투표 저장 중 일부가 실패했습니다.');
     }
 
     setSubmitting(false);
@@ -276,6 +327,52 @@ function BoardList({
               </p>
             )}
           </div>
+
+          <label className={styles.pollToggle}>
+            <input
+              type="checkbox"
+              checked={pollEnabled}
+              onChange={(e) => setPollEnabled(e.target.checked)}
+            />
+            투표 추가
+          </label>
+
+          {pollEnabled && (
+            <div className={styles.pollBuilder}>
+              <input
+                className={styles.input}
+                value={pollQuestion}
+                onChange={(e) => setPollQuestion(e.target.value)}
+                placeholder="투표 질문"
+              />
+              {pollOptions.map((opt, i) => (
+                <div className={styles.pollOptionRow} key={i}>
+                  <input
+                    className={styles.input}
+                    value={opt}
+                    onChange={(e) => updatePollOption(i, e.target.value)}
+                    placeholder={`선택지 ${i + 1}`}
+                  />
+                  {pollOptions.length > MIN_POLL_OPTIONS && (
+                    <button
+                      type="button"
+                      className={styles.pollRemove}
+                      onClick={() => removePollOption(i)}
+                      aria-label="선택지 삭제"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              {pollOptions.length < MAX_POLL_OPTIONS && (
+                <button type="button" className={styles.pollAdd} onClick={addPollOption}>
+                  + 선택지 추가
+                </button>
+              )}
+            </div>
+          )}
+
           {error && <p className={styles.error}>{error}</p>}
           <div className={styles.composeActions}>
             <button type="submit" className={styles.submit} disabled={submitting}>
@@ -305,11 +402,13 @@ function BoardList({
             <button
               key={post.id}
               type="button"
-              className={styles.row}
+              className={`${styles.row} ${post.category === 'notice' ? styles.rowNotice : ''}`}
               onClick={() => onOpen(post.id)}
             >
               <span className={styles.rowTitle}>
-                <span className={styles.categoryBadge}>{categoryLabel(post.category)}</span>
+                <span className={`${styles.categoryBadge} ${styles[CATEGORY_BADGE_CLASS[post.category]]}`}>
+                  {categoryLabel(post.category)}
+                </span>
                 {post.title}
               </span>
               <span className={styles.rowMeta}>
@@ -445,8 +544,9 @@ function PostDetailView({ postId }: { postId: string }) {
     await load();
   }
 
-  // 게시판 U/D는 관리자 예외 없이 작성자 본인에게만 허용한다.
+  // 수정은 작성자 본인만. 삭제는 작성자 본인 + 관리자(CHESS-01)도 가능(모더레이션 안전장치).
   const isOwner = (authorId: string) => !!profile && profile.id === authorId;
+  const canDelete = (authorId: string) => isOwner(authorId) || profile?.role === 'admin';
 
   if (loading) return <p className={styles.empty}>불러오는 중...</p>;
   if (!post) return <p className={styles.empty}>글을 찾을 수 없습니다.</p>;
@@ -502,21 +602,27 @@ function PostDetailView({ postId }: { postId: string }) {
           </form>
         ) : (
           <div className={styles.postHead}>
-            <span className={styles.categoryBadge}>{categoryLabel(post.category)}</span>
+            <span className={`${styles.categoryBadge} ${styles[CATEGORY_BADGE_CLASS[post.category]]}`}>
+              {categoryLabel(post.category)}
+            </span>
             <h2 className={styles.postTitle}>{post.title}</h2>
             <div className={styles.postMeta}>
               <span>
                 {post.profiles?.codename ?? '???'} · {formatDate(post.created_at)}
                 {post.updated_at !== post.created_at && ' (수정됨)'}
               </span>
-              {isOwner(post.author_id) && (
+              {(isOwner(post.author_id) || canDelete(post.author_id)) && (
                 <span className={styles.metaActions}>
-                  <button type="button" className={styles.editBtn} onClick={startEdit}>
-                    수정
-                  </button>
-                  <button type="button" className={styles.deleteBtn} onClick={onDeletePost}>
-                    삭제
-                  </button>
+                  {isOwner(post.author_id) && (
+                    <button type="button" className={styles.editBtn} onClick={startEdit}>
+                      수정
+                    </button>
+                  )}
+                  {canDelete(post.author_id) && (
+                    <button type="button" className={styles.deleteBtn} onClick={onDeletePost}>
+                      삭제
+                    </button>
+                  )}
                 </span>
               )}
             </div>
@@ -554,6 +660,8 @@ function PostDetailView({ postId }: { postId: string }) {
                 ))}
               </div>
             )}
+
+            <PollView postId={postId} />
           </>
         )}
 
@@ -566,7 +674,7 @@ function PostDetailView({ postId }: { postId: string }) {
                 <span>
                   {c.profiles?.codename ?? '???'} · {formatDate(c.created_at)}
                 </span>
-                {isOwner(c.author_id) && (
+                {canDelete(c.author_id) && (
                   <button
                     type="button"
                     className={styles.deleteBtn}

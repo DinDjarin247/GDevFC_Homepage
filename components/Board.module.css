@@ -53,6 +53,28 @@
   vertical-align: middle;
 }
 
+/* 카테고리별 색 구분 — 전체 보기에서 한눈에 구별되도록 */
+.badgeFree {
+  border-color: var(--lime-soft);
+  color: var(--lime);
+}
+
+.badgeNotice {
+  border-color: var(--magenta);
+  color: var(--magenta);
+  background: rgba(255, 47, 143, 0.12);
+}
+
+.badgeInfo {
+  border-color: rgba(79, 195, 247, 0.55);
+  color: #4fc3f7;
+}
+
+.badgeRecruit {
+  border-color: rgba(255, 179, 71, 0.55);
+  color: #ffb347;
+}
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -218,6 +240,68 @@
   color: var(--magenta);
 }
 
+/* ---------- 투표 작성 ---------- */
+
+.pollToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.pollBuilder {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: var(--field);
+}
+
+.pollOptionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pollOptionRow .input {
+  flex: 1 1 auto;
+}
+
+.pollRemove {
+  flex: 0 0 auto;
+  background: none;
+  border: 1px solid #565656;
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.pollRemove:hover {
+  border-color: var(--magenta);
+  color: var(--magenta);
+}
+
+.pollAdd {
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed #565656;
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pollAdd:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
 /* ---------- 목록 ---------- */
 
 .list {
@@ -250,6 +334,11 @@
 
 .row:hover {
   background: var(--field);
+}
+
+.rowNotice {
+  border-left: 3px solid var(--magenta);
+  background: rgba(255, 47, 143, 0.06);
 }
 
 .rowTitle {
