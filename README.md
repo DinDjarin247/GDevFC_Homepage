@@ -172,7 +172,8 @@ npm run gen:members
 제출은 `fetch` 로 비동기 전송되며, 페이지 이동 없이 **`▸ CHARACTER SAVED`** 확인 화면으로 전환됩니다.
 전송 실패 시 에러 문구가 뜨고 입력값은 유지됩니다.
 
-전송되는 키는 `name` · `playerId` · `class` · `favoriteGame` · `genre` · `originStory` · `inventory` 입니다.
+전송되는 키는 `name` · `playerId` · `phone` · `email` · `class` · `favoriteGame` · `genre` · `originStory` · `inventory` 입니다.
+`phone` · `email` 은 지원자에게 연락하기 위한 필수 항목입니다.
 INVENTORY 는 파일 업로드가 아니라 **URL 텍스트**로만 전송됩니다 (무료 플랜은 첨부를 지원하지 않음).
 
 ## 미니게임 — 달려라 우왕이 (`/play`)

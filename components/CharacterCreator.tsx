@@ -9,6 +9,8 @@ type Status = 'idle' | 'sending' | 'success' | 'error';
 const EMPTY = {
   name: '',
   playerId: '',
+  phone: '',
+  email: '',
   job: '',
   favoriteGame: '',
   genres: [] as string[],
@@ -43,8 +45,14 @@ export default function CharacterCreator() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!form.name.trim() || !form.playerId.trim() || !form.job) {
-      setError('이름 · 학번 · 클래스는 필수입니다.');
+    if (
+      !form.name.trim() ||
+      !form.playerId.trim() ||
+      !form.phone.trim() ||
+      !form.email.trim() ||
+      !form.job
+    ) {
+      setError('이름 · 학번 · 전화번호 · 이메일 · 클래스는 필수입니다.');
       return;
     }
 
@@ -54,6 +62,8 @@ export default function CharacterCreator() {
     const payload = new FormData();
     payload.append('name', form.name);
     payload.append('playerId', form.playerId);
+    payload.append('phone', form.phone);
+    payload.append('email', form.email);
     payload.append('class', selectedClass ? selectedClass.label : '');
     payload.append('favoriteGame', form.favoriteGame);
     payload.append('genre', form.genres.join(', '));
@@ -146,6 +156,44 @@ export default function CharacterCreator() {
               value={form.playerId}
               onChange={(e) => set('playerId', e.target.value)}
               placeholder={fields.playerId.placeholder}
+              autoComplete="off"
+              required
+            />
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.labelRow}>
+              <label className={styles.label} htmlFor="phone">
+                {fields.phone.label}
+              </label>
+              <span className={styles.sub}>{fields.phone.sub}</span>
+            </span>
+            <input
+              id="phone"
+              type="tel"
+              className={styles.input}
+              value={form.phone}
+              onChange={(e) => set('phone', e.target.value)}
+              placeholder={fields.phone.placeholder}
+              autoComplete="off"
+              required
+            />
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.labelRow}>
+              <label className={styles.label} htmlFor="email">
+                {fields.email.label}
+              </label>
+              <span className={styles.sub}>{fields.email.sub}</span>
+            </span>
+            <input
+              id="email"
+              type="email"
+              className={styles.input}
+              value={form.email}
+              onChange={(e) => set('email', e.target.value)}
+              placeholder={fields.email.placeholder}
               autoComplete="off"
               required
             />
@@ -299,6 +347,28 @@ export default function CharacterCreator() {
                 }`}
               >
                 {preview(form.playerId)}
+              </p>
+            </div>
+
+            <div className={styles.cardRow}>
+              <span className={styles.cardKey}>PHONE</span>
+              <p
+                className={`${styles.cardVal} ${
+                  isEmpty(form.phone) ? styles.empty : ''
+                }`}
+              >
+                {preview(form.phone)}
+              </p>
+            </div>
+
+            <div className={styles.cardRow}>
+              <span className={styles.cardKey}>EMAIL</span>
+              <p
+                className={`${styles.cardVal} ${
+                  isEmpty(form.email) ? styles.empty : ''
+                }`}
+              >
+                {preview(form.email)}
               </p>
             </div>
 

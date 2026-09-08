@@ -8,6 +8,8 @@
   "fields": {
     "name": { "label": "CHARACTER NAME", "sub": "이름", "placeholder": "홍길동" },
     "playerId": { "label": "PLAYER ID", "sub": "학번", "placeholder": "20XX000000" },
+    "phone": { "label": "PHONE", "sub": "전화번호", "placeholder": "010-1234-5678" },
+    "email": { "label": "EMAIL", "sub": "이메일", "placeholder": "example@email.com" },
     "job": { "label": "CLASS", "sub": "희망 분야" },
     "favoriteGame": {
       "label": "FAVORITE GAME",
