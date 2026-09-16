@@ -1,5 +1,6 @@
 import Frame from '@/components/Frame';
 import ScreenHeader from '@/components/ScreenHeader';
+import EventsBoard from '@/components/EventsBoard';
 import styles from './events.module.css';
 
 export const metadata = { title: '외부행사 — G DEV. F.C.' };
@@ -17,16 +18,7 @@ export default function EventsPage() {
         </p>
       </section>
 
-      <section className={styles.empty} aria-labelledby="empty-heading">
-        <span className={styles.symbol} aria-hidden="true">✦</span>
-        <p className={styles.status}>NO EVENTS YET</p>
-        <h2 id="empty-heading" className={styles.emptyHeading}>
-          아직 등록된 외부행사가 없습니다
-        </h2>
-        <p className={styles.description}>
-          새로운 행사 소식이 준비되면 이곳에서 안내할 예정입니다.
-        </p>
-      </section>
+      <EventsBoard />
     </Frame>
   );
 }
