@@ -1,0 +1,58 @@
+.intro {
+  padding: clamp(28px, 5vw, 64px) 0 32px;
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow {
+  margin: 0 0 20px;
+  color: var(--lime);
+  font-family: var(--font-pixel);
+  font-size: clamp(9px, 1.2vw, 12px);
+  line-height: 1.8;
+}
+
+.heading {
+  margin: 0 0 16px;
+  font-family: var(--font-pixel-lg);
+  font-size: clamp(20px, 3vw, 32px);
+  font-weight: 400;
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.description {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.9;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  margin: 32px 0;
+  padding: clamp(36px, 7vw, 80px) 20px;
+  border: 1px dashed var(--line);
+  background: var(--panel-2);
+  text-align: center;
+}
+
+.symbol {
+  color: var(--magenta);
+  font-size: 40px;
+}
+
+.status {
+  margin: 16px 0 24px;
+  color: var(--lime);
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  line-height: 1.8;
+}
+
+.emptyHeading {
+  margin: 0 0 12px;
+  font-size: clamp(17px, 2vw, 22px);
+  font-weight: 500;
+  word-break: keep-all;
+}

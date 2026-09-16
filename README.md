@@ -24,12 +24,13 @@ npm run build
 | 경로 | 화면 | 설명 |
 |---|---|---|
 | `/` | 타이틀 | `PRESS START` — 클릭 또는 Enter/Space. 배경에 반짝이는 스타필드 + 우주선 |
-| `/select` | SELECT MODE | 모드 카드 캐러셀 (← → 이동, Enter 진입, 스와이프). 실제 4개 + 잠긴 예고 카드 |
+| `/select` | SELECT MODE | 모드 카드 7개 캐러셀 (← → 이동, Enter 진입, 스와이프) |
 | `/about` | ABOUT | 매니페스토 히어로 · SEASON 1 · HISTORY · ACTIVITIES · CONTACT |
 | `/showcase` | SHOWCASE | 프로젝트 슬롯 6칸 (← → 이동, 스와이프) |
 | `/join` | JOIN THE PARTY | RPG 캐릭터 생성 컨셉 지원 폼 (실시간 카드 미리보기) |
 | `/play` | PLAY | "달려라 우왕이" 미니게임 — 교실 탈출 + 횡스크롤 러닝 + 공개 오락실 랭킹 |
 | `/gallery` | GALLERY | 회원 전용 갤러리 — 여러 장 업로드, 목록은 대표사진만, 클릭 시 상세 페이지에서 전체 스크롤 |
+| `/events` | 외부행사 | 외부행사 안내 — 행사 등록 전에는 빈 상태 표시 |
 | `/board` | BOARD | 회원 전용 게시판 — 카테고리(색상 구분, 공지는 항상 상단 고정), 사진/파일 첨부, 댓글, 선택적 투표 |
 
 프레임은 항상 뷰포트를 가득 채우며, 내부 콘텐츠만 `--content-max` 로 폭이 제한됩니다.
