@@ -102,6 +102,11 @@
 .eventLink { display: flex; justify-content: space-between; gap: 12px; color: var(--lime); }
 .eventLink:hover { text-decoration: underline; }
 .noLink { margin: 0; color: var(--muted); }
+.pagination { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 32px; }
+.pagination .button { min-width: 40px; padding: 8px 10px; }
+.pagination .button[aria-current='page'] { background: var(--lime); border-color: var(--lime); color: var(--bg); }
+.pagination .button:disabled { cursor: default; }
+.pageStatus { text-align: center; color: var(--muted); font-size: 13px; }
 .viewToggle { display: flex; gap: 6px; align-items: center; }
 .button[aria-pressed='true'] { background: var(--lime); color: var(--bg); border-color: var(--lime); }
 .button[aria-pressed='true']:hover { color: var(--bg); }
