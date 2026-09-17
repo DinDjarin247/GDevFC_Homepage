@@ -7,11 +7,12 @@ import PlazaScene from './PlazaScene';
 import { useArcadeKeys } from '@/lib/useArcadeKeys';
 import {
   PHASE_LABEL,
-  PLAZA_H,
   PLAZA_SPOTS,
   STATUE,
   fallbackSpot,
   phaseForHour,
+  sceneFx,
+  sceneFy,
   type DayPhase,
   type PlazaSpot,
 } from '@/lib/plazaLayout';
@@ -122,7 +123,10 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
           {/* 중앙 동상 자리 — 디자이너에게 "여기 들어갑니다" 를 보여주는 표식 */}
           <div
             className={styles.statue}
-            style={{ left: `${STATUE.fx * 100}%`, top: `${(STATUE.labelY / PLAZA_H) * 100}%` }}
+            style={{
+              left: `${sceneFx(STATUE.x) * 100}%`,
+              top: `${sceneFy(STATUE.labelY) * 100}%`,
+            }}
           >
             <span className={styles.statueTag}>동상 자리</span>
             <span className={styles.statueSub}>STATUE HERE</span>
@@ -145,8 +149,8 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
                 } ${spot.idle === 'stroll' ? styles.walking : ''}`}
                 style={
                   {
-                    left: `${spot.fx * 100}%`,
-                    top: `${spot.fy * 100}%`,
+                    left: `${sceneFx(spot.x) * 100}%`,
+                    top: `${sceneFy(spot.y) * 100}%`,
                     '--scale': spot.scale,
                   } as CSSProperties
                 }
