@@ -8,7 +8,7 @@ export const metadata = { title: 'SELECT MODE — G DEV. F.C.' };
 
 export default function SelectPage() {
   return (
-    <Frame badge={site.badge} header={<SysBar dot glitch />}>
+    <Frame badge={site.badge} header={<SysBar dot glitch />} fullBleedBody>
       <ModePlaza
         heading={modesData.heading}
         hint={modesData.hint}

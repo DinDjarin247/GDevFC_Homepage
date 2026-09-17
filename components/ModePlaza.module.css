@@ -1,26 +1,32 @@
 .wrap {
   flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(12px, 1.6vw, 24px);
-  padding: 4px 0 6px;
+  gap: clamp(6px, 0.9vw, 14px);
+  padding: 2px 0 4px;
 }
 
 .heading {
   margin: 0;
+  flex: 0 0 auto;
   font-family: var(--font-pixel);
-  font-size: clamp(14px, 2.2cqw, 30px);
+  font-size: clamp(12px, 1.5vw, 22px);
   letter-spacing: 0.1em;
   color: var(--lime);
-  text-shadow: clamp(-4px, -0.16vw, -2px) 0 0 var(--magenta);
+  text-shadow: clamp(-3px, -0.12vw, -2px) 0 0 var(--magenta);
   white-space: nowrap;
 }
 
 /* 좁은 화면에서는 광장을 줄이지 않고 좌우로 둘러본다 */
 .stageScroll {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
+  display: flex;
+  align-items: center;
   overflow-x: auto;
   overflow-y: hidden;
   border: 1px solid var(--line);
@@ -38,11 +44,42 @@
 .stage {
   position: relative;
   width: 100%;
-  min-width: 720px;
-  aspect-ratio: 400 / 225;
+  min-width: 860px;
+  margin-inline: auto;
+  aspect-ratio: 480 / 216;
+  /* 세로 공간이 모자라면 비율을 지킨 채 줄어든다 */
+  max-height: 100%;
   container-type: size;
-  /* 캐릭터 키 = 광장 높이의 13% x 자리별 배율 */
-  --char-h: 13cqh;
+  /* 캐릭터 키 = 광장 높이의 15% x 자리별 배율 */
+  --char-h: 15cqh;
+}
+
+/* 지금이 어느 시간대인지 — 접속 기기의 현지 시각 기준 */
+.phaseTag {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius);
+  background: rgba(10, 8, 18, 0.55);
+  pointer-events: none;
+}
+
+.phaseKo {
+  font-family: var(--font-pixel);
+  font-size: clamp(8px, 1.5cqh, 11px);
+  color: #ffe9a0;
+}
+
+.phaseEn {
+  font-family: var(--font-mono);
+  font-size: clamp(6px, 1.2cqh, 9px);
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .scene {
@@ -325,12 +362,13 @@
 }
 
 .hint {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   margin: 0;
   font-family: var(--font-mono);
-  font-size: clamp(11px, 0.9cqw, 15px);
+  font-size: clamp(10px, 0.85vw, 14px);
   letter-spacing: 0.08em;
   color: var(--muted);
 }
@@ -352,8 +390,15 @@
   }
 }
 
-@media (max-width: 720px) {
+/* 가로 스크롤로 넘어가는 폭에서는 광장이 세로로 늘어날 일이 없으므로,
+   스크롤 영역도 광장 높이에 맞춰 위아래 빈 띠가 생기지 않게 한다 */
+@media (max-width: 860px) {
+  .stageScroll {
+    flex: 0 0 auto;
+  }
+
   .stage {
-    --char-h: 15cqh;
+    max-height: none;
+    --char-h: 17cqh;
   }
 }

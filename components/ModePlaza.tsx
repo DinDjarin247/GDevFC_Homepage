@@ -5,7 +5,16 @@ import { useRouter } from 'next/navigation';
 import Sprite from './Sprite';
 import PlazaScene from './PlazaScene';
 import { useArcadeKeys } from '@/lib/useArcadeKeys';
-import { PLAZA_H, PLAZA_SPOTS, STATUE, fallbackSpot, type PlazaSpot } from '@/lib/plazaLayout';
+import {
+  PHASE_LABEL,
+  PLAZA_H,
+  PLAZA_SPOTS,
+  STATUE,
+  fallbackSpot,
+  phaseForHour,
+  type DayPhase,
+  type PlazaSpot,
+} from '@/lib/plazaLayout';
 import type { Mode } from '@/lib/types';
 import styles from './ModePlaza.module.css';
 
@@ -38,6 +47,11 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [tick, setTick] = useState(0);
+  /**
+   * 시간대는 접속 기기의 현지 시각으로 정한다. 정적 export 라 서버에서는 알 수 없으므로
+   * 마운트 후에 계산해야 하이드레이션이 어긋나지 않는다.
+   */
+  const [phase, setPhase] = useState<DayPhase | null>(null);
   const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   /** 키보드로 옮겼을 때만 화면을 따라 스크롤한다 (마우스 호버로는 움직이지 않게) */
   const keyboardMoveRef = useRef(false);
@@ -47,6 +61,14 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
 
   useEffect(() => {
     const id = setInterval(() => setTick((v) => (v + 1) % 120), TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  // 자정을 넘기거나 시간대가 바뀌면 광장도 따라 바뀐다 (1분마다 확인)
+  useEffect(() => {
+    const update = () => setPhase(phaseForHour(new Date().getHours()));
+    update();
+    const id = setInterval(update, 60_000);
     return () => clearInterval(id);
   }, []);
 
@@ -88,7 +110,14 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
 
       <div className={styles.stageScroll}>
         <div className={styles.stage}>
-          <PlazaScene className={styles.scene} />
+          {phase && <PlazaScene key={phase} className={styles.scene} phase={phase} />}
+
+          {phase && (
+            <span className={styles.phaseTag}>
+              <span className={styles.phaseKo}>{PHASE_LABEL[phase].ko}</span>
+              <span className={styles.phaseEn}>{PHASE_LABEL[phase].en}</span>
+            </span>
+          )}
 
           {/* 중앙 동상 자리 — 디자이너에게 "여기 들어갑니다" 를 보여주는 표식 */}
           <div
