@@ -146,6 +146,35 @@ const ARCHER = [
   '................',
 ];
 
+/**
+ * 엘프 아처 2프레임 — 활을 당긴 자세.
+ * 시위(O)가 몸 쪽(col 10)으로 당겨지고 활대(o)가 바깥으로 휘며, 화살(w)이 걸린다.
+ */
+const ARCHER_DRAW = [
+  '................',
+  '....fff.........',
+  '...fffff........',
+  '..fFfffFf..o....',
+  '.sffsssffs..o...',
+  '..fsEsEsf.O..o..',
+  '...sssss..O..o..',
+  '....SSS...O...o.',
+  '..ccccccc.O...o.',
+  '.ccclllcccO...o.',
+  '.ccqlllqccOwwwo.',
+  '.cCclllcCcO...o.',
+  '.cqqqqqqqcO...o.',
+  '.ccclllcccO...o.',
+  '.cCclllcCc.O..o.',
+  '.ccclllccc.O..o.',
+  '.cccclcccc.O.o..',
+  '.ccc...ccc.o....',
+  '.CCC...CCC......',
+  '.kCC...CCk......',
+  '.kkk...kkk......',
+  '................',
+];
+
 const W = 16;
 
 /**
@@ -173,6 +202,58 @@ const WOOWANG = [
   buildRow(W, { ...markRange(4, 11, 'Y'), 4: 'v', 11: 'v' }),
   buildRow(W, { 4: 'Y', 5: 'Y', 10: 'Y', 11: 'Y' }),
   buildRow(W, { 4: 'k', 5: 'k', 10: 'k', 11: 'k' }),
+  buildRow(W, {}),
+  buildRow(W, {}),
+];
+
+/** 우왕이 2프레임 — 솥을 젓느라 상체가 왼쪽으로 기울고 단추 줄이 흔들린다 */
+const WOOWANG_STIR = [
+  buildRow(W, {}),
+  buildRow(W, { 5: 'v', 8: 'v' }),
+  buildRow(W, { ...markRange(4, 5, 'v'), ...markRange(8, 9, 'v') }),
+  buildRow(W, markRange(3, 10, 'y')),
+  buildRow(W, { ...markRange(2, 11, 'y'), 2: 'Y', 11: 'Y' }),
+  buildRow(W, { ...markRange(2, 12, 'y'), ...markRange(4, 9, 'z'), 5: 'k', 8: 'k' }),
+  buildRow(W, { ...markRange(2, 12, 'y'), ...markRange(4, 9, 'z'), 2: 'x', 11: 'x' }),
+  buildRow(W, { ...markRange(2, 12, 'y'), ...markRange(5, 8, 'z'), 6: 'k', 7: 'k' }),
+  buildRow(W, markRange(3, 12, 'Y')),
+  buildRow(W, { ...markRange(2, 13, 'j'), 6: 'v' }),
+  buildRow(W, { ...markRange(2, 13, 'j'), 2: 'J', 13: 'J', 7: 'v' }),
+  buildRow(W, { ...markRange(2, 13, 'j'), 2: 'J', 13: 'J', 6: 'v' }),
+  buildRow(W, { ...markRange(2, 13, 'j'), 2: 'J', 13: 'J', 7: 'v' }),
+  buildRow(W, { ...markRange(3, 12, 'j'), 6: 'v' }),
+  buildRow(W, markRange(4, 11, 'J')),
+  buildRow(W, { ...markRange(4, 11, 'Y'), 4: 'v', 11: 'v' }),
+  buildRow(W, { ...markRange(4, 11, 'Y'), 4: 'v', 11: 'v' }),
+  buildRow(W, { ...markRange(4, 11, 'Y'), 4: 'v', 11: 'v' }),
+  buildRow(W, { 4: 'Y', 5: 'Y', 10: 'Y', 11: 'Y' }),
+  buildRow(W, { 4: 'k', 5: 'k', 10: 'k', 11: 'k' }),
+  buildRow(W, {}),
+  buildRow(W, {}),
+];
+
+/** 바드 2프레임 — 걸음이 바뀌고(다리 명암 교대) 류트 줄을 튕긴다 */
+const BARD_STRUM = [
+  buildRow(W, {}),
+  buildRow(W, { 11: 'h' }),
+  buildRow(W, { ...markRange(5, 10, 'u'), 12: 'H' }),
+  buildRow(W, markRange(5, 10, 'u')),
+  buildRow(W, markRange(4, 11, 'U')),
+  buildRow(W, { 4: 'r', ...markRange(5, 10, 's'), 11: 'r' }),
+  buildRow(W, { 4: 'r', 5: 's', 6: 'e', 7: 's', 8: 's', 9: 'e', 10: 's', 11: 'r' }),
+  buildRow(W, markRange(5, 10, 'S')),
+  buildRow(W, markRange(4, 11, 'n')),
+  buildRow(W, { ...markRange(3, 12, 'n'), 13: 'O', 14: 'v' }),
+  buildRow(W, { ...markRange(3, 12, 'n'), 13: 'O' }),
+  buildRow(W, { ...markRange(3, 10, 'n'), ...markRange(11, 15, 'o') }),
+  buildRow(W, { ...markRange(3, 10, 'o'), 11: 'o', 12: 'k', 13: 'k', 14: 'o', 15: 'v' }),
+  buildRow(W, { ...markRange(3, 10, 'n'), ...markRange(11, 15, 'o') }),
+  buildRow(W, markRange(3, 12, 'n')),
+  buildRow(W, markRange(3, 12, 'n')),
+  buildRow(W, { ...markRange(4, 7, 'n'), ...markRange(8, 11, 'N') }),
+  buildRow(W, { ...markRange(4, 7, 'n'), ...markRange(8, 11, 'N') }),
+  buildRow(W, { ...markRange(5, 7, 'n'), ...markRange(8, 10, 'N') }),
+  buildRow(W, { 5: 'k', 6: 'k', 9: 'k', 10: 'k' }),
   buildRow(W, {}),
   buildRow(W, {}),
 ];
@@ -290,6 +371,10 @@ const SPRITES: Record<string, string[]> = {
   bard: BARD,
   rogue: ROGUE,
   astrologer: ASTROLOGER,
+  // 광장 idle 용 2프레임 (기본 프레임과 번갈아 렌더링한다)
+  'archer-draw': ARCHER_DRAW,
+  'woowang-stir': WOOWANG_STIR,
+  'bard-strum': BARD_STRUM,
 };
 
 type SpriteProps = {

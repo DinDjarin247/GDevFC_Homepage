@@ -1,0 +1,166 @@
+'use client';
+
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useRouter } from 'next/navigation';
+import Sprite from './Sprite';
+import PlazaScene from './PlazaScene';
+import { useArcadeKeys } from '@/lib/useArcadeKeys';
+import { PLAZA_H, PLAZA_SPOTS, STATUE, fallbackSpot, type PlazaSpot } from '@/lib/plazaLayout';
+import type { Mode } from '@/lib/types';
+import styles from './ModePlaza.module.css';
+
+type ModePlazaProps = {
+  heading: string;
+  hint: string;
+  modes: Mode[];
+  /** 잠긴 자리에 표시할 문구 (예: "COMING SOON") */
+  comingSoonLabel: string;
+};
+
+/** idle 프레임 전환 주기 */
+const TICK_MS = 400;
+
+/**
+ * 2프레임 캐릭터가 지금 어떤 스프라이트를 쓸지 고른다.
+ * 캐릭터마다 리듬이 달라야 자연스러워서 주기를 다르게 잡는다.
+ */
+function currentSprite(mode: Mode, spot: PlazaSpot, tick: number) {
+  if (!spot.altSprite) return mode.sprite;
+  if (spot.idle === 'shoot') {
+    // 4초 주기로 1.6초 동안 활을 당긴 자세 유지 → 배경 캔버스의 화살과 리듬을 맞춘다
+    return tick % 10 < 4 ? spot.altSprite : mode.sprite;
+  }
+  if (spot.idle === 'cook') return tick % 4 < 2 ? spot.altSprite : mode.sprite;
+  return tick % 2 === 0 ? spot.altSprite : mode.sprite;
+}
+
+export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: ModePlazaProps) {
+  const router = useRouter();
+  const [index, setIndex] = useState(0);
+  const [tick, setTick] = useState(0);
+  const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  /** 키보드로 옮겼을 때만 화면을 따라 스크롤한다 (마우스 호버로는 움직이지 않게) */
+  const keyboardMoveRef = useRef(false);
+
+  const total = modes.length;
+  const current = modes[index];
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((v) => (v + 1) % 120), TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    modes.forEach((m) => {
+      if (m.href) router.prefetch(m.href);
+    });
+  }, [modes, router]);
+
+  const move = useCallback((delta: number) => {
+    keyboardMoveRef.current = true;
+    setIndex((i) => (i + delta + total) % total);
+  }, [total]);
+
+  const enter = useCallback(() => {
+    if (current?.locked || !current?.href) return;
+    router.push(current.href);
+  }, [router, current]);
+
+  const prev = useCallback(() => move(-1), [move]);
+  const next = useCallback(() => move(1), [move]);
+
+  useArcadeKeys({ onPrev: prev, onNext: next, onEnter: enter });
+
+  // 좁은 화면에서는 광장이 가로로 넘치므로, 선택된 캐릭터를 화면 안으로 끌어온다
+  useEffect(() => {
+    if (!keyboardMoveRef.current) return;
+    keyboardMoveRef.current = false;
+    buttonsRef.current[index]?.scrollIntoView({
+      block: 'nearest',
+      inline: 'center',
+      behavior: 'smooth',
+    });
+  }, [index]);
+
+  return (
+    <div className={styles.wrap}>
+      <h1 className={styles.heading}>{heading}</h1>
+
+      <div className={styles.stageScroll}>
+        <div className={styles.stage}>
+          <PlazaScene className={styles.scene} />
+
+          {/* 중앙 동상 자리 — 디자이너에게 "여기 들어갑니다" 를 보여주는 표식 */}
+          <div
+            className={styles.statue}
+            style={{ left: `${STATUE.fx * 100}%`, top: `${(STATUE.labelY / PLAZA_H) * 100}%` }}
+          >
+            <span className={styles.statueTag}>동상 자리</span>
+            <span className={styles.statueSub}>STATUE HERE</span>
+          </div>
+
+          {modes.map((mode, i) => {
+            const spot = PLAZA_SPOTS[mode.id] ?? fallbackSpot(i);
+            const isActive = i === index;
+            const sprite = currentSprite(mode, spot, tick);
+
+            return (
+              <button
+                key={mode.id}
+                ref={(el) => {
+                  buttonsRef.current[i] = el;
+                }}
+                type="button"
+                className={`${styles.char} ${isActive ? styles.active : ''} ${
+                  mode.locked ? styles.locked : ''
+                } ${spot.idle === 'stroll' ? styles.walking : ''}`}
+                style={
+                  {
+                    left: `${spot.fx * 100}%`,
+                    top: `${spot.fy * 100}%`,
+                    '--scale': spot.scale,
+                  } as CSSProperties
+                }
+                aria-current={isActive}
+                aria-disabled={mode.locked || undefined}
+                aria-label={`${mode.no} ${mode.label} — ${spot.place}`}
+                onMouseEnter={() => setIndex(i)}
+                onFocus={() => setIndex(i)}
+                onClick={() => {
+                  setIndex(i);
+                  if (mode.locked || !mode.href) return;
+                  router.push(mode.href);
+                }}
+              >
+                <span className={styles.plate} aria-hidden="true">
+                  <span className={styles.plateNo}>{mode.no}</span>
+                  <span className={styles.plateLabel}>
+                    {mode.locked ? comingSoonLabel : mode.label}
+                  </span>
+                  <span className={styles.platePlace}>{spot.place}</span>
+                </span>
+
+                <span className={`${styles.body} ${styles[spot.idle]}`}>
+                  <Sprite
+                    name={sprite}
+                    silhouette={mode.locked}
+                    className={`${styles.sprite} ${spot.flip ? styles.flip : ''}`}
+                  />
+                </span>
+
+                <span className={styles.glow} aria-hidden="true" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <p className={styles.hint}>
+        <span className={styles.hintMark} aria-hidden="true">
+          ▪
+        </span>
+        {hint}
+      </p>
+    </div>
+  );
+}
