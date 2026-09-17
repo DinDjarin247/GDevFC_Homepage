@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import {
+  GROUND_SHIFT,
   PLAZA_FLOOR,
   PLAZA_H,
   PLAZA_W,
@@ -9,6 +10,11 @@ import {
   phaseForHour,
   type DayPhase,
 } from '@/lib/plazaLayout';
+
+/** 지면 레이어의 바닥 — 장면 좌표에서 캔버스 맨 아래에 해당하는 y */
+const GROUND_BOTTOM = PLAZA_H - GROUND_SHIFT;
+/** 하늘이 차지하는 높이 (장면의 지평선 118 + 내려 그린 만큼) */
+const SKY_BOTTOM = 118 + GROUND_SHIFT;
 
 type PlazaSceneProps = {
   className?: string;
@@ -111,6 +117,9 @@ const AMBIENTS: Record<DayPhase, Ambient> = {
 
 const LEAF_TONES = ['#e0863a', '#c2622f', '#d9a43c', '#a8452a'];
 
+/** 주인공 스프라이트 대비 마을 사람 크기 — 조금 뒤에 있는 정도로만 작게 */
+const NPC_SCALE = 1.62;
+
 /** 광장을 오가는 마을 사람들 — 옷 색만 다른 작은 실루엣 */
 type Npc = {
   x: number;
@@ -127,22 +136,35 @@ type Npc = {
   scale: number;
   /** 제자리에서 수다 떠는 사람은 몸만 까딱인다 */
   chatter?: boolean;
+  /**
+   * back = 좌판보다 먼저 그려서 상판이 하반신을 가린다(= 좌판 안쪽 상인).
+   * front = 좌판보다 나중에 그려서 광장을 걸어다니는 사람으로 보인다.
+   */
+  layer: 'back' | 'front';
 };
 
+/**
+ * 좌판 상판은 y 140~152 에 있다. 좌판 안쪽 상인은 발끝을 상판보다 위(작은 y)에 두고
+ * back 으로, 광장을 지나다니는 사람은 상판보다 아래(큰 y)에 두고 front 로 그린다.
+ * 그래야 상인은 좌판 뒤에 서 있고 행인은 좌판 앞을 지나가는 것처럼 보인다.
+ */
 const NPCS: Npc[] = [
-  { x: 150, y: 134, from: 140, to: 206, speed: 9, dir: 1, coat: '#7b5a3a', head: '#e8c49a', hair: '#3a2a1c', phase: 0.2, scale: 1 },
-  { x: 318, y: 128, from: 276, to: 344, speed: 7, dir: -1, coat: '#4d5f7a', head: '#f0c49a', hair: '#5a3a22', phase: 1.1, scale: 0.95 },
-  { x: 214, y: 143, from: 196, to: 268, speed: 15, dir: 1, coat: '#a85a3c', head: '#f0c49a', hair: '#7a4a1e', phase: 2.3, scale: 0.78 },
-  { x: 186, y: 138, speed: 0, dir: 1, coat: '#6a4a6e', head: '#e8c49a', hair: '#2e2119', phase: 0.7, scale: 0.98, chatter: true },
-  { x: 197, y: 139, speed: 0, dir: -1, coat: '#57703f', head: '#f0c49a', hair: '#6b4a2a', phase: 1.9, scale: 0.98, chatter: true },
-  { x: 288, y: 133, speed: 0, dir: -1, coat: '#8a6a2e', head: '#e8c49a', hair: '#4a3420', phase: 2.8, scale: 0.96, chatter: true },
-  { x: 96, y: 148, speed: 0, dir: 1, coat: '#5a5a62', head: '#e8c49a', hair: '#8a8078', phase: 1.4, scale: 0.94, chatter: true },
-  { x: 430, y: 130, speed: 0, dir: -1, coat: '#4a4f6a', head: '#f0c49a', hair: '#33291f', phase: 0.5, scale: 1, chatter: true },
-  { x: 356, y: 140, from: 330, to: 392, speed: 6, dir: 1, coat: '#7a4552', head: '#f0c49a', hair: '#2b1f18', phase: 3.3, scale: 0.92 },
-  { x: 258, y: 146, from: 232, to: 300, speed: 11, dir: -1, coat: '#3f6a5a', head: '#e8c49a', hair: '#4a3420', phase: 1.6, scale: 0.86 },
-  { x: 176, y: 131, speed: 0, dir: 1, coat: '#8a7a4a', head: '#f0c49a', hair: '#5a4a2a', phase: 2.1, scale: 0.9, chatter: true },
-  { x: 402, y: 136, from: 396, to: 448, speed: 8, dir: 1, coat: '#6a5a7a', head: '#e8c49a', hair: '#3a2a1c', phase: 0.9, scale: 0.9 },
-  { x: 132, y: 152, speed: 0, dir: -1, coat: '#7a4a3a', head: '#f0c49a', hair: '#2e2119', phase: 2.6, scale: 0.92, chatter: true },
+  // 좌판 상인 둘 — 상판이 하반신을 가린다
+  { x: 176, y: 143, speed: 0, dir: 1, coat: '#8a7a4a', head: '#f0c49a', hair: '#5a4a2a', phase: 2.1, scale: 0.94, chatter: true, layer: 'back' },
+  { x: 290, y: 139, speed: 0, dir: -1, coat: '#8a6a2e', head: '#e8c49a', hair: '#4a3420', phase: 2.8, scale: 0.94, chatter: true, layer: 'back' },
+
+  // 광장을 지나다니는 사람들
+  // 동상 받침대(x 212~268, y 148~176)를 통과하지 않도록 좌/우 통행로를 나눠 뒀다
+  { x: 168, y: 162, from: 150, to: 205, speed: 9, dir: 1, coat: '#7b5a3a', head: '#e8c49a', hair: '#3a2a1c', phase: 0.2, scale: 0.96, layer: 'front' },
+  { x: 300, y: 157, from: 276, to: 320, speed: 7, dir: -1, coat: '#4d5f7a', head: '#f0c49a', hair: '#5a3a22', phase: 1.1, scale: 0.92, layer: 'front' },
+  { x: 180, y: 178, from: 150, to: 208, speed: 15, dir: 1, coat: '#a85a3c', head: '#f0c49a', hair: '#7a4a1e', phase: 2.3, scale: 0.74, layer: 'front' },
+  { x: 104, y: 164, speed: 0, dir: 1, coat: '#6a4a6e', head: '#e8c49a', hair: '#2e2119', phase: 0.7, scale: 0.94, chatter: true, layer: 'front' },
+  { x: 117, y: 164, speed: 0, dir: -1, coat: '#57703f', head: '#f0c49a', hair: '#6b4a2a', phase: 1.9, scale: 0.94, chatter: true, layer: 'front' },
+  { x: 284, y: 172, speed: 0, dir: 1, coat: '#3f6a5a', head: '#e8c49a', hair: '#4a3420', phase: 1.6, scale: 0.92, chatter: true, layer: 'front' },
+  { x: 297, y: 172, speed: 0, dir: -1, coat: '#7a4552', head: '#f0c49a', hair: '#2b1f18', phase: 3.3, scale: 0.92, chatter: true, layer: 'front' },
+  { x: 142, y: 179, speed: 0, dir: 1, coat: '#5a5a62', head: '#e8c49a', hair: '#8a8078', phase: 1.4, scale: 0.9, chatter: true, layer: 'front' },
+  { x: 196, y: 152, speed: 0, dir: -1, coat: '#4a4f6a', head: '#f0c49a', hair: '#33291f', phase: 0.5, scale: 0.94, chatter: true, layer: 'front' },
+  { x: 84, y: 168, from: 62, to: 112, speed: 6, dir: 1, coat: '#6a5a7a', head: '#e8c49a', hair: '#3a2a1c', phase: 0.9, scale: 0.9, layer: 'front' },
 ];
 
 export default function PlazaScene({ className, phase }: PlazaSceneProps) {
@@ -173,9 +195,9 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
       size: Math.random() < 0.3 ? 2 : 1,
     }));
 
-    const stars = Array.from({ length: 46 }, () => ({
+    const stars = Array.from({ length: 56 }, () => ({
       x: Math.random() * PLAZA_W,
-      y: Math.random() * 84,
+      y: Math.random() * (SKY_BOTTOM - 30),
       a: 0.25 + Math.random() * 0.5,
       tw: 0.5 + Math.random() * 1.4,
       phase: Math.random() * Math.PI * 2,
@@ -183,19 +205,19 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
 
     const npcs = NPCS.map((n) => ({ ...n }));
 
-    const sky = ctx.createLinearGradient(0, 0, 0, 118);
+    const sky = ctx.createLinearGradient(0, 0, 0, SKY_BOTTOM);
     amb.sky.forEach((color, i) => sky.addColorStop(i / (amb.sky.length - 1), color));
 
     // ---------- 하늘 ----------
 
     function drawSky(t: number) {
       ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, PLAZA_W, 118);
+      ctx.fillRect(0, 0, PLAZA_W, SKY_BOTTOM);
 
       if (amb.stars > 0) {
         for (const s of stars) {
           const tw = reduced ? 1 : 0.5 + 0.5 * Math.sin(t * s.tw + s.phase);
-          ctx.globalAlpha = s.a * tw * amb.stars * (1 - s.y / 130);
+          ctx.globalAlpha = s.a * tw * amb.stars * (1 - s.y / (SKY_BOTTOM + 12));
           ctx.fillStyle = '#f2ecff';
           ctx.fillRect(Math.round(s.x), Math.round(s.y), 1, 1);
         }
@@ -453,11 +475,11 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
     // ---------- 광장 바닥 ----------
 
     function drawGround() {
-      const field = ctx.createLinearGradient(0, 114, 0, PLAZA_H);
+      const field = ctx.createLinearGradient(0, 114, 0, GROUND_BOTTOM);
       field.addColorStop(0, '#463a26');
       field.addColorStop(1, '#2f2719');
       ctx.fillStyle = field;
-      ctx.fillRect(0, 114, PLAZA_W, PLAZA_H - 114);
+      ctx.fillRect(0, 114, PLAZA_W, GROUND_BOTTOM - 114);
 
       const { cx, cy, rx, ry } = PLAZA_FLOOR;
       ctx.fillStyle = '#6b6153';
@@ -792,7 +814,7 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
 
     /** 중앙 동상 자리 — 받침대 + "여기 들어갑니다" 점선 실루엣 */
     function drawStatuePlinth(t: number) {
-      const cx = STATUE.fx * PLAZA_W;
+      const cx = STATUE.x;
 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
       ctx.beginPath();
@@ -862,7 +884,7 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
         }
       }
 
-      const s = n.scale;
+      const s = n.scale * NPC_SCALE;
       const walking = n.from !== undefined && !reduced;
       const step = walking ? Math.sin(t * 6 + n.phase) : 0;
       const bob = reduced ? 0 : Math.abs(Math.sin(t * (n.chatter ? 2.4 : 6) + n.phase)) * (n.chatter ? 0.8 : 1.2);
@@ -889,8 +911,8 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
       ctx.fillRect(x + 1 * s, y - 14 * s, 3 * s, 1.5 * s);
     }
 
-    function drawNpcs(t: number, dt: number) {
-      for (const n of npcs) drawNpc(n, t, dt);
+    function drawNpcs(layer: 'back' | 'front', t: number, dt: number) {
+      for (const n of npcs) if (n.layer === layer) drawNpc(n, t, dt);
     }
 
     // ---------- 입자 / 마감 ----------
@@ -922,7 +944,7 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
       ctx.fillRect(0, 0, PLAZA_W, PLAZA_H);
       ctx.restore();
 
-      const v = ctx.createRadialGradient(240, 150, 90, 240, 150, 300);
+      const v = ctx.createRadialGradient(240, 160, 110, 240, 160, 330);
       v.addColorStop(0, 'rgba(0,0,0,0)');
       v.addColorStop(1, 'rgba(6, 4, 14, 0.5)');
       ctx.fillStyle = v;
@@ -940,12 +962,17 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
 
       ctx.clearRect(0, 0, PLAZA_W, PLAZA_H);
       drawSky(t);
+
+      // 지면 레이어 — 하늘을 넓게 두기 위해 통째로 내려 그린다
+      ctx.save();
+      ctx.translate(0, GROUND_SHIFT);
       drawSkyline();
       drawVillage(t);
       drawGround();
       drawTree(t);
+      drawNpcs('back', t, dt); // 좌판 상인 (상판이 하반신을 가리도록 먼저)
       drawMarket();
-      drawNpcs(t, dt);
+      drawNpcs('front', t, dt); // 광장을 지나다니는 사람들
       drawCauldron(t);
       drawAstrologerTent(t);
       drawArchery(t);
@@ -953,6 +980,8 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
       drawStatuePlinth(t);
       drawBench(t);
       drawScrollShop(t);
+      ctx.restore();
+
       drawLeaves(dt, t);
       drawAmbient();
 

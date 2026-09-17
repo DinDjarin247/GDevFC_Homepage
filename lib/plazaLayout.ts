@@ -7,24 +7,31 @@
  */
 
 export const PLAZA_W = 480;
-export const PLAZA_H = 216;
+export const PLAZA_H = 270;
 
-export const toX = (fx: number) => fx * PLAZA_W;
-export const toY = (fy: number) => fy * PLAZA_H;
+/**
+ * 하늘을 넉넉히 보여주기 위해, 지면(마을·광장·인물)은 캔버스 위에서 이만큼 내려 그린다.
+ * 그래서 소품 좌표는 "장면 좌표"(지면 기준)로 적고, 화면에 얹을 때만 이 값을 더한다.
+ */
+export const GROUND_SHIFT = 42;
 
-/** 광장 바닥(타원 포석) */
+/** 장면 좌표 → 캔버스 전체 대비 비율 (DOM 에서 % 로 쓰기 위한 변환) */
+export const sceneFx = (x: number) => x / PLAZA_W;
+export const sceneFy = (y: number) => (y + GROUND_SHIFT) / PLAZA_H;
+
+/** 광장 바닥(타원 포석) — 장면 좌표 */
 export const PLAZA_FLOOR = { cx: 240, cy: 166, rx: 214, ry: 50 };
 
 /**
- * 중앙 동상 자리 — 아직 동상이 없어 받침대와 자리 표시만 그린다.
+ * 중앙 동상 자리 — 아직 동상이 없어 받침대와 자리 표시만 그린다. 모두 장면 좌표.
  * topY 는 점선 실루엣의 꼭대기, labelY 는 그 위에 붙는 "동상 자리" 표식의 기준선.
  */
-export const STATUE = { fx: 0.5, topY: 116, baseY: 174, labelY: 112 };
+export const STATUE = { x: 240, topY: 116, baseY: 174, labelY: 112 };
 
 export type PlazaSpot = {
-  /** 캐릭터 발이 닿는 지점 (광장 폭·높이 대비 비율) */
-  fx: number;
-  fy: number;
+  /** 캐릭터 발이 닿는 지점 — 장면 좌표(캔버스 픽셀, 지면 기준) */
+  x: number;
+  y: number;
   /** 원근감용 크기 배율 — 뒤쪽일수록 작게 */
   scale: number;
   /** 스프라이트를 좌우 반전할지 (기본은 오른쪽을 보는 그림) */
@@ -43,11 +50,11 @@ export type PlazaSpot = {
  */
 export const PLAZA_SPOTS: Record<string, PlazaSpot> = {
   // 도적 — 광장 왼쪽 큰 나무의 왼쪽 가지 위 (단풍 앞이라 실루엣이 잘 보인다)
-  board: { fx: 0.092, fy: 0.472, scale: 0.72, place: '광장 어귀 큰 나무', idle: 'perch' },
+  board: { x: 44, y: 102, scale: 0.72, place: '광장 어귀 큰 나무', idle: 'perch' },
   // 우왕이 — 선술집 앞 솥에서 요리 중
   play: {
-    fx: 0.3,
-    fy: 0.663,
+    x: 144,
+    y: 143,
     scale: 0.84,
     flip: true,
     place: '선술집 앞 가마솥',
@@ -55,24 +62,24 @@ export const PLAZA_SPOTS: Record<string, PlazaSpot> = {
     idle: 'cook',
   },
   // 점성술사 — 광장에 친 별무늬 천막
-  events: { fx: 0.655, fy: 0.681, scale: 0.84, place: '점성술 천막', idle: 'read' },
+  events: { x: 314, y: 147, scale: 0.84, place: '점성술 천막', idle: 'read' },
   // 엘프 아처 — 오른쪽 담벼락 과녁장
   join: {
-    fx: 0.855,
-    fy: 0.735,
+    x: 410,
+    y: 159,
     scale: 0.88,
     place: '담벼락 과녁장',
     altSprite: 'archer-draw',
     idle: 'shoot',
   },
   // 마법사 — 앞쪽 마법 두루마리 좌판
-  showcase: { fx: 0.775, fy: 0.895, scale: 1, flip: true, place: '마법 두루마리 좌판', idle: 'browse' },
+  showcase: { x: 372, y: 193, scale: 1, flip: true, place: '마법 두루마리 좌판', idle: 'browse' },
   // 기사 — 광장 벤치와 화톳불
-  about: { fx: 0.225, fy: 0.885, scale: 1, place: '광장 벤치', idle: 'rest' },
+  about: { x: 108, y: 191, scale: 1, place: '광장 벤치', idle: 'rest' },
   // 바드 — 광장 앞을 오가며 노래
   gallery: {
-    fx: 0.5,
-    fy: 0.915,
+    x: 240,
+    y: 198,
     scale: 1,
     place: '광장 한가운데',
     altSprite: 'bard-strum',
@@ -83,8 +90,8 @@ export const PLAZA_SPOTS: Record<string, PlazaSpot> = {
 /** 자리가 지정되지 않은 모드를 위한 예비 배치 (광장 뒤편에 일렬로) */
 export function fallbackSpot(order: number): PlazaSpot {
   return {
-    fx: 0.34 + order * 0.09,
-    fy: 0.56,
+    x: 164 + order * 44,
+    y: 130,
     scale: 0.75,
     place: '광장',
     idle: 'rest',

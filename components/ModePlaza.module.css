@@ -46,12 +46,12 @@
   width: 100%;
   min-width: 860px;
   margin-inline: auto;
-  aspect-ratio: 480 / 216;
+  aspect-ratio: 480 / 270;
   /* 세로 공간이 모자라면 비율을 지킨 채 줄어든다 */
   max-height: 100%;
   container-type: size;
-  /* 캐릭터 키 = 광장 높이의 15% x 자리별 배율 */
-  --char-h: 15cqh;
+  /* 캐릭터 키 = 광장 높이의 12% x 자리별 배율 (캔버스 기준 약 32px) */
+  --char-h: 12cqh;
 }
 
 /* 지금이 어느 시간대인지 — 접속 기기의 현지 시각 기준 */
@@ -399,6 +399,6 @@
 
   .stage {
     max-height: none;
-    --char-h: 17cqh;
+    --char-h: 13.5cqh;
   }
 }
