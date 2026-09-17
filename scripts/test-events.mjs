@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { parseEventsCsv } from '../lib/events.ts';
+import { parseEventsCsv, matchesCalendarFilter } from '../lib/events.ts';
 
 test('events 탭의 영문 열과 행사 기간을 읽는다', () => {
   const [event] = parseEventsCsv('id,title,category,start_date,end_date,location,url,source\n1,Sample Jam,jam,2026-09-14,2026-09-28,온라인,https://example.com,itch.io');
@@ -10,6 +10,7 @@ test('events 탭의 영문 열과 행사 기간을 읽는다', () => {
   assert.equal(event.location, '온라인');
   assert.equal(event.url, 'https://example.com/');
   assert.equal(event.organizer, '');
+  assert.equal(event.source, 'itch.io');
 });
 
 test('빈 시트와 헤더만 있는 시트를 빈 목록으로 처리한다', () => {
@@ -22,14 +23,25 @@ test('열 순서, BOM, 쉼표, 줄바꿈, 따옴표를 보존한다', () => {
   assert.deepEqual(events, [{
     title: '테스트 행사', category: '게임잼', date: '2026-10-01',
     location: '온라인', organizer: '테스트 주최',
-    summary: '게임, 개발\n"함께"', url: 'https://example.com/',
+    summary: '게임, 개발\n"함께"', url: 'https://example.com/', source: '',
   }]);
 });
 
 test('이름 없는 행을 제외하고 선택 항목 누락을 허용한다', () => {
   assert.deepEqual(parseEventsCsv('행사명,분류\n,전시회\n테스트 행사,'), [{
-    title: '테스트 행사', category: '기타', date: '', location: '', organizer: '', summary: '', url: null,
+    title: '테스트 행사', category: '기타', date: '', location: '', organizer: '', summary: '', url: null, source: '',
   }]);
+});
+
+test('달력 출처와 컨퍼런스 필터를 독립적으로 적용한다', () => {
+  const [event] = parseEventsCsv('title,category,source\n행사,conference, UniDev ');
+  assert.equal(matchesCalendarFilter(event, 'all'), true);
+  assert.equal(matchesCalendarFilter(event, 'unidev'), true);
+  assert.equal(matchesCalendarFilter(event, 'conference'), true);
+  assert.equal(matchesCalendarFilter(event, 'itch'), false);
+  assert.equal(matchesCalendarFilter({ ...event, source: 'https://itch.io/jams' }, 'itch'), true);
+  assert.equal(matchesCalendarFilter({ ...event, source: 'notitch.io' }, 'itch'), false);
+  assert.equal(matchesCalendarFilter({ ...event, source: '', category: '게임잼' }, 'conference'), false);
 });
 
 test('실행 가능한 URL과 잘못된 링크는 표시하지 않는다', () => {

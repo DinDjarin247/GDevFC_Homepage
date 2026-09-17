@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { parseEventsCsv, type ExternalEvent } from '@/lib/events';
+import { parseEventsCsv, matchesCalendarFilter, type CalendarFilter, type ExternalEvent } from '@/lib/events';
 import source from '@/data/events-source.json';
 import EventsCalendar from './EventsCalendar';
 import styles from '@/app/events/events.module.css';
@@ -16,6 +16,7 @@ export default function EventsBoard() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
   const [page, setPage] = useState(1);
+  const [eventFilter, setEventFilter] = useState<CalendarFilter>('all');
   const [view, setView] = useState<'cards' | 'calendar'>('cards');
   const [month, setMonth] = useState(() => {
     const today = new Date();
@@ -53,17 +54,26 @@ export default function EventsBoard() {
 
   const categories = Array.from(new Set(events.map((event) => event.category)));
   const search = query.trim().toLocaleLowerCase('ko');
-  const filtered = events.filter((event) =>
+  const searchResults = events.filter((event) =>
     (!category || event.category === category) &&
     [event.title, event.summary, event.location, event.organizer, event.category]
       .some((value) => value.toLocaleLowerCase('ko').includes(search))
   );
+
+  const filtered = searchResults.filter((event) => matchesCalendarFilter(event, eventFilter));
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / 10));
   const currentPage = Math.min(page, pageCount);
   const groupStart = Math.floor((currentPage - 1) / 5) * 5 + 1;
   const pageNumbers = Array.from({ length: Math.min(5, pageCount - groupStart + 1) }, (_, i) => groupStart + i);
   const pageEvents = filtered.slice((currentPage - 1) * 10, currentPage * 10);
+
+  const eventFilters: { value: CalendarFilter; label: string }[] = [
+    { value: 'all', label: '전체 행사' },
+    { value: 'itch', label: 'itch.io' },
+    { value: 'unidev', label: 'unidev' },
+    { value: 'conference', label: '컨퍼런스' },
+  ];
 
   return (
     <section className={styles.board} aria-label="캘린더 행사 목록" aria-busy={loading}>
@@ -86,6 +96,15 @@ export default function EventsBoard() {
         </label>
         {sheetUrl && <button type="button" className={styles.button} disabled={loading}
           onClick={() => setRequest((value) => value + 1)}>새로고침</button>}
+      </div>
+
+      <div className={styles.calendarFilters} role="group" aria-label="행사 필터">
+        {eventFilters.map((filter) => (
+          <button key={filter.value} type="button" className={styles.button}
+            aria-pressed={eventFilter === filter.value} onClick={() => { setEventFilter(filter.value); setPage(1); }}>
+            {filter.label} ({searchResults.filter((event) => matchesCalendarFilter(event, filter.value)).length})
+          </button>
+        ))}
       </div>
 
       <p className={styles.count} role="status">
@@ -142,7 +161,7 @@ export default function EventsBoard() {
           <p className={styles.status}>{events.length ? 'NO RESULTS' : 'NO FORTUNE YET'}</p>
           <h2 className={styles.emptyHeading}>{events.length ? '점괘에 걸린 행사가 없습니다' : '아직 예언된 일정이 없습니다'}</h2>
           <p className={styles.description}>{events.length ? '다른 검색어나 분류로 다시 점쳐보세요.' : '별들이 새 소식을 전하면 이곳에 나타납니다.'}</p>
-          {(query || category) && <button type="button" className={styles.button} onClick={() => { setQuery(''); setCategory(''); setPage(1); }}>검색 초기화</button>}
+          {(query || category || eventFilter !== 'all') && <button type="button" className={styles.button} onClick={() => { setQuery(''); setCategory(''); setEventFilter('all'); setPage(1); }}>검색 초기화</button>}
         </div>
       )}
     </section>

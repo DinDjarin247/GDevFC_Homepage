@@ -5,6 +5,7 @@ export type ExternalEvent = {
   location: string;
   organizer: string;
   summary: string;
+  source?: string;
   url: string | null;
 };
 
@@ -77,7 +78,24 @@ export function parseEventsCsv(source: string): ExternalEvent[] {
       location: read(row, '장소', 'location'),
       organizer: read(row, '주최', 'organizer'),
       summary: read(row, '소개', 'summary'),
+      source: read(row, '출처', 'source'),
       url: safeEventUrl(read(row, '링크', 'url')),
     };
   });
+}
+
+export type CalendarFilter = 'all' | 'itch' | 'unidev' | 'conference';
+
+export function matchesCalendarFilter(event: ExternalEvent, filter: CalendarFilter): boolean {
+  const source = (event.source ?? '').trim().toLowerCase();
+  if (filter === 'all') return true;
+  if (filter === 'conference') return ['conference', 'conferences', '컨퍼런스', '콘퍼런스'].includes(event.category.trim().toLowerCase());
+  const name = filter === 'itch' ? 'itch.io' : 'unidev';
+  if (source === name) return true;
+  try {
+    const hostname = new URL(source.includes('://') ? source : `https://${source}`).hostname;
+    return filter === 'itch'
+      ? hostname === 'itch.io' || hostname.endsWith('.itch.io')
+      : hostname === 'unidev.kr' || hostname.endsWith('.unidev.kr') || hostname === 'unidev.co.kr' || hostname.endsWith('.unidev.co.kr');
+  } catch { return false; }
 }

@@ -467,6 +467,13 @@ a.calendarEvent:hover {
 }
 
 /* ---------- 반응형 ---------- */
+.calendarFilters {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
 
 @media (max-width: 960px) {
   .cards {
