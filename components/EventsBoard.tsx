@@ -66,7 +66,7 @@ export default function EventsBoard() {
   const pageEvents = filtered.slice((currentPage - 1) * 10, currentPage * 10);
 
   return (
-    <section className={styles.board} aria-label="외부행사 게시판" aria-busy={loading}>
+    <section className={styles.board} aria-label="캘린더 행사 목록" aria-busy={loading}>
       <div className={styles.toolbar}>
         <div className={styles.viewToggle} role="group" aria-label="보기 방식">
           <button type="button" className={styles.button} aria-pressed={view === 'cards'} onClick={() => setView('cards')}>카드 보기</button>
@@ -89,14 +89,18 @@ export default function EventsBoard() {
       </div>
 
       <p className={styles.count} role="status">
-        {loading ? '행사 정보를 불러오는 중…' : error ? '행사 정보를 불러오지 못했습니다.' : `전체 ${events.length}개 · 검색 결과 ${filtered.length}개`}
+        {loading ? '수정구슬을 들여다보는 중…' : error ? '수정구슬이 흐려 앞날이 보이지 않습니다.' : `전체 ${events.length}개 · 검색 결과 ${filtered.length}개`}
       </p>
 
       {loading ? (
-        <div className={styles.empty}><p className={styles.description}>새로운 만남을 준비하고 있어요.</p></div>
+        <div className={styles.empty}>
+          <span className={styles.symbol} aria-hidden="true">✦</span>
+          <p className={styles.description}>별자리를 읽는 중입니다…</p>
+        </div>
       ) : error ? (
         <div className={styles.empty}>
-          <h2 className={styles.emptyHeading}>행사 소식을 잠시 불러올 수 없습니다</h2>
+          <span className={styles.symbol} aria-hidden="true">✦</span>
+          <h2 className={styles.emptyHeading}>점괘를 불러오지 못했습니다</h2>
           <p className={styles.description}>잠시 후 다시 시도해 주세요.</p>
           <button type="button" className={styles.button} onClick={() => setRequest((value) => value + 1)}>다시 시도</button>
         </div>
@@ -135,9 +139,9 @@ export default function EventsBoard() {
       ) : (
         <div className={styles.empty}>
           <span className={styles.symbol} aria-hidden="true">✦</span>
-          <p className={styles.status}>{events.length ? 'NO RESULTS' : 'NO EVENTS YET'}</p>
-          <h2 className={styles.emptyHeading}>{events.length ? '검색 조건에 맞는 행사가 없습니다' : '아직 등록된 외부행사가 없습니다'}</h2>
-          <p className={styles.description}>{events.length ? '다른 검색어나 분류로 찾아보세요.' : '새로운 행사 소식이 준비되면 이곳에서 안내할 예정입니다.'}</p>
+          <p className={styles.status}>{events.length ? 'NO RESULTS' : 'NO FORTUNE YET'}</p>
+          <h2 className={styles.emptyHeading}>{events.length ? '점괘에 걸린 행사가 없습니다' : '아직 예언된 일정이 없습니다'}</h2>
+          <p className={styles.description}>{events.length ? '다른 검색어나 분류로 다시 점쳐보세요.' : '별들이 새 소식을 전하면 이곳에 나타납니다.'}</p>
           {(query || category) && <button type="button" className={styles.button} onClick={() => { setQuery(''); setCategory(''); setPage(1); }}>검색 초기화</button>}
         </div>
       )}

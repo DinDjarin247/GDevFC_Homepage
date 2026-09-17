@@ -60,11 +60,11 @@
     {
       "id": "events",
       "no": "07",
-      "label": "외부행사",
+      "label": "캘린더",
       "href": "/events",
       "image": null,
-      "sprite": "archer",
-      "alt": "엘프 아처 캐릭터 - 외부행사 모드"
+      "sprite": "astrologer",
+      "alt": "점성술사 캐릭터 - 캘린더 모드"
     }
   ]
 }

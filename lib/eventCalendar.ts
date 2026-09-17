@@ -17,11 +17,26 @@ export function eventRange(event: ExternalEvent) {
   return start !== null && end !== null && end >= start ? { start, end } : null;
 }
 
+/** 점성술사 천막 팔레트 — 어두운 글자(#1a0f2c)가 얹히므로 전부 밝은 톤으로 유지한다 */
+const TENT_PALETTE = ['#f5d76e', '#c8a6ff', '#9fe8ff', '#a8f0c6', '#ffb0c8'] as const;
+
+const CATEGORY_COLOR: Record<string, string> = {
+  게임잼: '#f5d76e',
+  전시회: '#c8a6ff',
+  컨퍼런스: '#9fe8ff',
+  스터디: '#a8f0c6',
+  공모전: '#ffb0c8',
+};
+
 export function eventColor(event: ExternalEvent) {
+  const byCategory = CATEGORY_COLOR[event.category];
+  if (byCategory) return byCategory;
+
+  // 미등록 분류는 제목 기준으로 팔레트 안에서 고정 배정한다 (같은 행사 = 같은 색)
   const key = `${event.title}|${event.date}|${event.url ?? ''}`;
   let hash = 0;
   for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return `hsl(${hash % 360} 70% 76%)`;
+  return TENT_PALETTE[hash % TENT_PALETTE.length];
 }
 
 export function weekSegments(events: ExternalEvent[], weekStart: number) {

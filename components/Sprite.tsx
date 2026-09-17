@@ -48,6 +48,12 @@ const PALETTE: Record<string, string> = {
   // 도적(게시판) 전용
   B: '#2a2a30', // 후드/망토(어두운 남보라)
   L: '#1a1a1f', // 망토 그림자
+  // 점성술사(캘린더) 전용
+  d: '#4b3a8f', // 별무늬 로브/모자(인디고)
+  D: '#2b1f5c', // 로브 그림자
+  i: '#9fe8ff', // 수정구슬
+  I: '#3f7fb3', // 수정구슬 테두리
+  G: '#f5d76e', // 금빛 별 장식
 };
 
 /** 수동으로 16글자를 세는 실수를 막기 위한 그리드 빌더 (인덱스 → 문자) */
@@ -249,6 +255,32 @@ const ROGUE = [
   buildRow(W, {}),
 ];
 
+/** 캘린더 모드용 — 별 박힌 챙 넓은 모자를 쓰고 수정구슬을 들여다보는 점성술사 */
+const ASTROLOGER = [
+  buildRow(W, {}),
+  buildRow(W, { 7: 'G' }),
+  buildRow(W, markRange(6, 9, 'd')),
+  buildRow(W, markRange(5, 10, 'd')),
+  buildRow(W, { ...markRange(4, 11, 'd'), 7: 'G', 8: 'G' }),
+  buildRow(W, markRange(3, 12, 'd')),
+  buildRow(W, { ...markRange(2, 13, 'd'), 2: 'D', 13: 'D' }),
+  buildRow(W, markRange(1, 14, 'D')),
+  buildRow(W, markRange(5, 10, 's')),
+  buildRow(W, { ...markRange(5, 10, 's'), 6: 'e', 9: 'e' }),
+  buildRow(W, markRange(5, 10, 'S')),
+  buildRow(W, { ...markRange(3, 12, 'd'), 7: 'G', 8: 'G' }),
+  buildRow(W, { ...markRange(2, 13, 'd'), 2: 'D', 13: 'D' }),
+  buildRow(W, { ...markRange(2, 13, 'd'), 2: 'D', 13: 'D', 4: 'G' }),
+  buildRow(W, { ...markRange(2, 13, 'd'), 2: 'D', 13: 'D', 11: 'G' }),
+  buildRow(W, { ...markRange(2, 13, 'd'), ...markRange(6, 9, 'I') }),
+  buildRow(W, { ...markRange(2, 13, 'd'), 5: 'I', ...markRange(6, 9, 'i'), 10: 'I' }),
+  buildRow(W, { ...markRange(2, 13, 'd'), 5: 'I', 6: 'w', ...markRange(7, 9, 'i'), 10: 'I' }),
+  buildRow(W, { ...markRange(2, 13, 'd'), ...markRange(6, 9, 'I') }),
+  buildRow(W, markRange(2, 13, 'D')),
+  buildRow(W, markRange(3, 12, 'D')),
+  buildRow(W, {}),
+];
+
 const SPRITES: Record<string, string[]> = {
   knight: KNIGHT,
   mage: MAGE,
@@ -257,6 +289,7 @@ const SPRITES: Record<string, string[]> = {
   mystery: MYSTERY,
   bard: BARD,
   rogue: ROGUE,
+  astrologer: ASTROLOGER,
 };
 
 type SpriteProps = {

@@ -1,130 +1,485 @@
+/* ==========================================================================
+   캘린더 — 점성술사의 천막
+   사이트 기본 팔레트(딥차콜 + 라임/마젠타) 위에, 이 화면에서만 쓰는
+   보라/금빛/수정구슬 색을 지역 변수로 얹는다.
+   ========================================================================== */
+
+.intro,
+.board {
+  --tent-gold: #f5d76e;
+  --tent-gold-soft: rgba(245, 215, 110, 0.4);
+  --tent-violet: #b98cff;
+  --tent-violet-soft: rgba(185, 140, 255, 0.34);
+  --tent-crystal: #9fe8ff;
+  --tent-panel: rgba(30, 18, 52, 0.84);
+  --tent-panel-2: rgba(38, 23, 66, 0.9);
+  --tent-line: rgba(185, 140, 255, 0.24);
+}
+
+/* 배경 천막 — Frame 의 bgLayer 를 패널 전체에 채운다.
+   카드/달력이 반투명이라 배경이 은은하게 비쳐 보이도록 낮은 불투명도를 쓴다 */
+.bg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  opacity: 0.5;
+}
+
+/* ---------- 인트로 ---------- */
+
 .intro {
-  padding: clamp(28px, 5vw, 64px) 0 32px;
-  border-bottom: 1px solid var(--line);
+  padding: clamp(24px, 4vw, 56px) 0 clamp(24px, 2.6vw, 34px);
+  border-bottom: 1px solid var(--tent-line);
+  text-align: center;
 }
 
 .eyebrow {
-  margin: 0 0 20px;
-  color: var(--lime);
+  margin: 0 0 clamp(14px, 1.4vw, 20px);
+  color: var(--tent-gold);
   font-family: var(--font-pixel);
-  font-size: clamp(9px, 1.2vw, 12px);
+  font-size: clamp(9px, 0.85cqw, 13px);
+  letter-spacing: 0.14em;
   line-height: 1.8;
+  text-shadow: 0 0 12px rgba(245, 215, 110, 0.35);
 }
 
 .heading {
-  margin: 0 0 16px;
+  margin: 0 0 clamp(12px, 1.2vw, 18px);
   font-family: var(--font-pixel-lg);
-  font-size: clamp(20px, 3vw, 32px);
+  font-size: clamp(17px, 2.3cqw, 30px);
   font-weight: 400;
   line-height: 1.6;
+  color: #efe6ff;
   word-break: keep-all;
   overflow-wrap: anywhere;
+  text-shadow: 0 0 18px rgba(185, 140, 255, 0.35);
 }
 
 .description {
   margin: 0;
-  color: var(--muted);
+  color: #b9a8d6;
+  font-size: clamp(12.5px, 0.95cqw, 16px);
   line-height: 1.9;
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
 
+/* ---------- 게시판 셸 ---------- */
+
+.board {
+  padding: clamp(22px, 2.4vw, 34px) 0 0;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(8px, 0.8vw, 12px);
+}
+
+.search {
+  flex: 1 1 240px;
+}
+
+.toolbar input,
+.toolbar select,
+.button {
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid var(--tent-line);
+  border-radius: var(--radius);
+  background: var(--tent-panel);
+  color: #e7ddfa;
+  font-size: clamp(12px, 0.85cqw, 14px);
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.toolbar input {
+  width: 100%;
+}
+
+.toolbar input::placeholder {
+  color: #7d6ca0;
+}
+
+.toolbar input:focus,
+.toolbar select:focus {
+  outline: none;
+  border-color: var(--tent-crystal);
+  box-shadow: 0 0 0 1px rgba(159, 232, 255, 0.35);
+}
+
+.button {
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: clamp(9px, 0.7cqw, 11.5px);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--tent-gold);
+  color: var(--tent-gold);
+  box-shadow: 0 0 14px rgba(245, 215, 110, 0.2);
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.viewToggle {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.button[aria-pressed='true'] {
+  background: var(--tent-gold);
+  border-color: var(--tent-gold);
+  color: #241436;
+}
+
+.button[aria-pressed='true']:hover {
+  color: #241436;
+}
+
+.count {
+  margin: clamp(14px, 1.6vw, 22px) 0;
+  color: #a695c6;
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 0.78cqw, 13px);
+  letter-spacing: 0.04em;
+}
+
+/* ---------- 카드 ---------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(14px, 1.4vw, 22px);
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: clamp(18px, 1.8vw, 26px);
+  border: 1px solid var(--tent-line);
+  border-top: 2px solid var(--tent-gold-soft);
+  border-radius: var(--radius);
+  background: var(--tent-panel);
+  overflow-wrap: anywhere;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-top-color: var(--tent-gold);
+  box-shadow: 0 10px 28px rgba(12, 6, 26, 0.55), 0 0 18px rgba(185, 140, 255, 0.18);
+}
+
+.category {
+  padding: 4px 10px;
+  border: 1px solid var(--tent-violet-soft);
+  border-radius: var(--radius);
+  background: rgba(185, 140, 255, 0.12);
+  color: var(--tent-violet);
+  font-family: var(--font-mono);
+  font-size: clamp(10px, 0.7cqw, 12px);
+  letter-spacing: 0.06em;
+}
+
+.cardTitle {
+  margin: clamp(14px, 1.3vw, 20px) 0 10px;
+  font-size: clamp(15px, 1.35cqw, 21px);
+  font-weight: 500;
+  line-height: 1.5;
+  color: #f1e9ff;
+  word-break: keep-all;
+}
+
+.summary {
+  margin: 0 0 clamp(16px, 1.6vw, 24px);
+  color: #b3a3d0;
+  font-size: clamp(12.5px, 0.9cqw, 15px);
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.details {
+  width: 100%;
+  margin: auto 0 clamp(16px, 1.6vw, 24px);
+  font-size: clamp(12px, 0.85cqw, 14px);
+}
+
+.details div {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.details dt {
+  color: var(--tent-gold);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  letter-spacing: 0.04em;
+}
+
+.details dd {
+  margin: 0;
+  color: #ddd2f2;
+  white-space: pre-line;
+}
+
+.eventLink,
+.noLink {
+  width: 100%;
+  padding-top: 14px;
+  border-top: 1px solid var(--tent-line);
+  font-size: clamp(12px, 0.85cqw, 14px);
+}
+
+.eventLink {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--tent-crystal);
+}
+
+.eventLink:hover {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(159, 232, 255, 0.55);
+}
+
+.noLink {
+  margin: 0;
+  color: #7d6ca0;
+}
+
+/* ---------- 페이지네이션 ---------- */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: clamp(22px, 2.4vw, 34px);
+}
+
+.pagination .button {
+  min-width: 40px;
+  padding: 8px 10px;
+}
+
+.pagination .button[aria-current='page'] {
+  background: var(--tent-gold);
+  border-color: var(--tent-gold);
+  color: #241436;
+}
+
+.pagination .button:disabled {
+  cursor: default;
+}
+
+.pageStatus {
+  margin-top: 12px;
+  text-align: center;
+  color: #8e7cb4;
+  font-family: var(--font-mono);
+  font-size: clamp(10.5px, 0.75cqw, 12.5px);
+}
+
+/* ---------- 빈 상태 / 오류 ---------- */
+
 .empty {
-  margin: 32px 0;
-  padding: clamp(36px, 7vw, 80px) 20px;
-  border: 1px dashed var(--line);
-  background: var(--panel-2);
+  margin: clamp(22px, 2.4vw, 34px) 0;
+  padding: clamp(32px, 5vw, 64px) 20px;
+  border: 1px dashed var(--tent-violet-soft);
+  border-radius: var(--radius);
+  background: var(--tent-panel);
   text-align: center;
 }
 
 .symbol {
-  color: var(--magenta);
-  font-size: 40px;
+  display: inline-block;
+  color: var(--tent-violet);
+  font-size: clamp(28px, 3vw, 40px);
+  text-shadow: 0 0 20px rgba(185, 140, 255, 0.5);
 }
 
 .status {
-  margin: 16px 0 24px;
-  color: var(--lime);
+  margin: 14px 0 20px;
+  color: var(--tent-gold);
   font-family: var(--font-pixel);
-  font-size: 10px;
+  font-size: clamp(9px, 0.7cqw, 11px);
+  letter-spacing: 0.1em;
   line-height: 1.8;
 }
 
 .emptyHeading {
-  margin: 0 0 12px;
-  font-size: clamp(17px, 2vw, 22px);
+  margin: 0 0 10px;
+  font-size: clamp(15px, 1.4cqw, 21px);
   font-weight: 500;
+  color: #efe6ff;
   word-break: keep-all;
 }
 
-.board { padding: 28px 0; }
-.toolbar { display: flex; flex-wrap: wrap; gap: 12px; }
-.search { flex: 1 1 240px; }
-.toolbar input, .toolbar select, .button {
-  min-height: 44px;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--field);
-  color: var(--text);
+.empty .button {
+  margin-top: 18px;
 }
-.toolbar input { width: 100%; }
-.toolbar input::placeholder { color: var(--muted); }
-.button { cursor: pointer; }
-.button:hover:not(:disabled) { border-color: var(--lime); color: var(--lime); }
-.button:disabled { opacity: 0.5; cursor: wait; }
-.empty .button { margin-top: 20px; }
-.count { margin: 20px 0; color: var(--muted); font-size: 13px; }
-.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-.card {
+
+/* ---------- 달력 ---------- */
+
+.calendarHeader {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: clamp(20px, 2vw, 28px);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--lime);
-  background: var(--panel-2);
-  overflow-wrap: anywhere;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 }
-.category {
-  padding: 4px 10px;
-  background: var(--lime-faint);
-  color: var(--lime);
+
+.calendarHeader h2 {
+  margin: clamp(8px, 1vw, 14px) 0;
+  font-family: var(--font-pixel-lg);
+  font-size: clamp(15px, 1.5cqw, 22px);
+  font-weight: 400;
+  color: var(--tent-gold);
+  text-shadow: 0 0 14px rgba(245, 215, 110, 0.3);
+}
+
+.calendarHint {
+  margin-bottom: 14px;
+  color: #8e7cb4;
+  font-size: clamp(11px, 0.78cqw, 12.5px);
+  line-height: 1.7;
+}
+
+.calendarScroll {
+  overflow-x: auto;
+  border: 1px solid var(--tent-line);
+  border-radius: var(--radius);
+  margin-bottom: 18px;
+  background: rgba(20, 12, 36, 0.6);
+}
+
+.calendarScroll:focus-visible {
+  outline: 2px solid var(--tent-crystal);
+  outline-offset: 2px;
+}
+
+.calendarGrid {
+  min-width: 720px;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  background: rgba(58, 37, 104, 0.75);
+  text-align: center;
+  padding: 10px 0;
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 0.8cqw, 13px);
+  letter-spacing: 0.06em;
+  color: #d8cbf5;
+}
+
+.weekdays span:first-child {
+  color: #ff8fb8;
+}
+
+.weekdays span:last-child {
+  color: var(--tent-crystal);
+}
+
+.calendarWeek {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--tent-line);
+}
+
+.calendarDay {
+  border-right: 1px solid rgba(185, 140, 255, 0.12);
+  padding: 4px 8px;
+  min-height: 96px;
+  background: var(--tent-panel-2);
+}
+
+.calendarDay:last-of-type {
+  border-right: 0;
+}
+
+.calendarDay time {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-family: var(--font-mono);
   font-size: 12px;
+  color: #cbbcec;
 }
-.cardTitle { margin: 20px 0 12px; font-size: 22px; line-height: 1.5; word-break: keep-all; }
-.summary { margin: 0 0 24px; color: var(--muted); white-space: pre-line; }
-.details { width: 100%; margin: auto 0 24px; font-size: 14px; }
-.details div { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; margin-top: 8px; }
-.details dt { color: var(--muted); }
-.details dd { margin: 0; white-space: pre-line; }
-.eventLink, .noLink { width: 100%; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; }
-.eventLink { display: flex; justify-content: space-between; gap: 12px; color: var(--lime); }
-.eventLink:hover { text-decoration: underline; }
-.noLink { margin: 0; color: var(--muted); }
-.pagination { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 32px; }
-.pagination .button { min-width: 40px; padding: 8px 10px; }
-.pagination .button[aria-current='page'] { background: var(--lime); border-color: var(--lime); color: var(--bg); }
-.pagination .button:disabled { cursor: default; }
-.pageStatus { text-align: center; color: var(--muted); font-size: 13px; }
-.viewToggle { display: flex; gap: 6px; align-items: center; }
-.button[aria-pressed='true'] { background: var(--lime); color: var(--bg); border-color: var(--lime); }
-.button[aria-pressed='true']:hover { color: var(--bg); }
-.calendarHeader { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.calendarHeader h2 { font-family: var(--font-pixel-lg); font-size: 22px; font-weight: 400; margin: 12px 0; }
-.calendarHint { color: var(--muted); font-size: 12px; margin-bottom: 16px; }
-.calendarScroll { overflow-x: auto; border: 1px solid var(--line); margin-bottom: 20px; }
-.calendarGrid { min-width: 720px; }
-.weekdays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); background: var(--field); text-align: center; padding: 12px 0; font-size: 13px; }
-.weekdays span:first-child { color: #ff9cad; }
-.weekdays span:last-child { color: #a7c8ff; }
-.calendarWeek { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); }
-.calendarDay { border-right: 1px solid var(--line-soft); padding: 4px 8px; min-height: 96px; background: var(--panel-2); }
-.calendarDay:last-of-type { border-right: 0; }
-.calendarDay time { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; font-size: 12px; }
-.outsideMonth { background: var(--panel); color: var(--dim); }
-.calendarDay .today { background: var(--lime); color: var(--bg); border-radius: 50%; font-weight: 700; }
-.calendarEvent { z-index: 1; align-self: center; margin: 2px 3px; padding: 2px 8px; border-radius: 3px; color: #101010; font-size: 12px; font-weight: 600; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-a.calendarEvent:hover { filter: brightness(1.1); text-decoration: underline; }
-@media (max-width: 960px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 600px) { .cards { grid-template-columns: minmax(0, 1fr); } }
+
+.outsideMonth {
+  background: rgba(22, 13, 40, 0.86);
+}
+
+.outsideMonth time {
+  color: #6b5b8c;
+}
+
+.calendarDay .today {
+  background: var(--tent-gold);
+  color: #241436;
+  border-radius: 50%;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(245, 215, 110, 0.55);
+}
+
+.calendarEvent {
+  z-index: 1;
+  align-self: center;
+  margin: 2px 3px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  color: #1a0f2c;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+a.calendarEvent:hover {
+  filter: brightness(1.12);
+  box-shadow: 0 0 12px rgba(245, 215, 110, 0.35);
+}
+
+/* ---------- 반응형 ---------- */
+
+@media (max-width: 960px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .toolbar {
+    gap: 8px;
+  }
+}
