@@ -70,8 +70,8 @@ export const PLAZA_SPOTS: Record<string, PlazaSpot> = {
     altSprite: 'woowang-stir',
     idle: 'cook',
   },
-  // 점성술사 — 광장에 친 별무늬 천막
-  events: { x: 314, y: 157, scale: 0.86, place: '점성술 천막', idle: 'read' },
+  // 점성술사 — 천막 입구 바로 앞 (입구 삼각형이 x=356 에 있다)
+  events: { x: 356, y: 167, scale: 0.88, place: '점성술 천막', idle: 'read' },
   // 엘프 아처 — 오른쪽 담벼락 과녁장
   join: {
     x: 408,

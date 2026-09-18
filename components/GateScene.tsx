@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 
+import { KNIGHT_GRID, paintKnight, pickKnightPair } from '@/lib/gateKnights';
+
 type GateSceneProps = {
   className?: string;
   /** true 가 되면 성문이 열린다 — 광장으로 넘어가기 직전의 연출 */
@@ -62,6 +64,16 @@ export default function GateScene({ className, opening = false }: GateSceneProps
     let stars: Star[] = [];
     let torches: [number, number][] = [];
     const embers: Ember[] = [];
+
+    /**
+     * 오늘 문을 지킬 두 사람 — 들어올 때 한 번만 뽑는다.
+     * 프레임마다 뽑으면 사람이 깜빡이며 바뀌므로 반드시 여기서 고정한다.
+     */
+    const [leftKnight, rightKnight] = pickKnightPair();
+    const knightArt = {
+      left: paintKnight(leftKnight),
+      right: paintKnight(rightKnight),
+    };
 
     /** 움직이지 않는 레이어는 한 번만 그려 캐시한다 */
     const backdrop = document.createElement('canvas');
@@ -357,6 +369,35 @@ export default function GateScene({ className, opening = false }: GateSceneProps
       }
     }
 
+    /**
+     * 성문을 지키는 두 기사.
+     *
+     * 문 바로 옆 횃불 바깥쪽에 세운다. 발끝을 길 시작선보다 살짝 아래로 내려서
+     * 성벽에 붙어 선 게 아니라 길 위에 서 있는 것으로 읽히게 한다.
+     * 오른쪽 사람은 좌우를 뒤집어 둘이 서로 마주 보게 세운다.
+     */
+    function drawKnights() {
+      const { w, h } = KNIGHT_GRID;
+      const footY = GROUND_Y + 4;
+      const top = footY - h;
+
+      // 발밑 그림자 — 없으면 길 위에 떠 보인다
+      for (const cx of [gateL - 34, gateR + 34]) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.beginPath();
+        ctx.ellipse(cx, footY - 1, 10, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.drawImage(knightArt.left, Math.round(gateL - 34 - w / 2), top);
+
+      ctx.save();
+      ctx.translate(Math.round(gateR + 34 + w / 2), top);
+      ctx.scale(-1, 1);
+      ctx.drawImage(knightArt.right, 0, 0);
+      ctx.restore();
+    }
+
     /** 횃불 — 불꽃과 벽에 번지는 빛 */
     function drawTorches(t: number) {
       torches.forEach(([tx, ty], i) => {
@@ -466,6 +507,7 @@ export default function GateScene({ className, opening = false }: GateSceneProps
 
       drawDoors(open);
       drawGateGlow(open, t);
+      drawKnights();
       drawTorches(t);
 
       if (!reduced) {
