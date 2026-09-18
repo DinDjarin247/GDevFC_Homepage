@@ -43,7 +43,7 @@ npm run build
 ## 캘린더 · Google Sheets
 
 화면 컨셉은 **점성술사의 천막**입니다. 배경은 `components/TentScene.tsx` 가 저해상도 캔버스로
-천막 천·매달린 등불·별자리·떠오르는 입자·수정구슬을 그리고(홈의 `Starfield`, 게시판의
+천막 천·매달린 등불·별자리·떠오르는 입자·수정구슬을 그리고(홈의 `GateScene`, 게시판의
 `CampfireScene` 과 같은 기법), 화면 안의 색은 `app/events/events.module.css` 상단에 모아둔
 보라/금빛/수정구슬 지역 변수(`--tent-*`)로 통일합니다. 달력 막대 색은
 `lib/eventCalendar.ts` 의 `eventColor()` 가 분류별로 고정 배정하며, 등록되지 않은 분류는
@@ -320,7 +320,7 @@ Canvas 2D 로 그리는 두 페이즈 구성 미니게임입니다. 무거운 �
 
 ```
 app/
-  page.tsx            타이틀 (배경: Starfield)
+  page.tsx            타이틀 (배경: GateScene)
   select/             SELECT MODE
   about/              ABOUT
   showcase/           SHOWCASE
@@ -336,7 +336,7 @@ components/
   AboutHero.tsx         매니페스토 순차 등장 + 클릭 스킵
   CharacterCreator.tsx  캐릭터 생성 폼 + 실시간 카드 미리보기
   Sprite.tsx            내장 픽셀 스프라이트 (기사 · 마법사 · 엘프 아처 · 우왕이 · 미스터리)
-  Starfield.tsx         홈 화면 배경 — 반짝이는 스타필드 + 우주선
+  GateScene.tsx         홈 화면 배경 — 마을 성문 앞 밤길 (START 누르면 문이 열린다)
   play/
     IntroScreen.tsx     레트로 타이틀 카드 (스크롤 끝까지 내려야 시작 활성화)
     WoowangGame.tsx     Canvas 게임 엔진 (페이즈1·2 + 게임오버 + 캡처)

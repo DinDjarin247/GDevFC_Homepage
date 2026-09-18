@@ -3,21 +3,24 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(6px, 0.9vw, 14px);
-  padding: 2px 0 4px;
 }
 
+/* 제목은 광장 하늘 위에 얹는다 (문서 흐름을 차지하지 않게) */
 .heading {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 2;
   margin: 0;
-  flex: 0 0 auto;
   font-family: var(--font-pixel);
-  font-size: clamp(12px, 1.5vw, 22px);
+  font-size: clamp(11px, 2.4cqh, 22px);
   letter-spacing: 0.1em;
   color: var(--lime);
-  text-shadow: clamp(-3px, -0.12vw, -2px) 0 0 var(--magenta);
+  text-shadow:
+    -2px 0 0 var(--magenta),
+    0 2px 6px rgba(0, 0, 0, 0.75);
   white-space: nowrap;
+  pointer-events: none;
 }
 
 /* 좁은 화면에서는 광장을 줄이지 않고 좌우로 둘러본다 */
@@ -26,31 +29,28 @@
   min-height: 0;
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
   background: #120d22;
 }
 
 .stageScroll:focus-visible {
   outline: 2px solid var(--lime);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
-/* 캔버스와 같은 16:9 비율을 유지해야 DOM 캐릭터 좌표(%)가 배경과 정확히 맞는다.
+/* 광장이 프레임 안쪽을 그대로 채운다. 캔버스(480x270)는 이 상자에 맞춰 늘어나고,
+   DOM 캐릭터 좌표는 % 라 배경과 함께 따라 늘어나므로 서로 어긋나지 않는다.
    size 컨테이너로 만들어, 캐릭터 크기를 광장 높이(cqh) 기준으로 잡는다 */
 .stage {
   position: relative;
   width: 100%;
+  height: 100%;
   min-width: 860px;
   margin-inline: auto;
-  aspect-ratio: 480 / 270;
-  /* 세로 공간이 모자라면 비율을 지킨 채 줄어든다 */
-  max-height: 100%;
   container-type: size;
-  /* 캐릭터 키 = 광장 높이의 12% x 자리별 배율 (캔버스 기준 약 32px) */
+  /* 캐릭터 키 = 광장 높이의 12% x 자리별 배율 */
   --char-h: 12cqh;
 }
 
@@ -361,16 +361,27 @@
   }
 }
 
+/* 안내문도 광장 위에 얹는다 — 바닥 포석 위에 살짝 떠 있는 자막처럼 */
 .hint {
-  flex: 0 0 auto;
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  z-index: 2;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 8px;
   margin: 0;
+  padding: 4px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius);
+  background: rgba(10, 8, 18, 0.55);
   font-family: var(--font-mono);
-  font-size: clamp(10px, 0.85vw, 14px);
+  font-size: clamp(9px, 1.5cqh, 14px);
   letter-spacing: 0.08em;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .hintMark {
@@ -397,8 +408,25 @@
     flex: 0 0 auto;
   }
 
+  /* 가로 스크롤로 넘어가는 폭에서는 부모 높이가 콘텐츠를 따라가므로,
+     높이를 비율로 정해 준다 */
   .stage {
-    max-height: none;
+    height: auto;
+    aspect-ratio: 480 / 270;
     --char-h: 13.5cqh;
+  }
+}
+
+/* 초광폭 모니터에서까지 늘리면 그림이 눈에 띄게 찌그러지므로,
+   그때만 비율을 지킨 채 가운데로 모은다 */
+@media (min-width: 861px) and (min-aspect-ratio: 2 / 1) {
+  .stageScroll {
+    align-items: center;
+  }
+
+  .stage {
+    height: auto;
+    aspect-ratio: 480 / 270;
+    max-height: 100%;
   }
 }

@@ -107,11 +107,12 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
 
   return (
     <div className={styles.wrap}>
-      <h1 className={styles.heading}>{heading}</h1>
-
       <div className={styles.stageScroll}>
         <div className={styles.stage}>
           {phase && <PlazaScene key={phase} className={styles.scene} phase={phase} />}
+
+          {/* 제목·안내문은 광장 위에 얹는다 — 위아래 띠를 없애 화면을 꽉 채우기 위해 */}
+          <h1 className={styles.heading}>{heading}</h1>
 
           {phase && (
             <span className={styles.phaseTag}>
@@ -185,15 +186,15 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
               </button>
             );
           })}
+
+          <p className={styles.hint}>
+            <span className={styles.hintMark} aria-hidden="true">
+              ▪
+            </span>
+            {hint}
+          </p>
         </div>
       </div>
-
-      <p className={styles.hint}>
-        <span className={styles.hintMark} aria-hidden="true">
-          ▪
-        </span>
-        {hint}
-      </p>
     </div>
   );
 }
