@@ -6,7 +6,7 @@ type CampfireSceneProps = {
   className?: string;
 };
 
-/** 저해상도 가상 캔버스 + CSS 확대로 8비트 느낌을 내고 렌더 비용을 낮춘다 (Starfield와 동일 기법) */
+/** 저해상도 가상 캔버스 + CSS 확대로 8비트 느낌을 내고 렌더 비용을 낮춘다 (GateScene과 동일 기법) */
 const VIRTUAL_W = 320;
 const VIRTUAL_H = 180;
 const GROUND_Y = VIRTUAL_H * 0.76;

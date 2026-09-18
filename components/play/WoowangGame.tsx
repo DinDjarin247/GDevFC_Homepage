@@ -157,7 +157,7 @@ type WoowangGameProps = {
 /**
  * 페이즈1(교실 탈출) + 페이즈2(횡스크롤 러닝)를 한 캔버스에서 처리하는
  * 게임 엔진. 상태는 전부 이 effect 안의 클로저 변수로 관리해 매 프레임
- * 리렌더 없이 rAF 루프만으로 동작한다 (Starfield.tsx 와 동일한 패턴).
+ * 리렌더 없이 rAF 루프만으로 동작한다 (GateScene.tsx 와 동일한 패턴).
  */
 export default function WoowangGame({ onExit }: WoowangGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);

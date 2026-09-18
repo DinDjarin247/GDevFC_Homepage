@@ -6,14 +6,16 @@
   padding: 20px 0 40px;
 }
 
-/* 배경 스타필드 — Frame 의 bgLayer 를 패널 전체(헤더 포함)에 채운다.
-   저해상도 가상 캔버스를 CSS 로 늘리는 방식이라 크기에 관계없이 반응형이다 */
+/* 배경 성문 — Frame 의 bgLayer 를 패널 전체(헤더 포함)에 채운다.
+   저해상도 가상 캔버스를 CSS 로 늘리는 방식이라 크기에 관계없이 반응형이다.
+   별만 흩뿌리던 때와 달리 이제는 읽어야 할 장면이라, 흐리게 깔지 않고 거의 그대로 보여준다.
+   글씨 가독성은 장면 안의 비네트가 맡는다 */
 .bg {
   display: block;
   width: 100%;
   height: 100%;
   image-rendering: pixelated;
-  opacity: 0.55;
+  opacity: 0.92;
 }
 
 .content {
