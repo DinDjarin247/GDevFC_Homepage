@@ -11,6 +11,14 @@ import {
   phaseForHour,
   type DayPhase,
 } from '@/lib/plazaLayout';
+import {
+  NPC_FAR_GRID,
+  NPC_GRID,
+  NPC_SKIN,
+  NPC_SPRITES,
+  paintNpcSprite,
+  type NpcKind,
+} from '@/lib/npcSprites';
 
 /** 지면 레이어의 바닥 — 장면 좌표에서 캔버스 맨 아래에 해당하는 y */
 const GROUND_BOTTOM = PLAZA_H - GROUND_SHIFT;
@@ -118,73 +126,11 @@ const AMBIENTS: Record<DayPhase, Ambient> = {
 
 const LEAF_TONES = ['#e0863a', '#c2622f', '#d9a43c', '#a8452a'];
 
-/** 주인공 스프라이트 대비 마을 사람 크기 — 조금 뒤에 있는 정도로만 작게 */
-const NPC_SCALE = 1.62;
-
-/** 광장을 오가는 마을 사람들 */
-type NpcKind = 'commoner' | 'knight' | 'mercenary' | 'orc' | 'elf' | 'dwarf';
-
 /**
- * 종족·직업별 생김새. 한 사람이 20px 남짓이라 이목구비를 그려 넣어봐야 뭉개지므로,
- * 실루엣(폭·키·다리 길이)과 색 한두 점, 등에 멘 무기로만 구분한다.
+ * 스프라이트 원본(14x20) 한 칸을 화면 몇 픽셀로 찍을지. 주인공이 32px 쯤 되므로
+ * 마을 사람은 21px 안팎 — 조금 뒤에 서 있는 정도로만 작다.
  */
-type NpcLook = {
-  /** 몸통 폭 배율 */
-  build: number;
-  /** 몸통 높이 배율 */
-  torso: number;
-  /** 다리 길이 배율 */
-  leg: number;
-  /** 종족 고유 살갗 (없으면 NPC 별로 지정한 색) */
-  skin?: string;
-  /** 얼굴을 덮는 투구 — 있으면 머리카락 대신 그리고 가리개 틈만 어둡게 남긴다 */
-  helm?: string;
-  /** 투구 깃털 */
-  plume?: string;
-  /** 가슴까지 내려오는 수염 */
-  beard?: string;
-  /** 어깨 보호대 */
-  pauldron?: string;
-  /** 뾰족귀 (엘프) */
-  pointedEars?: boolean;
-  /** 툭 튀어나온 아랫니 (오크) */
-  tusks?: boolean;
-  /** 허리까지 내려오는 긴 머리 */
-  longHair?: boolean;
-  /** 등에 멘 물건 */
-  gear?: 'spear' | 'sword' | 'axe' | 'bow';
-};
-
-const NPC_LOOKS: Record<NpcKind, NpcLook> = {
-  // 일반인 — 나머지 체형의 기준
-  commoner: { build: 1, torso: 1, leg: 1 },
-  // 기사 — 풀메일. 얼굴이 보이지 않는 투구에 붉은 깃털, 등에 창
-  knight: {
-    build: 1.16,
-    torso: 1.04,
-    leg: 1.02,
-    helm: '#b9c1cb',
-    plume: '#c4402f',
-    pauldron: '#8e97a3',
-    gear: 'spear',
-  },
-  // 용병 — 가죽 갑옷에 어깨 보호대, 등에 검
-  mercenary: { build: 1.08, torso: 1, leg: 1, pauldron: '#6b5945', gear: 'sword' },
-  // 오크 — 떡 벌어진 어깨에 짧은 다리, 초록 살갗과 아랫니
-  orc: { build: 1.44, torso: 1.06, leg: 0.86, skin: '#6f8f4a', tusks: true, gear: 'axe' },
-  // 엘프 — 호리호리하고 키가 크다. 뾰족귀, 긴 머리, 등에 활
-  elf: {
-    build: 0.82,
-    torso: 1.02,
-    leg: 1.18,
-    skin: '#f2dcc0',
-    pointedEars: true,
-    longHair: true,
-    gear: 'bow',
-  },
-  // 난쟁이 — 키는 작고 폭은 넓다. 수염이 가슴까지 내려오고 투구와 도끼
-  dwarf: { build: 1.32, torso: 0.94, leg: 0.48, helm: '#9a8358', beard: '#b4692c', gear: 'axe' },
-};
+const NPC_SPRITE_SCALE = 1.05;
 
 /**
  * far = 지평선 길(건물 앞)을 멀리서 오가는 사람들. 아주 작게 그린다.
@@ -192,6 +138,15 @@ const NPC_LOOKS: Record<NpcKind, NpcLook> = {
  * front = 좌판보다 나중에 그려서 광장을 걸어다니는 사람으로 보인다.
  */
 type NpcLayer = 'far' | 'back' | 'front';
+
+/** 스프라이트를 구워 붙인 사람 — 화면에 그릴 때 쓰는 형태 */
+type BakedNpc = Npc & {
+  /** 원본 그리드 크기 (근경 14x20 / 원경 8x11) */
+  gw: number;
+  gh: number;
+  /** 걸음 2프레임 */
+  frames: HTMLCanvasElement[];
+};
 
 type Npc = {
   kind: NpcKind;
@@ -224,32 +179,32 @@ type Npc = {
  */
 const NPCS: Npc[] = [
   // ---- 지평선 길 — 마을 건물 앞을 멀리서 오가는 사람들 ----
-  { kind: 'commoner', x: 60, y: 119, from: 14, to: 152, speed: 4.5, dir: 1, coat: '#8a7c5e', head: '#e8c49a', hair: '#4a3420', phase: 0.3, scale: 0.40, layer: 'far' },
-  { kind: 'dwarf', x: 120, y: 122, from: 64, to: 206, speed: 4, dir: 1, coat: '#7a5a3c', head: '#e8c49a', hair: '#8a4a1e', phase: 1.7, scale: 0.44, layer: 'far' },
-  { kind: 'knight', x: 350, y: 120, from: 256, to: 404, speed: 5, dir: -1, coat: '#9aa3ae', head: '#f0c49a', hair: '#3a3a42', phase: 2.4, scale: 0.42, layer: 'far' },
-  { kind: 'orc', x: 220, y: 125, from: 152, to: 298, speed: 6, dir: 1, coat: '#5d5138', head: '#6f8f4a', hair: '#2e2a1c', phase: 0.9, scale: 0.48, layer: 'far' },
-  { kind: 'elf', x: 380, y: 118, from: 302, to: 418, speed: 5.5, dir: -1, coat: '#4f7a62', head: '#f2dcc0', hair: '#d8c88a', phase: 3.1, scale: 0.40, layer: 'far' },
-  { kind: 'mercenary', x: 120, y: 126, from: 30, to: 178, speed: 7, dir: -1, coat: '#6b4a3a', head: '#e8c49a', hair: '#3a2a1c', phase: 1.2, scale: 0.50, layer: 'far' },
-  { kind: 'commoner', x: 280, y: 124, from: 212, to: 352, speed: 5, dir: 1, coat: '#6a5a7a', head: '#f0c49a', hair: '#5a3a22', phase: 2.0, scale: 0.46, layer: 'far' },
-  { kind: 'commoner', x: 300, y: 127, from: 244, to: 330, speed: 9.5, dir: -1, coat: '#a85a3c', head: '#f0c49a', hair: '#7a4a1e', phase: 0.6, scale: 0.42, layer: 'far' },
+  { kind: 'commoner', x: 62, y: 119, from: 16, to: 154, speed: 4.5, dir: 1, coat: '#8a7c5e', head: '#e8c49a', hair: '#4a3420', phase: 0.3, scale: 0.82, layer: 'far' },
+  { kind: 'dwarf', x: 122, y: 122, from: 66, to: 208, speed: 4, dir: 1, coat: '#7a5a3c', head: '#e8c49a', hair: '#8a4a1e', phase: 1.7, scale: 0.88, layer: 'far' },
+  { kind: 'knight', x: 352, y: 120, from: 258, to: 406, speed: 5, dir: -1, coat: '#9aa3ae', head: '#f0c49a', hair: '#3a3a42', phase: 2.4, scale: 0.85, layer: 'far' },
+  { kind: 'orc', x: 222, y: 125, from: 154, to: 300, speed: 6, dir: 1, coat: '#5d5138', head: '#6f8f4a', hair: '#2e2a1c', phase: 0.9, scale: 0.95, layer: 'far' },
+  { kind: 'elf', x: 382, y: 118, from: 304, to: 420, speed: 5.5, dir: -1, coat: '#4f7a62', head: '#f2dcc0', hair: '#d8c88a', phase: 3.1, scale: 0.82, layer: 'far' },
+  { kind: 'mercenary', x: 122, y: 126, from: 32, to: 180, speed: 7, dir: -1, coat: '#6b4a3a', head: '#e8c49a', hair: '#3a2a1c', phase: 1.2, scale: 1, layer: 'far' },
+  { kind: 'commoner', x: 282, y: 124, from: 214, to: 354, speed: 5, dir: 1, coat: '#6a5a7a', head: '#f0c49a', hair: '#5a3a22', phase: 2.0, scale: 0.92, layer: 'far' },
+  { kind: 'commoner', x: 302, y: 127, from: 246, to: 332, speed: 9.5, dir: -1, coat: '#a85a3c', head: '#f0c49a', hair: '#7a4a1e', phase: 0.6, scale: 0.85, layer: 'far' },
 
   // ---- 좌판 상인 둘 — 상판이 하반신을 가린다 ----
-  { kind: 'commoner', x: 176, y: 152, speed: 0, dir: 1, coat: '#8a7a4a', head: '#f0c49a', hair: '#5a4a2a', phase: 2.1, scale: 0.9, chatter: true, layer: 'back' },
-  { kind: 'dwarf', x: 290, y: 148, speed: 0, dir: -1, coat: '#8a6a2e', head: '#e8c49a', hair: '#4a3420', phase: 2.8, scale: 0.9, chatter: true, layer: 'back' },
+  { kind: 'commoner', x: 181, y: 152, speed: 0, dir: 1, coat: '#8a7a4a', head: '#f0c49a', hair: '#5a4a2a', phase: 2.1, scale: 0.9, chatter: true, layer: 'back' },
+  { kind: 'dwarf', x: 295, y: 148, speed: 0, dir: -1, coat: '#8a6a2e', head: '#e8c49a', hair: '#4a3420', phase: 2.8, scale: 0.9, chatter: true, layer: 'back' },
 
   // ---- 광장을 지나다니는 사람들 — 뒤쪽은 작게, 앞쪽은 크게 두어 깊이를 만든다 ----
   // 동상 받침대(x 211~269, y 165~195)를 통과하지 않도록 좌/우 통행로를 나눠 뒀다
-  { kind: 'mercenary', x: 168, y: 174, from: 148, to: 204, speed: 9, dir: 1, coat: '#7b5a3a', head: '#e8c49a', hair: '#3a2a1c', phase: 0.2, scale: 0.94, layer: 'front' },
-  { kind: 'elf', x: 302, y: 168, from: 278, to: 322, speed: 7, dir: -1, coat: '#4d5f7a', head: '#f2dcc0', hair: '#e0d09a', phase: 1.1, scale: 0.9, layer: 'front' },
-  { kind: 'commoner', x: 180, y: 200, from: 146, to: 210, speed: 15, dir: 1, coat: '#a85a3c', head: '#f0c49a', hair: '#7a4a1e', phase: 2.3, scale: 0.78, layer: 'front' },
-  { kind: 'commoner', x: 100, y: 178, speed: 0, dir: 1, coat: '#6a4a6e', head: '#e8c49a', hair: '#2e2119', phase: 0.7, scale: 0.96, chatter: true, layer: 'front' },
-  { kind: 'orc', x: 116, y: 178, speed: 0, dir: -1, coat: '#57703f', head: '#6f8f4a', hair: '#2b2416', phase: 1.9, scale: 0.96, chatter: true, layer: 'front' },
-  { kind: 'knight', x: 284, y: 194, speed: 0, dir: 1, coat: '#8f98a4', head: '#e8c49a', hair: '#3a3a42', phase: 1.6, scale: 1, chatter: true, layer: 'front' },
-  { kind: 'commoner', x: 302, y: 194, speed: 0, dir: -1, coat: '#7a4552', head: '#f0c49a', hair: '#2b1f18', phase: 3.3, scale: 1, chatter: true, layer: 'front' },
-  { kind: 'dwarf', x: 146, y: 214, speed: 0, dir: 1, coat: '#5a5a62', head: '#e8c49a', hair: '#8a8078', phase: 1.4, scale: 1.04, chatter: true, layer: 'front' },
-  { kind: 'elf', x: 198, y: 160, speed: 0, dir: -1, coat: '#4a4f6a', head: '#f2dcc0', hair: '#cdbb86', phase: 0.5, scale: 0.88, chatter: true, layer: 'front' },
-  { kind: 'commoner', x: 84, y: 186, from: 60, to: 114, speed: 6, dir: 1, coat: '#6a5a7a', head: '#e8c49a', hair: '#3a2a1c', phase: 0.9, scale: 0.94, layer: 'front' },
-  { kind: 'mercenary', x: 330, y: 220, from: 300, to: 380, speed: 8, dir: -1, coat: '#7a6a4a', head: '#f0c49a', hair: '#4a3420', phase: 2.6, scale: 1.08, layer: 'front' },
+  { kind: 'mercenary', x: 173, y: 174, from: 153, to: 209, speed: 9, dir: 1, coat: '#7b5a3a', head: '#e8c49a', hair: '#3a2a1c', phase: 0.2, scale: 0.94, layer: 'front' },
+  { kind: 'elf', x: 307, y: 168, from: 283, to: 327, speed: 7, dir: -1, coat: '#4d5f7a', head: '#f2dcc0', hair: '#e0d09a', phase: 1.1, scale: 0.9, layer: 'front' },
+  { kind: 'commoner', x: 185, y: 200, from: 151, to: 215, speed: 15, dir: 1, coat: '#a85a3c', head: '#f0c49a', hair: '#7a4a1e', phase: 2.3, scale: 0.78, layer: 'front' },
+  { kind: 'commoner', x: 105, y: 178, speed: 0, dir: 1, coat: '#6a4a6e', head: '#e8c49a', hair: '#2e2119', phase: 0.7, scale: 0.96, chatter: true, layer: 'front' },
+  { kind: 'orc', x: 121, y: 178, speed: 0, dir: -1, coat: '#57703f', head: '#6f8f4a', hair: '#2b2416', phase: 1.9, scale: 0.96, chatter: true, layer: 'front' },
+  { kind: 'knight', x: 289, y: 194, speed: 0, dir: 1, coat: '#8f98a4', head: '#e8c49a', hair: '#3a3a42', phase: 1.6, scale: 1, chatter: true, layer: 'front' },
+  { kind: 'commoner', x: 307, y: 194, speed: 0, dir: -1, coat: '#7a4552', head: '#f0c49a', hair: '#2b1f18', phase: 3.3, scale: 1, chatter: true, layer: 'front' },
+  { kind: 'dwarf', x: 151, y: 214, speed: 0, dir: 1, coat: '#5a5a62', head: '#e8c49a', hair: '#8a8078', phase: 1.4, scale: 1.04, chatter: true, layer: 'front' },
+  { kind: 'elf', x: 203, y: 160, speed: 0, dir: -1, coat: '#4a4f6a', head: '#f2dcc0', hair: '#cdbb86', phase: 0.5, scale: 0.88, chatter: true, layer: 'front' },
+  { kind: 'commoner', x: 89, y: 186, from: 65, to: 119, speed: 6, dir: 1, coat: '#6a5a7a', head: '#e8c49a', hair: '#3a2a1c', phase: 0.9, scale: 0.94, layer: 'front' },
+  { kind: 'mercenary', x: 335, y: 220, from: 305, to: 385, speed: 8, dir: -1, coat: '#7a6a4a', head: '#f0c49a', hair: '#4a3420', phase: 2.6, scale: 1.08, layer: 'front' },
 ];
 
 export default function PlazaScene({ className, phase }: PlazaSceneProps) {
@@ -265,6 +220,8 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
 
     canvas.width = PLAZA_W;
     canvas.height = PLAZA_H;
+    // 스프라이트를 확대해 찍으므로, 흐릿해지지 않게 픽셀 보간을 끈다
+    ctx.imageSmoothingEnabled = false;
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const active: DayPhase = phase ?? phaseForHour(new Date().getHours());
@@ -288,7 +245,24 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
       phase: Math.random() * Math.PI * 2,
     }));
 
-    const npcs = NPCS.map((n) => ({ ...n }));
+    /**
+     * 사람마다 스프라이트를 마운트할 때 한 번씩 구워둔다. 옷·머리·살갗 색이 저마다
+     * 다르므로 종류별로 한 장씩 공유할 수는 없지만, 21명 x 2프레임 = 14x20 짜리
+     * 캔버스 42장이라 메모리는 없는 것이나 마찬가지다. 대신 매 프레임 할 일은
+     * drawImage 한 번으로 줄어든다.
+     */
+    const npcs: BakedNpc[] = NPCS.map((n) => {
+      const far = n.layer === 'far';
+      const grid = far ? NPC_FAR_GRID : NPC_GRID;
+      const grids = far ? NPC_SPRITES[n.kind].far : NPC_SPRITES[n.kind].near;
+      const palette = { skin: NPC_SKIN[n.kind] ?? n.head, hair: n.hair, coat: n.coat };
+      return {
+        ...n,
+        gw: grid.w,
+        gh: grid.h,
+        frames: grids.map((g) => paintNpcSprite(g, grid.w, grid.h, palette)),
+      };
+    });
 
     const sky = ctx.createLinearGradient(0, 0, 0, SKY_BOTTOM);
     amb.sky.forEach((color, i) => sky.addColorStop(i / (amb.sky.length - 1), color));
@@ -1383,7 +1357,7 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
 
     // ---------- 마을 사람들 ----------
 
-    function drawNpc(n: Npc, t: number, dt: number) {
+    function drawNpc(n: BakedNpc, t: number, dt: number) {
       if (n.from !== undefined && n.to !== undefined && !reduced) {
         n.x += n.speed * n.dir * dt;
         if (n.x > n.to) {
@@ -1395,125 +1369,33 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
         }
       }
 
-      const look = NPC_LOOKS[n.kind];
-      const s = n.scale * NPC_SCALE;
       const walking = n.from !== undefined && !reduced;
-      const step = walking ? Math.sin(t * 6 + n.phase) : 0;
-      const bob = reduced ? 0 : Math.abs(Math.sin(t * (n.chatter ? 2.4 : 6) + n.phase)) * (n.chatter ? 0.8 : 1.2);
-      const x = Math.round(n.x);
-      const y = Math.round(n.y - bob);
+      // 걷는 사람만 두 프레임을 번갈아 밟는다. 서 있는 사람은 첫 프레임 고정
+      const frame = walking && Math.sin(t * 5 + n.phase) > 0 ? 1 : 0;
+      const bob = reduced
+        ? 0
+        : Math.abs(Math.sin(t * (n.chatter ? 2.4 : 6) + n.phase)) * (n.chatter ? 0.7 : 1);
 
-      /** 픽셀 그림이라 사각형은 정수 크기로만 — 최소 1px 은 남겨 멀리 있는 사람도 사라지지 않게 */
-      const px = (v: number) => Math.max(1, Math.round(v));
+      const dh = Math.max(4, Math.round(n.gh * n.scale * NPC_SPRITE_SCALE));
+      const dw = Math.max(3, Math.round(n.gw * (dh / n.gh)));
+      const dx = Math.round(n.x - dw / 2);
+      const dy = Math.round(n.y - bob) - dh;
 
-      const bodyW = px(5 * s * look.build);
-      const bodyH = px(6 * s * look.torso);
-      const legH = px(4 * s * look.leg);
-      const legW = px(1.8 * s * look.build);
-      const headW = px(3 * s);
-      const headH = px(3 * s);
-
-      const legTop = y - legH;
-      const torsoTop = legTop - bodyH;
-      const headTop = torsoTop - headH;
-      const headX = x + Math.round((bodyW - headW) / 2);
-      const swing = Math.round(step * Math.max(1, s * 0.8));
-      // 등은 진행 방향의 반대쪽 — 멘 무기는 그쪽으로 삐져나온다
-      const backX = n.dir === 1 ? x : x + bodyW;
-      const backDir = n.dir === 1 ? -1 : 1;
-
-      // 그림자
+      // 발밑 그림자
       ctx.fillStyle = 'rgba(0,0,0,0.22)';
       ctx.beginPath();
-      ctx.ellipse(x + bodyW / 2, n.y + 1, bodyW * 0.6, Math.max(1, 1.4 * s), 0, 0, Math.PI * 2);
+      ctx.ellipse(n.x, n.y, dw * 0.32, Math.max(1, dh * 0.07), 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // 등에 멘 무기 — 몸보다 먼저 그려야 등 뒤로 넘어간다
-      if (look.gear) {
-        const gw = px(s * 0.9);
-        const gx = backDir === -1 ? backX - gw : backX;
-        if (look.gear === 'spear') {
-          ctx.fillStyle = '#6a4a2c';
-          ctx.fillRect(gx, torsoTop - px(s * 5), gw, px(s * 5 + bodyH + legH * 0.4));
-          ctx.fillStyle = '#c9d0d8';
-          ctx.fillRect(gx, torsoTop - px(s * 7), gw, px(s * 2));
-        } else if (look.gear === 'sword') {
-          ctx.fillStyle = '#c9d0d8';
-          ctx.fillRect(gx, torsoTop - px(s * 3), gw, px(s * 6));
-          ctx.fillStyle = '#6a4a2c';
-          ctx.fillRect(gx - px(s * 0.6), torsoTop - px(s * 3), gw + px(s * 1.2), px(s));
-        } else if (look.gear === 'axe') {
-          ctx.fillStyle = '#6a4a2c';
-          ctx.fillRect(gx, torsoTop - px(s * 3), gw, px(s * 6));
-          ctx.fillStyle = '#b9c1cb';
-          ctx.fillRect(backDir === -1 ? gx - px(s * 1.6) : gx + gw, torsoTop - px(s * 3), px(s * 1.6), px(s * 2.4));
-        } else {
-          // 활 — 등에 비스듬히 걸친 나무 곡선
-          ctx.strokeStyle = '#8a6a3a';
-          ctx.lineWidth = Math.max(1, s * 0.7);
-          ctx.beginPath();
-          ctx.arc(backX + backDir * s * 2.4, torsoTop + bodyH * 0.4, Math.max(2, s * 4), -Math.PI * 0.42, Math.PI * 0.42, backDir === -1);
-          ctx.stroke();
-        }
-      }
-
-      // 다리 — 갑옷을 입은 쪽은 정강이받이로 보이게 금속색
-      ctx.fillStyle = look.helm && n.kind === 'knight' ? '#727a85' : '#3b2f26';
-      ctx.fillRect(x + swing, legTop, legW, legH);
-      ctx.fillRect(x + bodyW - legW - swing, legTop, legW, legH);
-
-      // 몸통
-      ctx.fillStyle = n.coat;
-      ctx.fillRect(x, torsoTop, bodyW, bodyH);
-
-      // 어깨 보호대
-      if (look.pauldron) {
-        ctx.fillStyle = look.pauldron;
-        ctx.fillRect(x - px(s * 0.5), torsoTop, bodyW + px(s), px(s * 1.4));
-      }
-
-      // 엘프의 긴 머리 — 등 쪽으로 흘러내린다
-      if (look.longHair) {
-        ctx.fillStyle = n.hair;
-        ctx.fillRect(headX, headTop, px(s), headH + px(bodyH * 0.55));
-      }
-
-      if (look.helm) {
-        // 투구가 얼굴을 덮고, 가리개 틈만 어둡게 남는다
-        ctx.fillStyle = look.helm;
-        ctx.fillRect(headX, headTop, headW, headH);
-        ctx.fillStyle = 'rgba(18, 20, 26, 0.85)';
-        ctx.fillRect(headX, headTop + Math.round(headH * 0.42), headW, px(headH * 0.24));
-        if (look.plume) {
-          ctx.fillStyle = look.plume;
-          ctx.fillRect(headX + Math.round(headW / 2), headTop - px(s * 1.6), px(s * 0.9), px(s * 1.6));
-        }
+      // 그림은 오른쪽을 보고 있다 — 왼쪽으로 가는 사람은 뒤집어 그린다
+      if (n.dir === -1) {
+        ctx.save();
+        ctx.translate(dx + dw, dy);
+        ctx.scale(-1, 1);
+        ctx.drawImage(n.frames[frame], 0, 0, dw, dh);
+        ctx.restore();
       } else {
-        // 살갗 + 머리카락
-        ctx.fillStyle = look.skin ?? n.head;
-        ctx.fillRect(headX, headTop, headW, headH);
-        ctx.fillStyle = n.hair;
-        ctx.fillRect(headX, headTop, headW, px(headH * 0.4));
-      }
-
-      // 뾰족귀
-      if (look.pointedEars) {
-        ctx.fillStyle = look.skin ?? n.head;
-        ctx.fillRect(headX - px(s * 0.7), headTop + px(headH * 0.3), px(s * 0.7), px(s * 0.7));
-        ctx.fillRect(headX + headW, headTop + px(headH * 0.3), px(s * 0.7), px(s * 0.7));
-      }
-
-      // 아랫니
-      if (look.tusks) {
-        ctx.fillStyle = '#eae2cf';
-        ctx.fillRect(headX + px(s * 0.4), headTop + headH, px(s * 0.6), px(s * 0.6));
-        ctx.fillRect(headX + headW - px(s), headTop + headH, px(s * 0.6), px(s * 0.6));
-      }
-
-      // 가슴까지 내려오는 수염 — 투구 아래 얼굴 자리를 통째로 덮는다
-      if (look.beard) {
-        ctx.fillStyle = look.beard;
-        ctx.fillRect(headX, headTop + Math.round(headH * 0.6), headW, px(headH * 0.4 + bodyH * 0.5));
+        ctx.drawImage(n.frames[frame], dx, dy, dw, dh);
       }
     }
 
