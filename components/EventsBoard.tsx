@@ -62,11 +62,12 @@ export default function EventsBoard() {
 
   const filtered = searchResults.filter((event) => matchesCalendarFilter(event, eventFilter));
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / 10));
+  const pageSize = 12;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const groupStart = Math.floor((currentPage - 1) / 5) * 5 + 1;
   const pageNumbers = Array.from({ length: Math.min(5, pageCount - groupStart + 1) }, (_, i) => groupStart + i);
-  const pageEvents = filtered.slice((currentPage - 1) * 10, currentPage * 10);
+  const pageEvents = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const eventFilters: { value: CalendarFilter; label: string }[] = [
     { value: 'all', label: '전체 행사' },
