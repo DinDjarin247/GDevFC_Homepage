@@ -12,6 +12,11 @@ type FrameProps = {
   /** true 면 본문의 max-width/좌우 여백을 없애고 패널 폭 전체를 채운다 (예: 게임 화면) */
   fullBleedBody?: boolean;
   /**
+   * true 면 바깥 여백·헤더·본문 패딩을 최소로 줄여, 안쪽 화면이 뷰포트를 거의
+   * 그대로 채우게 한다 (예: 마을 광장). 테두리와 배지는 그대로 남는다.
+   */
+  slimChrome?: boolean;
+  /**
    * true 면 좁은 화면(모바일)에서 배지/헤더/여백/테두리를 모두 없애고
    * 패널이 뷰포트를 그대로 채우는 전체화면 모드가 된다. 데스크톱에는
    * 영향이 없다 — 헤더의 BACK 링크가 사라지므로, 이 모드를 켤 때는
@@ -27,6 +32,7 @@ export default function Frame({
   header,
   background,
   fullBleedBody = false,
+  slimChrome = false,
   immersiveMobile = false,
   children,
 }: FrameProps) {
@@ -34,7 +40,7 @@ export default function Frame({
     <main
       className={`${styles.page} ${immersiveMobile ? styles.immersive : ''} ${
         fullBleedBody ? styles.fixedHeight : ''
-      }`}
+      } ${slimChrome ? styles.slim : ''}`}
     >
       <div className={styles.panel}>
         {background && <div className={styles.bgLayer}>{background}</div>}
