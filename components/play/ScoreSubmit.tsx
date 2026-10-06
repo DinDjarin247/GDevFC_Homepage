@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import Leaderboard from './Leaderboard';
+import Leaderboard, { defaultScoreFormat, type ScoreTable } from './Leaderboard';
 import styles from './ScoreSubmit.module.css';
 
 const NAME_KEY = 'gdevfc_woowang_name';
@@ -10,13 +10,20 @@ const MAX_NAME_LEN = 12;
 
 type ScoreSubmitProps = {
   score: number;
+  /** 기록을 남길 랭킹 테이블 (기본: 달려라 우왕이) */
+  table?: ScoreTable;
+  formatScore?: (score: number) => string;
 };
 
 /**
  * 옛날 오락실 방식 기록 등록 — 로그인 없이 이름만 적으면 점수가 공개 랭킹에 남는다.
  * 등록 직후 자동으로 TOP 10 랭킹을 보여준다.
  */
-export default function ScoreSubmit({ score }: ScoreSubmitProps) {
+export default function ScoreSubmit({
+  score,
+  table = 'arcade_scores',
+  formatScore = defaultScoreFormat,
+}: ScoreSubmitProps) {
   const [name, setName] = useState(() => {
     if (typeof window === 'undefined') return '';
     return window.localStorage.getItem(NAME_KEY) ?? '';
@@ -37,7 +44,7 @@ export default function ScoreSubmit({ score }: ScoreSubmitProps) {
     setSubmitting(true);
 
     const { data, error: insertError } = await supabase
-      .from('arcade_scores')
+      .from(table)
       .insert({ player_name: trimmed.slice(0, MAX_NAME_LEN), score })
       .select('id')
       .single();
@@ -82,7 +89,12 @@ export default function ScoreSubmit({ score }: ScoreSubmitProps) {
 
       {showBoard && (
         <div className={styles.board}>
-          <Leaderboard highlightId={submittedId} refreshKey={submittedId ? 1 : 0} />
+          <Leaderboard
+            highlightId={submittedId}
+            refreshKey={submittedId ? 1 : 0}
+            table={table}
+            formatScore={formatScore}
+          />
         </div>
       )}
     </div>

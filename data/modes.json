@@ -65,6 +65,15 @@
       "image": null,
       "sprite": "astrologer",
       "alt": "점성술사 캐릭터 - 캘린더 모드"
+    },
+    {
+      "id": "jump",
+      "no": "08",
+      "label": "뛰어라 우왕이",
+      "href": "/jump",
+      "image": null,
+      "sprite": "woowang-helm",
+      "alt": "투구 쓴 우왕이 캐릭터 - 뛰어라 우왕이 미니게임"
     }
   ]
 }

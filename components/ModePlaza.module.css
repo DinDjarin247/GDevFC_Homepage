@@ -267,6 +267,11 @@
   animation: breathe 2.6s ease-in-out infinite;
 }
 
+/* 뛰어라 우왕이 — 웅크려 힘을 모았다가 폴짝 뛰고, 내려앉으며 찌그러진다 */
+.hop {
+  animation: hop 2.6s ease-in-out infinite;
+}
+
 /* 바드는 몸통에서 진행 방향만 뒤집고, 실제 이동은 버튼(.walking)이 맡는다 */
 .stroll {
   animation: strollFace 9s ease-in-out infinite;
@@ -319,6 +324,27 @@
   }
   50% {
     transform: translateY(-1.8%) rotate(-1deg);
+  }
+}
+
+@keyframes hop {
+  0%,
+  20% {
+    transform: translateY(0) scale(1, 1);
+  }
+  42%,
+  52% {
+    transform: translateY(0) scale(1.1, 0.82);
+  }
+  64% {
+    transform: translateY(-36%) scale(0.94, 1.08);
+  }
+  76% {
+    transform: translateY(0) scale(1.1, 0.86);
+  }
+  86%,
+  100% {
+    transform: translateY(0) scale(1, 1);
   }
 }
 
@@ -396,6 +422,7 @@
   .read,
   .shoot,
   .stroll,
+  .hop,
   .char.walking {
     animation: none;
   }

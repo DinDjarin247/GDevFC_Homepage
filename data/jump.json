@@ -1,0 +1,47 @@
+{
+  "badge": "미니게임",
+  "heading": "JUMP",
+  "intro": {
+    "titleMain": "뛰어라",
+    "titleSub": "우왕이",
+    "subtitle": "JUMP, WOOWANG, JUMP!",
+    "controlsHeading": "CONTROLS",
+    "controls": [
+      { "key": "SPACE 길게 / JUMP", "desc": "힘 모으기 — 떼는 순간 뛴다 (가득 차면 저절로)" },
+      { "key": "← → / ◀ ▶", "desc": "걷기 · 힘 모으는 동안 누르면 점프 방향" },
+      { "key": "ESC / Ⅱ", "desc": "일시정지 · 여기까지의 기록 남기기" }
+    ],
+    "phasesHeading": "ALTITUDE",
+    "phases": [
+      { "no": "0m", "title": "숲", "desc": "단풍 든 숲에서 탑을 오르기 시작한다. 떨어져도 죽지 않지만, 아래로 떨어진 만큼 다시 올라야 한다." },
+      { "no": "250m", "title": "산맥", "desc": "숲이 발아래로 사라지고 눈 덮인 산줄기가 지평선에 걸린다." },
+      { "no": "550m", "title": "구름", "desc": "구름 사이를 뚫고 올라간다. 발판도 구름이다." },
+      { "no": "900m", "title": "구름 위", "desc": "구름 바다가 발아래 깔리고 하늘이 짙어진다." },
+      { "no": "1400m", "title": "성층권", "desc": "하늘이 검게 물들고 지구의 둥근 가장자리가 보인다." },
+      { "no": "2000m~", "title": "우주", "desc": "1km 마다 행성 하나 — 수성, 금성, 지구, 화성, 목성, 토성, 천왕성, 해왕성, 명왕성. 그 너머는 끝없는 우주." }
+    ],
+    "rankingHeading": "TOP HEIGHTS",
+    "scrollHint": "▾ 아래로 스크롤",
+    "startHint": "▸ TOUCH TO START"
+  },
+  "pause": {
+    "title": "PAUSED",
+    "subtitle": "일시정지",
+    "bestLabel": "이번 판 최고",
+    "resume": "▸ 계속하기",
+    "giveUp": "여기서 끝내고 기록 남기기",
+    "exit": "광장으로 나가기"
+  },
+  "end": {
+    "title": "YOUR RECORD",
+    "newBest": "NEW BEST!",
+    "capture": "CAPTURE RECORD",
+    "retry": "RETRY",
+    "back": "BACK TO SELECT"
+  },
+  "touch": {
+    "left": "◀",
+    "jump": "JUMP",
+    "right": "▶"
+  }
+}

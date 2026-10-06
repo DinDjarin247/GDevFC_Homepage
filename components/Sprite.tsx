@@ -362,6 +362,87 @@ const ASTROLOGER = [
   buildRow(W, {}),
 ];
 
+/**
+ * 투구 쓴 우왕이 — 뛰어라 우왕이(점프킹) 주인공.
+ * 은빛 투구에 금 꼭지·금 리벳·코가리개, 원래 뿔은 투구 옆을 뚫고 나온다. 어깨엔 은빛 견갑.
+ * 머리(9줄)·몸(6줄)을 나눠 두고 다리만 바꿔 끼워 게임 속 자세를 만든다.
+ */
+const WOOWANG_HELM_HEAD = [
+  buildRow(W, { 7: 'g', 8: 'g' }),
+  buildRow(W, { 2: 'v', ...markRange(5, 10, 'a'), 13: 'v' }),
+  buildRow(W, { ...markRange(2, 3, 'v'), ...markRange(4, 11, 'a'), ...markRange(12, 13, 'v'), 5: 'w', 6: 'w' }),
+  buildRow(W, { ...markRange(3, 12, 'A'), 5: 'g', 10: 'g' }),
+  buildRow(W, { ...markRange(3, 12, 'y'), 3: 'Y', 12: 'Y', 7: 'A', 8: 'A' }),
+  buildRow(W, { ...markRange(2, 13, 'y'), ...markRange(5, 10, 'z'), 6: 'k', 9: 'k', 7: 'A', 8: 'A' }),
+  buildRow(W, { ...markRange(2, 13, 'y'), ...markRange(5, 10, 'z'), 3: 'x', 12: 'x' }),
+  buildRow(W, { ...markRange(2, 13, 'y'), ...markRange(6, 9, 'z'), 7: 'k', 8: 'k' }),
+  buildRow(W, markRange(3, 12, 'Y')),
+];
+
+const WOOWANG_HELM_BODY = [
+  buildRow(W, { ...markRange(2, 13, 'j'), ...markRange(1, 3, 'a'), ...markRange(12, 14, 'a'), 7: 'v' }),
+  buildRow(W, { ...markRange(2, 13, 'j'), 1: 'A', 2: 'A', 13: 'A', 14: 'A', 8: 'v' }),
+  buildRow(W, { ...markRange(2, 13, 'j'), 2: 'J', 13: 'J', 7: 'v' }),
+  buildRow(W, { ...markRange(2, 13, 'j'), 2: 'J', 13: 'J', 8: 'v' }),
+  buildRow(W, { ...markRange(3, 12, 'j'), 7: 'v' }),
+  buildRow(W, markRange(4, 11, 'J')),
+];
+
+const PANTS = buildRow(W, { ...markRange(4, 11, 'Y'), 4: 'v', 11: 'v' });
+const EMPTY = buildRow(W, {});
+
+/** 서 있기 */
+const WOOWANG_HELM = [
+  ...WOOWANG_HELM_HEAD,
+  ...WOOWANG_HELM_BODY,
+  PANTS,
+  PANTS,
+  PANTS,
+  buildRow(W, { 4: 'Y', 5: 'Y', 10: 'Y', 11: 'Y' }),
+  buildRow(W, { 4: 'k', 5: 'k', 10: 'k', 11: 'k' }),
+  EMPTY,
+  EMPTY,
+];
+
+/** 걷기 — 보폭을 벌린 프레임 (서 있기와 번갈아) */
+const WOOWANG_HELM_WALK = [
+  ...WOOWANG_HELM_HEAD,
+  ...WOOWANG_HELM_BODY,
+  PANTS,
+  PANTS,
+  PANTS,
+  buildRow(W, { 3: 'Y', 4: 'Y', 11: 'Y', 12: 'Y' }),
+  buildRow(W, { 2: 'k', 3: 'k', 12: 'k', 13: 'k' }),
+  EMPTY,
+  EMPTY,
+];
+
+/** 힘 모으기 — 무릎을 굽혀 몸 전체가 3줄 내려앉는다 */
+const WOOWANG_HELM_CROUCH = [
+  EMPTY,
+  EMPTY,
+  EMPTY,
+  ...WOOWANG_HELM_HEAD,
+  ...WOOWANG_HELM_BODY,
+  buildRow(W, { ...markRange(3, 12, 'Y'), 3: 'v', 12: 'v' }),
+  buildRow(W, { 2: 'k', 3: 'k', 12: 'k', 13: 'k' }),
+  EMPTY,
+  EMPTY,
+];
+
+/** 공중 — 다리를 접어 올린다 */
+const WOOWANG_HELM_AIR = [
+  ...WOOWANG_HELM_HEAD,
+  ...WOOWANG_HELM_BODY,
+  PANTS,
+  PANTS,
+  buildRow(W, { ...markRange(3, 5, 'Y'), ...markRange(10, 12, 'Y') }),
+  buildRow(W, { 3: 'k', 4: 'k', 11: 'k', 12: 'k' }),
+  EMPTY,
+  EMPTY,
+  EMPTY,
+];
+
 const SPRITES: Record<string, string[]> = {
   knight: KNIGHT,
   mage: MAGE,
@@ -375,7 +456,17 @@ const SPRITES: Record<string, string[]> = {
   'archer-draw': ARCHER_DRAW,
   'woowang-stir': WOOWANG_STIR,
   'bard-strum': BARD_STRUM,
+  // 뛰어라 우왕이 — 광장 카드와 게임 속 자세
+  'woowang-helm': WOOWANG_HELM,
+  'woowang-helm-walk': WOOWANG_HELM_WALK,
+  'woowang-helm-crouch': WOOWANG_HELM_CROUCH,
+  'woowang-helm-air': WOOWANG_HELM_AIR,
 };
+
+/** 캔버스 게임이 같은 그림을 구워 쓰도록 그리드와 팔레트를 내보낸다 */
+export const SPRITE_GRIDS = SPRITES;
+export const SPRITE_PALETTE = PALETTE;
+export const SPRITE_SIZE = { w: 16, h: 22 };
 
 type SpriteProps = {
   name: string;

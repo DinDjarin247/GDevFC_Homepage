@@ -50,7 +50,7 @@ export type PlazaSpot = {
   /** 기본 프레임과 번갈아 보여줄 2프레임 스프라이트 (없으면 숨쉬기만) */
   altSprite?: string;
   /** idle 연출 종류 — CSS 클래스와 1:1 대응 */
-  idle: 'rest' | 'browse' | 'perch' | 'cook' | 'read' | 'shoot' | 'stroll';
+  idle: 'rest' | 'browse' | 'perch' | 'cook' | 'read' | 'shoot' | 'stroll' | 'hop';
 };
 
 /**
@@ -85,6 +85,9 @@ export const PLAZA_SPOTS: Record<string, PlazaSpot> = {
   showcase: { x: 366, y: 218, scale: 1.06, flip: true, place: '마법 두루마리 좌판', idle: 'browse' },
   // 기사 — 광장 벤치와 화톳불
   about: { x: 112, y: 215, scale: 1.06, place: '광장 벤치', idle: 'rest' },
+  // 투구 쓴 우왕이 — 시계탑 왼쪽 골목 앞에서 힘을 모았다 뛰었다 한다 (뛰어라 우왕이).
+  // 왼쪽 좌판 차양(y 134~)보다 뒤, 먼 길 행인들(y ≤ 127)보다는 앞이다
+  jump: { x: 197, y: 128, scale: 0.8, place: '시계탑 옆', idle: 'hop' },
   // 바드 — 광장 앞을 오가며 노래
   gallery: {
     x: 240,
