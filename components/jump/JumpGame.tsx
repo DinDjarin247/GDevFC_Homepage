@@ -369,17 +369,20 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       camY += (target - camY) * (1 - Math.exp(-rate * dt));
 
       // 가로 — 월드를 통째로 보여주는 넓은 화면은 고정. 좁은 화면은 우왕이가 가운데
-      // 부분을 벗어날 때만 따라간다 (조금 움직일 때마다 화면이 흔들리지 않게)
+      // 부분을 벗어날 때만 따라간다 (조금 움직일 때마다 화면이 흔들리지 않게).
+      // 땅에서 방향을 누르고 있으면(걷거나, 힘을 모으며 겨누면) 그쪽을 더 보여준다 —
+      // 다음 발판은 대개 옆으로 비켜 있어서, 겨누는 쪽이 화면 밖일 수 있다
       const viewW = canvas.width;
       if (viewW >= WORLD_W) {
         camX = 0;
         return;
       }
-      const off = wrapDelta(body.x - (camX + viewW / 2));
-      const dead = viewW * 0.22;
+      const aim = pstate === 'ground' || pstate === 'charge' ? heldDir() : 0;
+      const off = wrapDelta(body.x + aim * viewW * 0.3 - (camX + viewW / 2));
+      const dead = aim !== 0 ? 0 : viewW * 0.18;
       if (Math.abs(off) > dead) {
         const want = off - Math.sign(off) * dead;
-        camX = wrapX(camX + want * (1 - Math.exp(-8 * dt)));
+        camX = wrapX(camX + want * (1 - Math.exp(-6 * dt)));
       }
     }
 

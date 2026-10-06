@@ -249,12 +249,14 @@ export function canReach(
 
   const candidates = [to, ...interceptors.filter((p) => p !== to && p !== from && p.y >= to.y)];
 
-  // 출발점 — 목표에서 가로로 닿을 만한 거리 안의 것만, 가까운 순으로
+  // 출발점 — 발판 위 눈에 보이는 범위에서만 고른다. 끝을 살짝 넘어 걸쳐 설 수 있는 여유(EDGE_GRACE)는
+  // 쓰지 않는다: 거기서만 되는 점프는 떨어지기 반 픽셀 전에 정확히 멈춰야 해서 사람이 못 한다.
+  // 목표에서 가로로 닿을 만한 거리 안의 것만, 가까운 순으로
   const targetMid = to.x + to.w / 2;
-  const stride = from.kind === 'ground' ? 8 : 5;
+  const stride = from.kind === 'ground' ? 8 : 4;
   const starts: number[] = [];
-  for (let x = from.x - EDGE_GRACE; x < from.x + from.w + EDGE_GRACE; x += stride) starts.push(wrapX(x));
-  starts.push(wrapX(from.x + from.w + EDGE_GRACE));
+  for (let x = from.x; x < from.x + from.w; x += stride) starts.push(wrapX(x));
+  starts.push(wrapX(from.x + from.w));
   const limit = reachX(rise) + to.w / 2 + EDGE_GRACE + 2;
   const near = starts
     .map((x) => ({ x, d: wrapDelta(targetMid - x) }))
@@ -279,29 +281,28 @@ export function canReach(
   return false;
 }
 
-/** 오르는 길 하나 — 메인 발판의 사슬과, 이 길이 주로 머무는 가로 위치 */
-type Chain = { lane: number; links: Platform[] };
-
 /**
- * 끝없이 위로 이어지는 발판들.
+ * 끝없이 위로 이어지는 발판들 — 점프킹처럼 한 번 삐끗하면 한참 떨어지게.
  *
- * 뼈대는 "메인" 발판의 사슬 세 줄이다. 새 메인 발판은 같은 사슬의 직전 발판에서
- * canReach 로 닿는 것이 확인된 자리에만 놓이므로, 땅에서부터 끝까지 올라가는 길이
- * 적어도 세 갈래 존재한다. 사슬은 저마다 주로 머무는 가로 위치(lane)가 있어 월드
- * 전체에 고르게 퍼지지만, 서로 가까워지기도 해서 길을 갈아탈 수 있다.
- * 떨어져도 결국 어느 사슬 위(최악이면 땅)에 내려앉으니 언제든 다시 오를 수 있다.
+ * 뼈대는 "메인" 발판 한 줄의 사슬이다. 새 메인 발판은 직전 메인 발판에서 canReach 로
+ * 닿는 것이 확인된 자리에만 놓이므로, 땅에서부터 끝까지 올라가는 길이 늘 존재한다.
  *
- * 사이사이 "곁" 발판(일부는 스프링)을 섞어 쉬어 갈 곳과 지름길을 만든다. 곁 발판은
- * 두 메인 발판 사이 높이에만 놓는다 — 그보다 높으면 아직 만들지 않은 다음 고리를
- * 가로챌 수 있다. 그래도 아래쪽 고리로 내려오는 점프를 가로챌 수는 있으므로, 곁
- * 발판을 놓을 때마다 모든 사슬의 최근 고리를 다시 시뮬레이션해서 하나라도 끊기면
- * 그 곁 발판은 버린다.
+ * 놓칠 때 아프게 하는 장치:
+ * - 다음 발판은 거의 언제나 직전 발판의 **옆**에 놓는다(가로로 겹치지 않게). 그래서
+ *   빗나간 점프 아래에는 받쳐 줄 발판이 없고, 지나온 발판들 사이로 한참 떨어진다.
+ * - 길은 한 방향으로 흘러가다 가끔 꺾는다. 그래서 바로 아래층들이 같은 자리에 쌓이지
+ *   않고 비스듬히 퍼져, 떨어질 때 중간에 걸리기 어렵다. 월드가 원통이라 길은 탑을
+ *   한 바퀴씩 돌며 올라간다.
+ * - 곁 발판(쉬어 갈 곳, 일부는 스프링)은 드문드문만 둔다.
  *
- * 나중에 생긴 더 높은 메인 발판이 아래 고리를 가로채는 건 괜찮다 — 어느 사슬이든
- * 더 위쪽 메인 발판에 내려앉는 것이니 오히려 앞서 나간 셈이다.
+ * 곁 발판은 두 메인 발판 사이 높이에만 놓는다 — 그보다 높으면 아직 만들지 않은 다음
+ * 고리를 가로챌 수 있다. 그래도 아래쪽 고리로 내려오는 점프를 가로챌 수는 있으므로,
+ * 곁 발판을 놓을 때마다 그것이 가로챌 수 있는 고리들을 다시 시뮬레이션해서 하나라도
+ * 끊기면 그 곁 발판은 버린다. 나중에 생긴 더 높은 메인 발판이 아래 고리를 가로채는
+ * 건 괜찮다 — 사슬의 더 위쪽에 내려앉는 것이니 오히려 앞서 나간 셈이다.
  *
- * 새는 생성이 끝난 높이(모든 사슬의 꼭대기보다 충분히 아래)에만 놓는다. 그래야
- * 나중에 생길 발판과 겹칠 일이 없어, "발판에 서 있는 높이"를 정확히 피할 수 있다.
+ * 새는 생성이 끝난 높이(사슬 꼭대기보다 충분히 아래)에만 놓는다. 그래야 나중에 생길
+ * 발판과 겹칠 일이 없어, "발판에 서 있는 높이"를 정확히 피할 수 있다.
  */
 export class PlatformField {
   /** y 오름차순 */
@@ -309,19 +310,23 @@ export class PlatformField {
   /** y 오름차순 */
   readonly birds: Bird[] = [];
   private readonly rng: () => number;
-  private readonly chains: Chain[];
+  /** 최근 메인 발판들 (마지막이 가장 높다) */
+  private readonly chain: Platform[] = [];
+  /** 길이 흘러가는 가로 방향 — 가끔 꺾인다 */
+  private drift: 1 | -1;
   private nextBirdY = 40 * PX_PER_M;
 
   constructor(seed: number) {
     this.rng = mulberry32(seed);
     const ground: Platform = { x: 0, y: 0, w: WORLD_W, kind: 'ground' };
     this.platforms.push(ground);
-    this.chains = [1, 3, 5].map((k) => ({ lane: (WORLD_W * k) / 6, links: [ground] }));
+    this.chain.push(ground);
+    this.drift = this.rng() < 0.5 ? -1 : 1;
   }
 
-  /** 가장 낮은 사슬의 꼭대기 — 여기까지는 모든 길이 완성돼 있다 */
+  /** 사슬의 꼭대기 — 여기까지는 길이 완성돼 있다 */
   get top() {
-    return Math.min(...this.chains.map((c) => c.links[c.links.length - 1].y));
+    return this.chain[this.chain.length - 1].y;
   }
 
   /**
@@ -332,12 +337,7 @@ export class PlatformField {
     const start = budgetMs === Infinity ? 0 : performance.now();
     while (this.top < y) {
       if (budgetMs !== Infinity && performance.now() - start > budgetMs) return;
-      // 가장 뒤처진 사슬부터 한 칸씩 — 세 길이 나란히 올라간다
-      let low = this.chains[0];
-      for (const c of this.chains) {
-        if (c.links[c.links.length - 1].y < low.links[low.links.length - 1].y) low = c;
-      }
-      this.addNext(low);
+      this.addNext();
       this.placeBirds();
     }
   }
@@ -373,51 +373,59 @@ export class PlatformField {
     return canReach(from, to, this.query(to.y, to.y + MAX_APEX), tolerance);
   }
 
-  private addNext(chain: Chain) {
+  private addNext() {
     const rng = this.rng;
-    const from = chain.links[chain.links.length - 1];
+    const from = this.chain[this.chain.length - 1];
     const d = difficulty(from.y);
-    // 낮은 곳은 넉넉하게(10단계 ≈ 83ms), 높은 곳은 빡빡하게(5단계 ≈ 42ms)
-    const tolerance = Math.round(lerp(10, 5, d));
+    // 허용 오차 — 낮은 곳 8단계(≈67ms), 높은 곳 4단계(≈33ms). 한 점프 한 점프 신중하게
+    const tolerance = Math.round(lerp(8, 4, d));
+
+    // 길은 대개 가던 방향으로, 가끔 꺾는다
+    if (rng() < 0.22) this.drift = this.drift === 1 ? -1 : 1;
 
     let placed: Platform | null = null;
-    const TRIES = 28;
+    const TRIES = 30;
     for (let i = 0; i < TRIES && !placed; i++) {
       // 실패가 쌓일수록 넓고 낮게 — 어떻게든 다음 발판을 찾는다
       const ease = i / TRIES;
-      const w = Math.round(lerp(lerp(52, 26, d), lerp(78, 40, d), rng()) + ease * 18);
-      const rise = Math.round(lerp(lerp(32, 46, d), lerp(64, 92, d), rng()) * (1 - ease * 0.45));
-      // 직전 발판에서 실제로 닿을 수 있는 가로 범위 안에서 고른다. 이 길의 자리(lane)에서
-      // 멀어졌으면 그쪽으로 돌아가는 쪽을 더 자주 골라, 세 길이 월드 전체에 고르게 퍼진다
+      const w = Math.round(lerp(lerp(40, 22, d), lerp(62, 34, d), rng()) + ease * 18);
+      const rise = Math.round(lerp(lerp(40, 56, d), lerp(74, 96, d), rng()) * (1 - ease * 0.45));
+
       let mid: number;
       if (from.kind === 'ground') {
-        mid = wrapX(chain.lane + (rng() * 2 - 1) * 110);
+        mid = WORLD_W / 2 + (rng() * 2 - 1) * 140;
       } else {
         const fromMid = from.x + from.w / 2;
-        const backToLane = wrapDelta(chain.lane - fromMid);
-        const sign = Math.abs(backToLane) > 60 && rng() < 0.7 ? Math.sign(backToLane) : rng() < 0.5 ? -1 : 1;
-        mid = wrapX(fromMid + sign * rng() * (from.w / 2 + reachX(rise) * 0.9));
+        const touch = from.w / 2 + w / 2;
+        // 열에 아홉은 옆으로 비켜 놓는다 (놓치면 아래가 비어 있다). 가끔은 바로 위
+        const beside = rng() < 0.9 || ease > 0.6;
+        const sign = rng() < 0.8 ? this.drift : this.drift === 1 ? -1 : 1;
+        const off = beside
+          ? touch + 12 + rng() * Math.max(0, reachX(rise) * 0.95 - 12)
+          : rng() * touch * 0.8;
+        mid = fromMid + sign * off;
       }
-      const x = Math.round(Math.min(WORLD_W - w, Math.max(0, mid - w / 2)));
+      const x = Math.round(Math.min(WORLD_W - w, Math.max(0, wrapX(mid) - w / 2)));
       const c: Platform = { x, y: from.y + Math.max(32, rise), w, kind: 'main' };
       if (this.isClear(c) && this.reachable(from, c, tolerance)) placed = c;
     }
     if (!placed) placed = this.fallback(from);
 
     this.insert(placed);
-    chain.links.push(placed);
-    if (chain.links.length > 6) chain.links.shift();
+    this.chain.push(placed);
+    if (this.chain.length > 6) this.chain.shift();
 
-    if (rng() < lerp(0.6, 0.3, d)) this.trySide(from, placed, d);
+    // 곁 발판은 드문드문 — 쉬어 갈 곳이자, 일부는 스프링
+    if (rng() < lerp(0.3, 0.16, d)) this.trySide(from, placed, d);
   }
 
   /** 무작위 자리가 다 실패했을 때 — 바로 위로 조금씩 올려 가며 닿는 자리를 찾는다 */
   private fallback(from: Platform): Platform {
-    const w = 64;
+    const w = 56;
     const mid = from.kind === 'ground' ? WORLD_W / 2 : from.x + from.w / 2;
     for (let rise = 36; rise <= 96; rise += 6) {
-      for (const off of [0, -40, 40, -80, 80]) {
-        const x = Math.round(Math.min(WORLD_W - w, Math.max(0, mid - w / 2 + off)));
+      for (const off of [60, -60, 0, 100, -100]) {
+        const x = Math.round(Math.min(WORLD_W - w, Math.max(0, wrapX(mid + off) - w / 2)));
         const c: Platform = { x, y: from.y + rise, w, kind: 'main' };
         if (this.isClear(c) && this.reachable(from, c, 3)) return c;
       }
@@ -433,11 +441,11 @@ export class PlatformField {
     const hi = next.y - 8;
     if (hi <= lo) return;
 
-    // 스프링은 30m 넘어서부터, 곁 발판 다섯 중 하나꼴
-    const spring = from.y > 30 * PX_PER_M && rng() < 0.2;
+    // 스프링은 30m 넘어서부터, 곁 발판 둘 중 하나꼴 (80m 에 하나쯤)
+    const spring = from.y > 30 * PX_PER_M && rng() < 0.5;
     for (let i = 0; i < 4; i++) {
-      const w = spring ? 22 : Math.round(lerp(lerp(40, 24, d), lerp(60, 36, d), rng()));
-      // 곁 발판은 두 메인 발판 사이 어디쯤, 좌우로 넓게
+      const w = spring ? 22 : Math.round(lerp(lerp(34, 22, d), lerp(50, 32, d), rng()));
+      // 두 메인 발판 사이 어디쯤, 좌우로 넓게
       const mid = wrapX(lerp(from.x, next.x, rng()) + (rng() * 2 - 1) * 170);
       const s: Platform = {
         x: Math.round(Math.min(WORLD_W - w, Math.max(0, mid - w / 2))),
@@ -449,28 +457,26 @@ export class PlatformField {
       if (!this.isClear(s)) continue;
 
       this.insert(s);
-      if (this.chainsStillHold(s)) return;
+      if (this.chainStillHolds(s)) return;
       this.remove(s);
     }
   }
 
   /**
-   * 곁 발판 s 가 들어와도 모든 사슬의 최근 고리가 여전히 이어져 있는지.
+   * 곁 발판 s 가 들어와도 사슬의 최근 고리가 여전히 이어져 있는지.
    * s 가 가로챌 수 있는 고리만 다시 시뮬레이션한다 — 도착 발판보다 높고, 출발점에서
    * 뛰어 닿을 만한 높이 안이며, 가로로도 그 점프가 지나갈 만한 범위에 있는 고리.
    */
-  private chainsStillHold(s: Platform) {
-    for (const chain of this.chains) {
-      const c = chain.links;
-      for (let i = Math.max(1, c.length - 4); i < c.length; i++) {
-        const a = c[i - 1];
-        const b = c[i];
-        if (s.y < b.y || s.y > a.y + MAX_APEX) continue;
-        const nearA = a.kind === 'ground' || overlapsX(s.x, s.w, a.x, a.w, MAX_REACH_X);
-        const nearB = overlapsX(s.x, s.w, b.x, b.w, MAX_REACH_X);
-        if (!nearA && !nearB) continue;
-        if (!this.reachable(a, b, 3)) return false;
-      }
+  private chainStillHolds(s: Platform) {
+    const c = this.chain;
+    for (let i = Math.max(1, c.length - 4); i < c.length; i++) {
+      const a = c[i - 1];
+      const b = c[i];
+      if (s.y < b.y || s.y > a.y + MAX_APEX) continue;
+      const nearA = a.kind === 'ground' || overlapsX(s.x, s.w, a.x, a.w, MAX_REACH_X);
+      const nearB = overlapsX(s.x, s.w, b.x, b.w, MAX_REACH_X);
+      if (!nearA && !nearB) continue;
+      if (!this.reachable(a, b, 3)) return false;
     }
     return true;
   }
@@ -498,7 +504,13 @@ export class PlatformField {
           overlapsX(x0, range, p.x, p.w, BIRD_HALF_W + PLAYER_HALF_W + 2)
         );
         if (blocked) continue;
-        const bird: Bird = { y, x0, x1, speed: Math.round(lerp(28, 62, d) * lerp(0.85, 1.15, rng())), phase: rng() * range * 2 };
+        const bird: Bird = {
+          y,
+          x0,
+          x1,
+          speed: Math.round(lerp(28, 62, d) * lerp(0.85, 1.15, rng())),
+          phase: rng() * range * 2,
+        };
         this.birds.splice(lowerBound(this.birds, y), 0, bird);
         break;
       }
