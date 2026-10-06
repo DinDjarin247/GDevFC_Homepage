@@ -17,15 +17,19 @@ import {
   MIN_VIEW_W,
   PHYS_DT,
   PLATFORM_H,
-  PLAYFIELD_W,
   PX_PER_M,
   VIEW_H,
   WALK_SPEED,
+  WORLD_W,
   ZONES,
   PlatformField,
+  birdPos,
   jumpVelocity,
   stepAir,
   stepWalk,
+  touchesBird,
+  wrapDelta,
+  wrapX,
   zoneIndexAt,
   type Body,
   type Dir,
@@ -40,6 +44,10 @@ const CAM_MIN = -24;
 /** 이보다 높은 데서 떨어지면 착지할 때 철퍼덕 — 잠깐 못 움직인다 (점프킹처럼) */
 const SPLAT_FALL = 170;
 const SPLAT_TIME = 0.45;
+/** 새와 부딪히면 이 속도로 튕겨 나가고, 잠깐은 다시 부딪히지 않는다 */
+const KNOCK_VX = 150;
+const KNOCK_VY = 100;
+const KNOCK_GUARD = 0.8;
 
 const FONT_LG = "10px 'Press Start 2P', monospace";
 const FONT_SM = "7px 'Press Start 2P', monospace";
@@ -159,7 +167,7 @@ export default function JumpGame({ onExit }: JumpGameProps) {
 
     let mode: Mode = 'play';
     let field = new PlatformField((Math.random() * 2 ** 32) >>> 0);
-    let body: Body = { x: PLAYFIELD_W / 2, y: 0, vx: 0, vy: 0 };
+    let body: Body = { x: WORLD_W / 2, y: 0, vx: 0, vy: 0 };
     let pstate: PlayerState = 'ground';
     let standing: Platform = field.platforms[0];
     let chargeSteps = 0;
@@ -176,7 +184,15 @@ export default function JumpGame({ onExit }: JumpGameProps) {
     let endNewBest = false;
     let shownZone = -1;
     let camY = CAM_MIN;
+    /** 화면 왼쪽 끝이 보는 월드 x — 화면이 월드보다 좁을 때만 옆으로 따라간다 */
+    let camX = 0;
     let t = 0;
+    /** 물리 시계 — 새의 위치는 이걸로 정해서 물리 스텝과 한 치도 어긋나지 않게 한다 */
+    let simT = 0;
+    /** 새에 부딪힌 뒤 무적 시간 */
+    let guardLeft = 0;
+    /** 스프링이 마지막으로 눌린 시각 (눌린 그림을 잠깐 보여준다) */
+    const springFired = new Map<Platform, number>();
     let dust: Dust[] = [];
     let nearby: Platform[] = [];
     let bannerKey = 0;
@@ -194,7 +210,7 @@ export default function JumpGame({ onExit }: JumpGameProps) {
 
     /**
      * 세로는 늘 32m(320px) 를 보여주고, 가로는 화면 비율에 맞춰 180~576px 사이로 정한다.
-     * 휴대폰 세로 화면이면 플레이필드(180)만, 넓은 화면이면 양옆 풍경까지 보인다.
+     * 넓은 화면은 월드 한 바퀴(576)를 통째로, 휴대폰 세로 화면은 그 일부를 보며 옆으로 따라간다.
      */
     function resize() {
       if (!box) return;
@@ -202,7 +218,10 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       const bh = box.clientHeight;
       if (bw === 0 || bh === 0) return;
       const vw = Math.round(Math.min(MAX_VIEW_W, Math.max(MIN_VIEW_W, (VIEW_H * bw) / bh)));
-      if (canvas.width !== vw) canvas.width = vw;
+      if (canvas.width !== vw) {
+        canvas.width = vw;
+        snapCamX();
+      }
       // 캔버스 크기를 바꾸면 컨텍스트 설정이 초기화된다
       ctx.imageSmoothingEnabled = false;
       const scale = Math.min(bw / vw, bh / VIEW_H);
@@ -213,6 +232,8 @@ export default function JumpGame({ onExit }: JumpGameProps) {
     const ro = new ResizeObserver(resize);
     ro.observe(box);
     resize();
+    // 화면 폭이 처음부터 최소값이면 resize 가 폭 변화를 못 느끼므로 한 번은 직접 맞춘다
+    snapCamX();
 
     // ---------- 물리 (1/120초 고정 스텝) ----------
 
@@ -263,8 +284,30 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       }
     }
 
+    /** 새(우주에선 UFO)에 부딪혔는지 보고, 부딪혔으면 반대쪽으로 튕겨 낸다 */
+    function checkBirds() {
+      if (guardLeft > 0) {
+        guardLeft -= PHYS_DT;
+        return;
+      }
+      for (const b of field.queryBirds(body.y - 12, body.y + 30)) {
+        const pos = birdPos(b, simT);
+        if (!touchesBird(body, pos.x, b.y)) continue;
+        const away = Math.sign(wrapDelta(body.x - pos.x)) || pos.dir;
+        body.vx = away * KNOCK_VX;
+        body.vy = KNOCK_VY;
+        pstate = 'air';
+        airApex = body.y;
+        guardLeft = KNOCK_GUARD;
+        puff(8, 80);
+        return;
+      }
+    }
+
     function step() {
+      simT += PHYS_DT;
       if (!input.jump) jumpArmed = true;
+      checkBirds();
 
       switch (pstate) {
         case 'ground': {
@@ -297,8 +340,15 @@ export default function JumpGame({ onExit }: JumpGameProps) {
         }
         case 'air': {
           const hit = stepAir(body, nearby);
+          if (hit?.spring) {
+            // 스프링 — 서지 않고 그대로 높이 튀어 오른다
+            springFired.set(hit, t);
+            airApex = body.y;
+            puff(6, 70);
+          } else if (hit) {
+            land(hit);
+          }
           if (body.y > airApex) airApex = body.y;
-          if (hit) land(hit);
           break;
         }
         case 'splat': {
@@ -317,11 +367,42 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       const screenY = VIEW_H - (body.y - camY);
       const rate = screenY > VIEW_H - 48 || screenY < 56 ? 10 : 4.5;
       camY += (target - camY) * (1 - Math.exp(-rate * dt));
+
+      // 가로 — 월드를 통째로 보여주는 넓은 화면은 고정. 좁은 화면은 우왕이가 가운데
+      // 부분을 벗어날 때만 따라간다 (조금 움직일 때마다 화면이 흔들리지 않게)
+      const viewW = canvas.width;
+      if (viewW >= WORLD_W) {
+        camX = 0;
+        return;
+      }
+      const off = wrapDelta(body.x - (camX + viewW / 2));
+      const dead = viewW * 0.22;
+      if (Math.abs(off) > dead) {
+        const want = off - Math.sign(off) * dead;
+        camX = wrapX(camX + want * (1 - Math.exp(-8 * dt)));
+      }
     }
 
     // ---------- 그리기 ----------
 
     const sy = (worldY: number) => VIEW_H - (worldY - camY);
+
+    /** 가로 카메라를 우왕이에게 바로 맞춘다 (시작 · 다시 하기 · 화면 폭이 바뀔 때) */
+    function snapCamX() {
+      camX = canvas.width >= WORLD_W ? 0 : wrapX(body.x - canvas.width / 2);
+    }
+
+    /**
+     * 월드 x 를 화면 x 로. 이음새에 걸친 것도 끊기지 않게, 화면에 걸리는 사본 위치를
+     * 모두(0~2개) 돌려준다. w 는 그리는 물체의 폭.
+     */
+    function screenXs(worldX: number, w: number): number[] {
+      const viewW = canvas.width;
+      const base = wrapX(worldX - camX);
+      const out: number[] = [];
+      for (const x of [base, base - WORLD_W]) if (x < viewW && x + w > 0) out.push(Math.round(x));
+      return out;
+    }
 
     function drawGround(viewW: number) {
       const y = Math.round(sy(0));
@@ -341,24 +422,46 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       }
     }
 
-    /** 넓은 화면에서 플레이필드 양쪽 벽(튕겨 나오는 선)을 보여준다 */
-    function drawBounds(pfX: number, viewW: number) {
-      ctx.fillStyle = 'rgba(6, 8, 18, 0.16)';
-      ctx.fillRect(0, 0, pfX, VIEW_H);
-      ctx.fillRect(pfX + PLAYFIELD_W, 0, viewW - pfX - PLAYFIELD_W, VIEW_H);
-      const off = Math.round(((camY % 8) + 8) % 8);
-      for (const x of [pfX - 1, pfX + PLAYFIELD_W]) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
-        ctx.fillRect(x, 0, 1, VIEW_H);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
-        for (let y = -8 + off; y < VIEW_H; y += 8) ctx.fillRect(x, y, 1, 4);
+    /** 발판 — 오른 높이(구간)에 따라 나무 → 돌 → 구름 → 얼음 → 금속 */
+    function drawPlatform(p: Platform) {
+      const y = Math.round(sy(p.y));
+      for (const x of screenXs(p.x, p.w)) {
+        if (p.spring) drawSpring(p, x, y);
+        else drawLedge(p, x, y);
       }
     }
 
-    /** 발판 — 오른 높이(구간)에 따라 나무 → 돌 → 구름 → 얼음 → 금속 */
-    function drawPlatform(p: Platform, pfX: number) {
-      const x = Math.round(pfX + p.x);
-      const y = Math.round(sy(p.y));
+    /** 스프링 점프대 — 밟힌 직후 잠깐 눌린 모양 */
+    function drawSpring(p: Platform, x: number, y: number) {
+      const w = p.w;
+      const pressed = t - (springFired.get(p) ?? -1) < 0.15;
+      const padY = y + (pressed ? 3 : 0);
+      // 받침
+      ctx.fillStyle = '#3e3f48';
+      ctx.fillRect(x + 1, y + 6, w - 2, 3);
+      ctx.fillStyle = '#62646f';
+      ctx.fillRect(x + 1, y + 6, w - 2, 1);
+      // 용수철 — 지그재그
+      const coilTop = padY + 3;
+      for (let i = 0; coilTop + i < y + 6; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#c8ccd4' : '#8a8f99';
+        ctx.fillRect(x + Math.round(w / 2) - 5 + (i % 2) * 2, coilTop + i, 8, 1);
+      }
+      // 발판
+      ctx.fillStyle = '#9e2a22';
+      ctx.fillRect(x, padY, w, 3);
+      ctx.fillStyle = '#e0443a';
+      ctx.fillRect(x, padY, w, 2);
+      ctx.fillStyle = '#ff9a8a';
+      ctx.fillRect(x + 2, padY, w - 4, 1);
+      // 반짝 — 멀리서도 스프링인 줄 알아보게
+      if (Math.floor(t * 3 + p.x) % 4 === 0) {
+        ctx.fillStyle = '#fff3c4';
+        ctx.fillRect(x + w - 4, padY - 2, 1, 1);
+      }
+    }
+
+    function drawLedge(p: Platform, x: number, y: number) {
       const w = p.w;
       const zone = zoneIndexAt(p.y / PX_PER_M);
 
@@ -416,24 +519,80 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       }
     }
 
-    function drawPlayer(pfX: number) {
-      const cx = Math.round(pfX + body.x);
+    /** 새 — 구간 따라 참새 · 갈매기 · 독수리, 우주에선 UFO. 날갯짓 2프레임 */
+    function drawBirds() {
+      for (const b of field.queryBirds(camY - 10, camY + VIEW_H + 10)) {
+        const pos = birdPos(b, simT);
+        const y = Math.round(sy(b.y));
+        const zone = zoneIndexAt(b.y / PX_PER_M);
+        const flap = Math.floor(t * 8 + b.phase) % 2 === 0;
+        for (const left of screenXs(pos.x - 8, 16)) {
+          if (zone >= 5) drawUfo(left + 8, y);
+          else drawBird(left + 8, y, pos.dir, flap, zone);
+        }
+      }
+    }
+
+    function drawBird(cx: number, cy: number, dir: 1 | -1, flap: boolean, zone: number) {
+      const body = zone <= 1 ? '#7a5634' : zone <= 3 ? '#f2f2f2' : '#3a2e28';
+      const wing = zone <= 1 ? '#5a3c22' : zone <= 3 ? '#9aa3ad' : '#2a201c';
+      const belly = zone <= 1 ? '#d9b27a' : zone <= 3 ? '#ffffff' : '#c8b49a';
+      // 오른쪽을 보는 그림을 기준으로, 왼쪽으로 날면 x 를 거울처럼 뒤집는다
+      const px = (dx: number, dy: number, w: number, h: number) =>
+        ctx.fillRect(dir === 1 ? cx + dx : cx - dx - w, cy + dy, w, h);
+      ctx.fillStyle = body;
+      px(-4, -1, 8, 3); // 몸통
+      px(3, -2, 3, 3); // 머리
+      ctx.fillStyle = belly;
+      px(-3, 1, 6, 1);
+      ctx.fillStyle = '#f2b13a';
+      px(6, -1, 1, 1); // 부리
+      ctx.fillStyle = '#141414';
+      px(4, -2, 1, 1); // 눈
+      ctx.fillStyle = wing;
+      px(-6, -1, 2, 2); // 꼬리
+      if (flap) {
+        px(-2, -4, 4, 3);
+        px(-1, -6, 2, 2);
+      } else {
+        px(-2, 1, 4, 3);
+      }
+    }
+
+    function drawUfo(cx: number, cy: number) {
+      ctx.fillStyle = '#7fe3ff';
+      ctx.fillRect(cx - 2, cy - 4, 5, 3);
+      ctx.fillStyle = '#c3cad3';
+      ctx.fillRect(cx - 7, cy - 1, 15, 3);
+      ctx.fillStyle = '#828b96';
+      ctx.fillRect(cx - 5, cy + 2, 11, 1);
+      ctx.fillStyle = Math.floor(t * 6) % 2 === 0 ? '#ff5a3d' : '#ffe06b';
+      ctx.fillRect(cx - 5, cy, 1, 1);
+      ctx.fillRect(cx, cy, 1, 1);
+      ctx.fillRect(cx + 5, cy, 1, 1);
+    }
+
+    function drawPlayer() {
+      // 새에 부딪힌 직후엔 깜빡인다
+      if (guardLeft > 0 && Math.floor(t * 16) % 2 === 0) return;
       const footY = Math.round(sy(body.y));
       const side = facing === 1 ? 0 : 1;
       const W = SPRITE_SIZE.w;
 
-      if (pstate === 'splat') {
-        // 철퍼덕 — 웅크린 그림을 납작하게
-        ctx.drawImage(sprites.crouch[side], cx - 9, footY - 15, 18, 16);
-        return;
+      for (const left of screenXs(body.x - W / 2, W)) {
+        const cx = left + W / 2;
+        if (pstate === 'splat') {
+          // 철퍼덕 — 웅크린 그림을 납작하게
+          ctx.drawImage(sprites.crouch[side], cx - 9, footY - 15, 18, 16);
+          continue;
+        }
+        let img = sprites.idle[side];
+        if (pstate === 'charge') img = sprites.crouch[side];
+        else if (pstate === 'air') img = sprites.air[side];
+        else if (heldDir() !== 0 && Math.floor(walkDist / 6) % 2 === 1) img = sprites.walk[side];
+        ctx.drawImage(img, left, footY - 20);
+        if (pstate === 'charge') drawCharge(cx, footY);
       }
-      let img = sprites.idle[side];
-      if (pstate === 'charge') img = sprites.crouch[side];
-      else if (pstate === 'air') img = sprites.air[side];
-      else if (heldDir() !== 0 && Math.floor(walkDist / 6) % 2 === 1) img = sprites.walk[side];
-      ctx.drawImage(img, cx - W / 2, footY - 20);
-
-      if (pstate === 'charge') drawCharge(cx, footY);
     }
 
     /** 힘 게이지와 점프 방향 화살표 (머리 위) */
@@ -461,7 +620,7 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       }
     }
 
-    function drawDust(pfX: number, dt: number) {
+    function drawDust(dt: number) {
       for (const d of dust) {
         d.life -= dt;
         d.x += d.vx * dt;
@@ -472,7 +631,7 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       for (const d of dust) {
         ctx.globalAlpha = Math.min(1, d.life * 2);
         ctx.fillStyle = '#efe6d2';
-        ctx.fillRect(Math.round(pfX + d.x), Math.round(sy(d.y)), 2, 2);
+        for (const x of screenXs(d.x, 2)) ctx.fillRect(x, Math.round(sy(d.y)), 2, 2);
       }
       ctx.globalAlpha = 1;
     }
@@ -505,18 +664,17 @@ export default function JumpGame({ onExit }: JumpGameProps) {
 
     function render(dt: number) {
       const viewW = canvas.width;
-      const pfX = Math.round((viewW - PLAYFIELD_W) / 2);
 
       bg.drawBack(ctx, viewW, camY, t);
       bg.drawTower(ctx, viewW, camY);
       bg.drawFront(ctx, viewW, camY);
       drawGround(viewW);
-      if (viewW > PLAYFIELD_W) drawBounds(pfX, viewW);
       for (const p of field.query(camY - 12, camY + VIEW_H + 12)) {
-        if (p.kind !== 'ground') drawPlatform(p, pfX);
+        if (p.kind !== 'ground') drawPlatform(p);
       }
-      drawDust(pfX, dt);
-      drawPlayer(pfX);
+      drawBirds();
+      drawDust(dt);
+      drawPlayer();
       if (mode === 'ended') drawEnd(viewW);
       else drawHud();
     }
@@ -532,8 +690,8 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       last = now;
       t += dt;
 
-      // 이번 프레임에 걸릴 수 있는 발판만 추린다 (한 프레임에 최대 56px 움직인다)
-      nearby = field.query(body.y - 64, body.y + 64);
+      // 이번 프레임에 걸릴 수 있는 발판만 추린다 (스프링으로 솟을 때 한 프레임에 최대 76px)
+      nearby = field.query(body.y - 96, body.y + 96);
       acc += dt;
       let n = 0;
       while (acc >= PHYS_DT && n < 16) {
@@ -544,8 +702,8 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       if (n === 16) acc = 0;
 
       updateCamera(dt);
-      // 앞으로 세 화면 높이까지 발판을 미리 만들어 둔다
-      field.extendTo(camY + VIEW_H * 3);
+      // 앞으로 세 화면 높이까지 발판을 미리 만들어 둔다 — 한 프레임에 4ms 까지만 쓰고 나머지는 다음 프레임에
+      field.extendTo(camY + VIEW_H * 3, 4);
 
       render(dt);
       raf = requestAnimationFrame(frame);
@@ -602,7 +760,7 @@ export default function JumpGame({ onExit }: JumpGameProps) {
     function retry() {
       field = new PlatformField((Math.random() * 2 ** 32) >>> 0);
       field.extendTo(VIEW_H * 3);
-      body = { x: PLAYFIELD_W / 2, y: 0, vx: 0, vy: 0 };
+      body = { x: WORLD_W / 2, y: 0, vx: 0, vy: 0 };
       pstate = 'ground';
       standing = field.platforms[0];
       chargeSteps = 0;
@@ -615,6 +773,10 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       storedBest = readBest();
       endNewBest = false;
       camY = CAM_MIN;
+      snapCamX();
+      simT = 0;
+      guardLeft = 0;
+      springFired.clear();
       dust = [];
       mode = 'play';
       setEnded(null);
