@@ -174,6 +174,15 @@ export default function JumpGame({ onExit }: JumpGameProps) {
     /** 점프 키를 한 번 떼야 다음 힘 모으기가 시작된다 — 누른 채 착지해도 바로 또 뛰지 않게 */
     let jumpArmed = true;
     let facing: 1 | -1 = 1;
+    /**
+     * 힘을 모으는 동안 고른 점프 방향. ← → 를 한 번 누를 때마다 한 칸씩
+     * (왼쪽 · 위 · 오른쪽) 옮겨지고, 손을 떼도 그대로 남는다 — 방향키를 계속 누르고
+     * 있을 필요가 없다. 힘 모으기를 시작할 때 누르고 있던 방향이 있으면 거기서 출발한다.
+     */
+    let aim: Dir = 0;
+    /** 직전 스텝의 방향키 상태 — "막 눌렀다"를 알아내는 데 쓴다 */
+    let prevLeft = false;
+    let prevRight = false;
     let airApex = 0;
     let splatLeft = 0;
     let walkDist = 0;
@@ -256,11 +265,10 @@ export default function JumpGame({ onExit }: JumpGameProps) {
     }
 
     function launch(steps: number) {
-      const dir = heldDir();
-      const v = jumpVelocity(steps, dir);
+      const v = jumpVelocity(steps, aim);
       body.vx = v.vx;
       body.vy = v.vy;
-      if (dir !== 0) facing = dir;
+      if (aim !== 0) facing = aim;
       pstate = 'air';
       airApex = body.y;
       puff(3, 30);
@@ -307,6 +315,10 @@ export default function JumpGame({ onExit }: JumpGameProps) {
     function step() {
       simT += PHYS_DT;
       if (!input.jump) jumpArmed = true;
+      const pressedLeft = input.left && !prevLeft;
+      const pressedRight = input.right && !prevRight;
+      prevLeft = input.left;
+      prevRight = input.right;
       checkBirds();
 
       switch (pstate) {
@@ -315,6 +327,7 @@ export default function JumpGame({ onExit }: JumpGameProps) {
             pstate = 'charge';
             chargeSteps = 0;
             jumpArmed = false;
+            aim = heldDir();
             break;
           }
           const dir = heldDir();
@@ -332,8 +345,10 @@ export default function JumpGame({ onExit }: JumpGameProps) {
         }
         case 'charge': {
           chargeSteps++;
-          const dir = heldDir();
-          if (dir !== 0) facing = dir;
+          // 누를 때마다 한 칸 — 오른쪽을 고른 뒤 ← 를 누르면 위, 한 번 더 누르면 왼쪽
+          if (pressedLeft && aim > -1) aim = (aim - 1) as Dir;
+          if (pressedRight && aim < 1) aim = (aim + 1) as Dir;
+          if (aim !== 0) facing = aim;
           // 손을 떼거나, 가득 차면 저절로 뛴다
           if (!input.jump || chargeSteps >= CHARGE_STEPS) launch(Math.min(chargeSteps, CHARGE_STEPS));
           break;
@@ -377,9 +392,9 @@ export default function JumpGame({ onExit }: JumpGameProps) {
         camX = 0;
         return;
       }
-      const aim = pstate === 'ground' || pstate === 'charge' ? heldDir() : 0;
-      const off = wrapDelta(body.x + aim * viewW * 0.3 - (camX + viewW / 2));
-      const dead = aim !== 0 ? 0 : viewW * 0.18;
+      const lean = pstate === 'charge' ? aim : pstate === 'ground' ? heldDir() : 0;
+      const off = wrapDelta(body.x + lean * viewW * 0.3 - (camX + viewW / 2));
+      const dead = lean !== 0 ? 0 : viewW * 0.18;
       if (Math.abs(off) > dead) {
         const want = off - Math.sign(off) * dead;
         camX = wrapX(camX + want * (1 - Math.exp(-6 * dt)));
@@ -429,9 +444,25 @@ export default function JumpGame({ onExit }: JumpGameProps) {
     function drawPlatform(p: Platform) {
       const y = Math.round(sy(p.y));
       for (const x of screenXs(p.x, p.w)) {
-        if (p.spring) drawSpring(p, x, y);
-        else drawLedge(p, x, y);
+        if (p.spring) {
+          drawSpring(p, x, y);
+          continue;
+        }
+        drawLedge(p, x, y);
+        if (p.landing) drawFlag(x + p.w - 5, y);
       }
+    }
+
+    /** 스프링 착지 발판의 깃발 — "저 스프링을 밟으면 여기로 온다" */
+    function drawFlag(x: number, y: number) {
+      ctx.fillStyle = '#5a3a1c';
+      ctx.fillRect(x, y - 11, 1, 11);
+      const wave = Math.floor(t * 4) % 2;
+      ctx.fillStyle = '#f5d76e';
+      ctx.fillRect(x + 1, y - 11 + wave, 5, 2);
+      ctx.fillRect(x + 1, y - 9, 3 + wave, 2);
+      ctx.fillStyle = '#c99a2e';
+      ctx.fillRect(x + 1, y - 8, 2, 1);
     }
 
     /** 스프링 점프대 — 밟힌 직후 잠깐 눌린 모양 */
@@ -457,10 +488,13 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       ctx.fillRect(x, padY, w, 2);
       ctx.fillStyle = '#ff9a8a';
       ctx.fillRect(x + 2, padY, w - 4, 1);
-      // 반짝 — 멀리서도 스프링인 줄 알아보게
-      if (Math.floor(t * 3 + p.x) % 4 === 0) {
+      // 날아갈 쪽을 가리키는 화살표 — 깜빡이며 위아래로 까딱인다
+      if (p.launch) {
+        const dir = wrapDelta(p.launch.toX - (p.x + w / 2)) >= 0 ? 1 : -1;
+        const ax = x + Math.round(w / 2);
+        const ay = padY - 5 - (Math.floor(t * 3) % 2);
         ctx.fillStyle = '#fff3c4';
-        ctx.fillRect(x + w - 4, padY - 2, 1, 1);
+        for (let i = 0; i < 3; i++) ctx.fillRect(ax + dir * (i - 1), ay - (2 - i), 1, 1 + (2 - i) * 2);
       }
     }
 
@@ -609,18 +643,22 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       ctx.fillStyle = full ? (Math.floor(t * 12) % 2 ? '#ffffff' : '#ff5a3d') : p < 0.5 ? '#c9f73d' : p < 0.85 ? '#f5d76e' : '#ff8a3d';
       ctx.fillRect(x + 1, y + 1, Math.max(1, Math.round(16 * p)), 2);
 
-      const dir = heldDir();
-      ctx.fillStyle = '#ffffff';
-      if (dir === -1) {
-        ctx.fillRect(x - 4, y + 1, 1, 2);
-        ctx.fillRect(x - 3, y, 1, 4);
-      } else if (dir === 1) {
-        ctx.fillRect(x + 21, y + 1, 1, 2);
-        ctx.fillRect(x + 20, y, 1, 4);
-      } else {
-        ctx.fillRect(cx, y - 4, 1, 1);
-        ctx.fillRect(cx - 1, y - 3, 3, 1);
-      }
+      // 고를 수 있는 세 방향을 모두 그리고, 지금 고른 쪽만 밝게
+      const on = '#c9f73d';
+      const off = 'rgba(255, 255, 255, 0.28)';
+      const ly = y + 2;
+      ctx.fillStyle = aim === -1 ? on : off;
+      ctx.fillRect(x - 6, ly, 1, 1);
+      ctx.fillRect(x - 5, ly - 1, 1, 3);
+      ctx.fillRect(x - 4, ly - 2, 1, 5);
+      ctx.fillStyle = aim === 1 ? on : off;
+      ctx.fillRect(x + 22, ly, 1, 1);
+      ctx.fillRect(x + 21, ly - 1, 1, 3);
+      ctx.fillRect(x + 20, ly - 2, 1, 5);
+      ctx.fillStyle = aim === 0 ? on : off;
+      ctx.fillRect(cx, y - 6, 1, 1);
+      ctx.fillRect(cx - 1, y - 5, 3, 1);
+      ctx.fillRect(cx - 2, y - 4, 5, 1);
     }
 
     function drawDust(dt: number) {
@@ -769,6 +807,9 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       chargeSteps = 0;
       jumpArmed = false;
       facing = 1;
+      aim = 0;
+      prevLeft = false;
+      prevRight = false;
       airApex = 0;
       splatLeft = 0;
       walkDist = 0;

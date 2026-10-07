@@ -52,8 +52,12 @@ export type Platform = {
   y: number;
   w: number;
   kind: 'ground' | 'main' | 'side';
-  /** 스프링 점프대 — 밟으면 서지 않고 높이 튀어 오른다 */
+  /** 스프링 점프대 — 밟으면 서지 않고 높이 튀어 올라 짝지어진 착지 발판으로 날아간다 */
   spring?: boolean;
+  /** 스프링이 쏘아 보낼 곳 — 착지 발판의 가운데 x 와, 스프링보다 얼마나 높은지 */
+  launch?: { toX: number; rise: number };
+  /** 어느 스프링의 착지 발판 (깃발로 표시한다) */
+  landing?: boolean;
 };
 
 export type Body = { x: number; y: number; vx: number; vy: number };
@@ -91,8 +95,8 @@ export function isOver(x: number, p: Platform) {
  * 공중에서 한 스텝 진행한다. 발판에 닿으면 그 발판을 돌려준다.
  *
  * 발판은 아래에서 위로는 통과하고(머리를 박지 않는다) 위에서 내려올 때만 밟힌다.
- * 스프링을 밟으면 서지 않고 그 자리에서 다시 튀어 오른다 — 가로 속도는 그대로라
- * 들어온 방향으로 날아간다. 돌려준 발판의 spring 으로 둘을 구분한다.
+ * 스프링을 밟으면 서지 않고 그 자리에서 다시 튀어 올라 짝지어진 착지 발판으로 날아간다
+ * (springVx). 돌려준 발판의 spring 으로 둘을 구분한다.
  * platforms 에는 이번 스텝에 걸릴 수 있는 후보만 넘기면 된다.
  */
 export function stepAir(b: Body, platforms: readonly Platform[]): Platform | null {
@@ -110,6 +114,7 @@ export function stepAir(b: Body, platforms: readonly Platform[]): Platform | nul
       b.y = hit.y;
       if (hit.spring) {
         b.vy = SPRING_VY;
+        b.vx = springVx(b.x, hit);
       } else {
         b.vx = 0;
         b.vy = 0;
@@ -118,6 +123,43 @@ export function stepAir(b: Body, platforms: readonly Platform[]): Platform | nul
     }
   }
   return null;
+}
+
+/**
+ * 스프링이 x 지점에서 밟혔을 때의 가로 발사 속도. 위로는 늘 SPRING_VY 로 튀고, 정점을
+ * 지나 착지 발판 높이까지 내려오는 시간 동안 그 발판 가운데에 닿도록 가로 속도를 맞춘다.
+ * 그래서 스프링 어디를 밟든, 어느 방향에서 들어오든 같은 발판에 내려앉는다 —
+ * 제자리로 다시 떨어져 끝없이 튀는 일이 없다.
+ */
+export function springVx(x: number, p: Platform) {
+  if (!p.launch) return 0;
+  const down = Math.sqrt(Math.max(0, SPRING_VY * SPRING_VY - 2 * GRAVITY * p.launch.rise));
+  const time = (SPRING_VY + down) / GRAVITY;
+  return wrapDelta(p.launch.toX - x) / time;
+}
+
+/** 스프링 정점 높이 (~32m) */
+export const SPRING_APEX = (SPRING_VY * SPRING_VY) / (2 * GRAVITY);
+/** 착지 발판은 스프링보다 이만큼 높다 (16~26m) */
+const SPRING_RISE_MIN = 160;
+const SPRING_RISE_MAX = 260;
+
+/**
+ * 스프링 s 의 왼쪽 끝 · 가운데 · 오른쪽 끝(걸쳐 설 수 있는 여유까지)을 밟았을 때 모두
+ * 착지 발판 t 에 내려앉는지. blockers 는 비행 중 먼저 걸릴 수 있는 발판들 (t 포함).
+ */
+function springLands(s: Platform, t: Platform, blockers: readonly Platform[]) {
+  const xs = [s.x - EDGE_GRACE, s.x, s.x + s.w / 2, s.x + s.w, s.x + s.w + EDGE_GRACE];
+  return xs.every((x0) => {
+    const x = wrapX(x0);
+    const b: Body = { x, y: s.y, vx: springVx(x, s), vy: SPRING_VY };
+    for (let k = 0; k < 900; k++) {
+      const hit = stepAir(b, blockers);
+      if (hit) return hit === t;
+      if (b.vy < 0 && b.y < t.y) return false;
+    }
+    return false;
+  });
 }
 
 /** 땅 위에서 한 스텝 걷는다. 발판 끝을 벗어나면 false */
@@ -315,6 +357,8 @@ export class PlatformField {
   /** 길이 흘러가는 가로 방향 — 가끔 꺾인다 */
   private drift: 1 | -1;
   private nextBirdY = 40 * PX_PER_M;
+  /** 스프링 → 그 착지 발판. 나중에 놓는 발판이 비행 경로를 막지 않게 확인할 때 쓴다 */
+  private readonly springTargets = new Map<Platform, Platform>();
 
   constructor(seed: number) {
     this.rng = mulberry32(seed);
@@ -361,10 +405,19 @@ export class PlatformField {
     if (i >= 0) this.platforms.splice(i, 1);
   }
 
-  /** 다른 발판과 겹치거나, 위아래로 붙어서 우왕이가 설 자리가 없는 곳은 안 된다 */
+  /**
+   * 다른 발판과 겹치거나, 위아래로 붙어서 우왕이가 설 자리가 없는 곳은 안 된다.
+   * 이미 놓인 스프링의 비행 경로를 가로막는 곳도 안 된다 — 스프링은 언제나 제 착지
+   * 발판에 내려앉아야 한다.
+   */
   private isClear(c: Platform) {
     for (const p of this.query(c.y - 34, c.y + 34)) {
       if (overlapsX(c.x, c.w, p.x, p.w, 8) && Math.abs(c.y - p.y) < 32) return false;
+    }
+    // c 를 지나갈 수 있는 스프링: c 가 착지 높이(스프링+160~260)와 정점(+~325) 사이에 있는 것
+    for (const sp of this.query(c.y - SPRING_APEX - 4, c.y - SPRING_RISE_MIN)) {
+      const t = this.springTargets.get(sp);
+      if (t && t !== c && !springLands(sp, t, [t, c])) return false;
     }
     return true;
   }
@@ -441,10 +494,12 @@ export class PlatformField {
     const hi = next.y - 8;
     if (hi <= lo) return;
 
-    // 스프링은 30m 넘어서부터, 곁 발판 둘 중 하나꼴 (80m 에 하나쯤)
-    const spring = from.y > 30 * PX_PER_M && rng() < 0.5;
+    // 스프링은 30m 넘어서부터, 곁 발판 둘 중 하나꼴 (80m 에 하나쯤). 착지 발판을 못 찾으면
+    // 그 자리엔 보통 곁 발판을 놓는다
+    if (from.y > 30 * PX_PER_M && rng() < 0.5 && this.placeSpring(lo, hi, from, next)) return;
+
     for (let i = 0; i < 4; i++) {
-      const w = spring ? 22 : Math.round(lerp(lerp(34, 22, d), lerp(50, 32, d), rng()));
+      const w = Math.round(lerp(lerp(34, 22, d), lerp(50, 32, d), rng()));
       // 두 메인 발판 사이 어디쯤, 좌우로 넓게
       const mid = wrapX(lerp(from.x, next.x, rng()) + (rng() * 2 - 1) * 170);
       const s: Platform = {
@@ -452,7 +507,6 @@ export class PlatformField {
         y: Math.round(lerp(lo, hi, rng())),
         w,
         kind: 'side',
-        ...(spring ? { spring: true } : {}),
       };
       if (!this.isClear(s)) continue;
 
@@ -460,6 +514,48 @@ export class PlatformField {
       if (this.chainStillHolds(s)) return;
       this.remove(s);
     }
+  }
+
+  /**
+   * 스프링과 그 착지 발판을 한 쌍으로 놓는다. 착지 발판은 스프링보다 16~26m 높고
+   * 옆으로 비켜 있다(제자리로 되떨어지지 않게). 스프링의 왼쪽 끝·가운데·오른쪽 끝을
+   * 밟는 경우를 모두 시뮬레이션해서, 셋 다 다른 발판에 걸리지 않고 착지 발판에
+   * 내려앉을 때만 놓는다.
+   */
+  private placeSpring(lo: number, hi: number, from: Platform, next: Platform) {
+    const rng = this.rng;
+    const SW = 22;
+    const TW = 40;
+    for (let i = 0; i < 8; i++) {
+      const mid = wrapX(lerp(from.x, next.x, rng()) + (rng() * 2 - 1) * 170);
+      const sx = Math.round(Math.min(WORLD_W - SW, Math.max(0, mid - SW / 2)));
+      const sy = Math.round(lerp(lo, hi, rng()));
+      const rise = Math.round(lerp(SPRING_RISE_MIN, SPRING_RISE_MAX, rng()));
+      const side = rng() < 0.5 ? -1 : 1;
+      const tMid = wrapX(sx + SW / 2 + side * lerp(60, 170, rng()));
+      const t: Platform = {
+        x: Math.round(Math.min(WORLD_W - TW, Math.max(0, tMid - TW / 2))),
+        y: sy + rise,
+        w: TW,
+        kind: 'side',
+        landing: true,
+      };
+      const s: Platform = { x: sx, y: sy, w: SW, kind: 'side', spring: true, launch: { toX: t.x + TW / 2, rise } };
+      if (!this.isClear(s) || !this.isClear(t)) continue;
+
+      // 날아가는 동안 착지 발판보다 먼저 걸릴 수 있는 것들 (착지 높이 ~ 정점)
+      if (!springLands(s, t, [t, ...this.query(t.y, sy + SPRING_APEX + 4)])) continue;
+
+      this.insert(s);
+      this.insert(t);
+      if (this.chainStillHolds(s) && this.chainStillHolds(t)) {
+        this.springTargets.set(s, t);
+        return true;
+      }
+      this.remove(s);
+      this.remove(t);
+    }
+    return false;
   }
 
   /**
