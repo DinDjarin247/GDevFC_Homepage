@@ -48,6 +48,10 @@ const SPLAT_TIME = 0.45;
 const KNOCK_VX = 150;
 const KNOCK_VY = 100;
 const KNOCK_GUARD = 0.8;
+/** 이보다 세게(최대의 60% 이상) 뛰면 잔상이 남는다 */
+const TRAIL_POWER = 0.6;
+/** 이펙트 입자 상한 — 넘으면 오래된 것부터 버린다 */
+const MAX_PARTICLES = 320;
 
 const FONT_LG = "10px 'Press Start 2P', monospace";
 const FONT_SM = "7px 'Press Start 2P', monospace";
@@ -56,7 +60,25 @@ const FONT_XL = "16px 'Press Start 2P', monospace";
 type Mode = 'play' | 'paused' | 'ended';
 type PlayerState = 'ground' | 'charge' | 'air' | 'splat';
 type Input = { left: boolean; right: boolean; jump: boolean };
-type Dust = { x: number; y: number; vx: number; vy: number; life: number };
+/**
+ * 이펙트 입자 (월드 좌표, 위가 +y). g 는 위쪽 가속도 — 먼지는 음수(가라앉음),
+ * 기운·별가루는 0 이상(떠오름). 순전히 장식이라 물리와는 상관없다.
+ */
+type Particle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  max: number;
+  size: number;
+  color: string;
+  g: number;
+};
+/** 바닥에 퍼지는 고리 (위에서 비스듬히 본 납작한 원) */
+type Ring = { x: number; y: number; life: number; max: number; r: number; color: string };
+/** 세게 뛸 때 남는 잔상 — 그 순간의 자세를 한 가지 색으로 */
+type Ghost = { x: number; y: number; img: HTMLCanvasElement; life: number; max: number };
 
 type Banner = { key: number; en: string; ko: string; m: number };
 type EndResult = { score: number; newBest: boolean };
@@ -87,6 +109,20 @@ function writeBest(m: number) {
   } catch {
     // 사생활 보호 모드 등에서 저장이 막혀도 게임은 그대로 한다
   }
+}
+
+/** 스프라이트를 한 가지 색의 실루엣으로 (잔상용) */
+function tintSprite(src: HTMLCanvasElement, color: string) {
+  const c = document.createElement('canvas');
+  c.width = src.width;
+  c.height = src.height;
+  const g = c.getContext('2d');
+  if (!g) return c;
+  g.drawImage(src, 0, 0);
+  g.globalCompositeOperation = 'source-in';
+  g.fillStyle = color;
+  g.fillRect(0, 0, c.width, c.height);
+  return c;
 }
 
 /** Sprite.tsx 의 그리드를 캔버스 한 장으로 굽는다 (flip 이면 좌우 반전) */
@@ -162,6 +198,13 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       ],
       air: [bakeSprite(SPRITE_GRIDS['woowang-helm-air'], false), bakeSprite(SPRITE_GRIDS['woowang-helm-air'], true)],
     };
+    /** 잔상 — 보통 점프는 연두, 스프링은 금빛 */
+    const ghostImg = {
+      jump: sprites.air.map((img) => tintSprite(img, '#c9f73d')),
+      spring: sprites.air.map((img) => tintSprite(img, '#f5d76e')),
+    };
+    /** 흔들림을 싫어하는 사람(움직임 줄이기 설정)에게는 화면을 흔들지 않는다 */
+    const calmMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
     // ---------- 판 상태 ----------
 
@@ -202,7 +245,18 @@ export default function JumpGame({ onExit }: JumpGameProps) {
     let guardLeft = 0;
     /** 스프링이 마지막으로 눌린 시각 (눌린 그림을 잠깐 보여준다) */
     const springFired = new Map<Platform, number>();
-    let dust: Dust[] = [];
+    let parts: Particle[] = [];
+    let rings: Ring[] = [];
+    let ghosts: Ghost[] = [];
+    /** 잔상을 남길 남은 시간 (세게 뛴 직후) */
+    let trailLeft = 0;
+    /** 스프링으로 솟는 중 — 정점까지 금빛 잔상 */
+    let springTrail = false;
+    let ghostTimer = 0;
+    /** 힘 모으는 동안 피어오르는 기운 — 프레임마다 소수점까지 모아 뿌린다 */
+    let auraAcc = 0;
+    /** 철퍼덕 화면 흔들림 */
+    let shakeLeft = 0;
     let nearby: Platform[] = [];
     let bannerKey = 0;
 
@@ -252,16 +306,160 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       return 0;
     }
 
-    function puff(n: number, spread: number) {
+    // ---------- 이펙트 ----------
+
+    const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
+    function emit(p: Omit<Particle, 'max'>) {
+      parts.push({ ...p, max: p.life });
+      if (parts.length > MAX_PARTICLES) parts.splice(0, parts.length - MAX_PARTICLES);
+    }
+
+    /** 발밑 먼지 — 양옆으로 퍼지며 가라앉는다 */
+    function dustBurst(n: number, spread: number, color = '#efe6d2') {
       for (let i = 0; i < n; i++) {
-        dust.push({
-          x: body.x + (Math.random() - 0.5) * 10,
-          y: body.y,
-          vx: (Math.random() - 0.5) * spread,
-          vy: Math.random() * 18 + 6,
-          life: 0.45 + Math.random() * 0.25,
+        const side = i % 2 === 0 ? -1 : 1;
+        emit({
+          x: body.x + side * rand(1, 6),
+          y: body.y + rand(0, 2),
+          vx: side * rand(spread * 0.35, spread),
+          vy: rand(4, 22),
+          life: rand(0.3, 0.55),
+          size: Math.random() < 0.35 ? 3 : 2,
+          color,
+          g: -50,
         });
       }
+    }
+
+    /** 사방으로 터지는 반짝이 (스프링 · 충돌) */
+    function sparkBurst(n: number, speed: number, colors: string[], g: number, life: number) {
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + rand(-0.2, 0.2);
+        const v = rand(speed * 0.5, speed);
+        emit({
+          x: body.x,
+          y: body.y + 8,
+          vx: Math.cos(a) * v,
+          vy: Math.sin(a) * v * 0.8 + 10,
+          life: rand(life * 0.7, life),
+          size: Math.random() < 0.3 ? 2 : 1,
+          color: colors[i % colors.length],
+          g,
+        });
+      }
+    }
+
+    function ring(r: number, color: string, life = 0.3) {
+      rings.push({ x: body.x, y: body.y, life, max: life, r, color });
+    }
+
+    /** 도약 — 세게 뛸수록 먼지가 크게 터지고, 고리가 퍼지고, 잔상이 남는다 */
+    function fxLaunch(power: number) {
+      dustBurst(Math.round(4 + power * 8), 40 + power * 80);
+      if (power > 0.45) ring(8 + power * 14, power >= 1 ? '#ffffff' : '#c9f73d');
+      if (power >= TRAIL_POWER) {
+        trailLeft = 0.25 + power * 0.25;
+        ghostTimer = 0;
+      }
+    }
+
+    /** 착지 — 높이 떨어질수록 먼지가 크게, 철퍼덕이면 고리와 화면 흔들림까지 */
+    function fxLand(fall: number, splat: boolean) {
+      trailLeft = 0;
+      springTrail = false;
+      if (splat) {
+        dustBurst(18, 120);
+        ring(22, '#efe6d2', 0.35);
+        if (!calmMotion) shakeLeft = 0.25;
+      } else {
+        dustBurst(fall > 60 ? 10 : 5, fall > 60 ? 70 : 40);
+      }
+    }
+
+    /** 스프링 — 금빛 별가루와 고리, 정점까지 금빛 잔상 */
+    function fxSpring() {
+      sparkBurst(14, 90, ['#f5d76e', '#fff3c4', '#ff9a8a'], 30, 0.6);
+      ring(18, '#f5d76e', 0.35);
+      springTrail = true;
+      trailLeft = 0;
+      ghostTimer = 0;
+    }
+
+    /** 새에 부딪힘 — 깃털이 흩날린다 (우주에선 UFO 불꽃) */
+    function fxBird(zone: number) {
+      if (zone >= 5) {
+        sparkBurst(12, 110, ['#ffe06b', '#ff5a3d', '#7fe3ff'], -40, 0.45);
+        return;
+      }
+      const feather = zone <= 1 ? ['#7a5634', '#d9b27a'] : zone <= 3 ? ['#ffffff', '#cfd6de'] : ['#3a2e28', '#c8b49a'];
+      for (let i = 0; i < 9; i++) {
+        emit({
+          x: body.x + rand(-6, 6),
+          y: body.y + rand(8, 18),
+          vx: rand(-45, 45),
+          vy: rand(10, 45),
+          life: rand(0.7, 1.1),
+          size: 2,
+          color: feather[i % 2],
+          g: -35,
+        });
+      }
+      trailLeft = 0;
+      springTrail = false;
+    }
+
+    /** 장식 효과의 시간 진행 — 물리와 따로, 그리는 프레임마다 */
+    function updateEffects(dt: number, frameSide: number) {
+      if (dt <= 0) return;
+
+      // 힘 모으는 동안 발밑에서 기운이 피어오른다. 모일수록 많고 뜨겁게
+      if (pstate === 'charge') {
+        const p = Math.min(1, chargeSteps / CHARGE_STEPS);
+        auraAcc += dt * (18 + p * 70);
+        const color = p < 0.5 ? '#c9f73d' : p < 0.85 ? '#f5d76e' : '#ff8a3d';
+        while (auraAcc >= 1) {
+          auraAcc -= 1;
+          emit({
+            x: body.x + rand(-7, 7),
+            y: body.y + rand(0, 3),
+            vx: rand(-6, 6),
+            vy: rand(18, 34 + p * 30),
+            life: rand(0.35, 0.6),
+            size: Math.random() < p * 0.4 ? 2 : 1,
+            color,
+            g: 10,
+          });
+        }
+      } else {
+        auraAcc = 0;
+      }
+
+      // 잔상 — 세게 뛴 직후 잠깐, 스프링이면 정점까지
+      if (springTrail && body.vy <= 0) springTrail = false;
+      if (trailLeft > 0) trailLeft -= dt;
+      if (pstate === 'air' && (trailLeft > 0 || springTrail)) {
+        ghostTimer -= dt;
+        if (ghostTimer <= 0) {
+          ghostTimer = 0.035;
+          const img = (springTrail ? ghostImg.spring : ghostImg.jump)[frameSide];
+          ghosts.push({ x: body.x, y: body.y, img, life: 0.24, max: 0.24 });
+        }
+      }
+
+      for (const p of parts) {
+        p.life -= dt;
+        p.vy += p.g * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vx *= 1 - Math.min(1, dt * 2.5);
+      }
+      parts = parts.filter((p) => p.life > 0);
+      for (const r of rings) r.life -= dt;
+      rings = rings.filter((r) => r.life > 0);
+      for (const g of ghosts) g.life -= dt;
+      ghosts = ghosts.filter((g) => g.life > 0);
+      if (shakeLeft > 0) shakeLeft -= dt;
     }
 
     function launch(steps: number) {
@@ -271,7 +469,7 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       if (aim !== 0) facing = aim;
       pstate = 'air';
       airApex = body.y;
-      puff(3, 30);
+      fxLaunch(Math.min(1, steps / CHARGE_STEPS));
     }
 
     function land(p: Platform) {
@@ -280,10 +478,10 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       if (fall > SPLAT_FALL) {
         pstate = 'splat';
         splatLeft = SPLAT_TIME;
-        puff(10, 90);
+        fxLand(fall, true);
       } else {
         pstate = 'ground';
-        puff(4, 40);
+        fxLand(fall, false);
       }
       if (p.y > bestLanded) {
         bestLanded = p.y;
@@ -307,7 +505,7 @@ export default function JumpGame({ onExit }: JumpGameProps) {
         pstate = 'air';
         airApex = body.y;
         guardLeft = KNOCK_GUARD;
-        puff(8, 80);
+        fxBird(zoneIndexAt(b.y / PX_PER_M));
         return;
       }
     }
@@ -359,7 +557,7 @@ export default function JumpGame({ onExit }: JumpGameProps) {
             // 스프링 — 서지 않고 그대로 높이 튀어 오른다
             springFired.set(hit, t);
             airApex = body.y;
-            puff(6, 70);
+            fxSpring();
           } else if (hit) {
             land(hit);
           }
@@ -618,6 +816,16 @@ export default function JumpGame({ onExit }: JumpGameProps) {
 
       for (const left of screenXs(body.x - W / 2, W)) {
         const cx = left + W / 2;
+        if (pstate === 'charge') {
+          // 발밑에 모이는 빛 — 힘이 찰수록 넓고 밝게
+          const p = Math.min(1, chargeSteps / CHARGE_STEPS);
+          const hw = Math.round(5 + p * 6);
+          ctx.globalAlpha = 0.25 + p * 0.45;
+          ctx.fillStyle = p < 0.5 ? '#c9f73d' : p < 0.85 ? '#f5d76e' : '#ff8a3d';
+          ctx.fillRect(cx - hw, footY, hw * 2, 1);
+          ctx.fillRect(cx - hw + 2, footY + 1, hw * 2 - 4, 1);
+          ctx.globalAlpha = 1;
+        }
         if (pstate === 'splat') {
           // 철퍼덕 — 웅크린 그림을 납작하게
           ctx.drawImage(sprites.crouch[side], cx - 9, footY - 15, 18, 16);
@@ -661,18 +869,38 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       ctx.fillRect(cx - 2, y - 4, 5, 1);
     }
 
-    function drawDust(dt: number) {
-      for (const d of dust) {
-        d.life -= dt;
-        d.x += d.vx * dt;
-        d.y += d.vy * dt;
-        d.vy -= 60 * dt;
+    /** 바닥 고리와 잔상 — 우왕이보다 뒤에 */
+    function drawBehindEffects() {
+      for (const r of rings) {
+        const k = 1 - r.life / r.max;
+        const rad = 2 + r.r * k;
+        ctx.globalAlpha = (r.life / r.max) * 0.85;
+        ctx.fillStyle = r.color;
+        const cy = Math.round(sy(r.y));
+        const n = 18;
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * Math.PI * 2;
+          const dx = Math.cos(a) * rad;
+          const dy = Math.sin(a) * rad * 0.32;
+          for (const x of screenXs(r.x + dx, 1)) ctx.fillRect(x, cy + Math.round(dy), 1, 1);
+        }
       }
-      dust = dust.filter((d) => d.life > 0);
-      for (const d of dust) {
-        ctx.globalAlpha = Math.min(1, d.life * 2);
-        ctx.fillStyle = '#efe6d2';
-        for (const x of screenXs(d.x, 2)) ctx.fillRect(x, Math.round(sy(d.y)), 2, 2);
+      for (const g of ghosts) {
+        ctx.globalAlpha = (g.life / g.max) * 0.45;
+        const top = Math.round(sy(g.y)) - 20;
+        for (const left of screenXs(g.x - SPRITE_SIZE.w / 2, SPRITE_SIZE.w)) ctx.drawImage(g.img, left, top);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    /** 먼지 · 기운 · 별가루 · 깃털 — 우왕이보다 앞에 */
+    function drawParticles() {
+      for (const p of parts) {
+        ctx.globalAlpha = Math.min(1, (p.life / p.max) * 1.6);
+        ctx.fillStyle = p.color;
+        const size = p.life / p.max < 0.35 && p.size > 1 ? p.size - 1 : p.size;
+        const y = Math.round(sy(p.y)) - size + 1;
+        for (const x of screenXs(p.x, size)) ctx.fillRect(x, y, size, size);
       }
       ctx.globalAlpha = 1;
     }
@@ -706,7 +934,15 @@ export default function JumpGame({ onExit }: JumpGameProps) {
     function render(dt: number) {
       const viewW = canvas.width;
 
+      updateEffects(dt, facing === 1 ? 0 : 1);
+
       bg.drawBack(ctx, viewW, camY, t);
+      // 철퍼덕 — 하늘은 그대로 두고 탑·발판·우왕이만 흔든다 (가장자리에 빈틈이 안 생기게)
+      ctx.save();
+      if (shakeLeft > 0) {
+        const m = Math.ceil(shakeLeft * 10);
+        ctx.translate(Math.round(rand(-m, m)), Math.round(rand(-m, m)));
+      }
       bg.drawTower(ctx, viewW, camY);
       bg.drawFront(ctx, viewW, camY);
       drawGround(viewW);
@@ -714,8 +950,10 @@ export default function JumpGame({ onExit }: JumpGameProps) {
         if (p.kind !== 'ground') drawPlatform(p);
       }
       drawBirds();
-      drawDust(dt);
+      drawBehindEffects();
       drawPlayer();
+      drawParticles();
+      ctx.restore();
       if (mode === 'ended') drawEnd(viewW);
       else drawHud();
     }
@@ -821,7 +1059,13 @@ export default function JumpGame({ onExit }: JumpGameProps) {
       simT = 0;
       guardLeft = 0;
       springFired.clear();
-      dust = [];
+      parts = [];
+      rings = [];
+      ghosts = [];
+      trailLeft = 0;
+      springTrail = false;
+      auraAcc = 0;
+      shakeLeft = 0;
       mode = 'play';
       setEnded(null);
       showZone(0);
