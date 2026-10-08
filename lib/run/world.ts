@@ -135,6 +135,8 @@ export type Runner = {
   sliding: boolean;
   coyote: number;
   buffer: number;
+  /** 점프할 때 ↓ 를 누르고 있었다 — 손을 뗐다 다시 누를 때까지 급강하하지 않는다 */
+  slideLock: boolean;
 };
 
 export type RunInput = {
@@ -145,7 +147,7 @@ export type RunInput = {
 };
 
 export function newRunner(): Runner {
-  return { y: GROUND_Y, vy: 0, grounded: true, airJumps: 1, sliding: false, coyote: 0, buffer: 0 };
+  return { y: GROUND_Y, vy: 0, grounded: true, airJumps: 1, sliding: false, coyote: 0, buffer: 0, slideLock: false };
 }
 
 function over(x: number, s: Surface) {
@@ -167,15 +169,19 @@ export function stepRunner(r: Runner, x: number, inp: RunInput, surfaces: readon
       r.coyote = 0;
       r.airJumps = maxJumps - 1;
       r.buffer = 0;
+      r.slideLock = inp.slide;
     } else if (r.airJumps > 0) {
       r.vy = -AIR_JUMP_V;
       r.airJumps -= 1;
       r.buffer = 0;
+      r.slideLock = inp.slide;
     }
   }
 
+  // 슬라이드하다 ↓ 를 쥔 채 점프해도 점프가 먹히게 — 급강하는 ↓ 를 새로 눌렀을 때만
+  if (!inp.slide) r.slideLock = false;
   r.sliding = r.grounded && inp.slide;
-  if (!r.grounded && inp.slide && r.vy < FAST_FALL_V) r.vy = FAST_FALL_V;
+  if (!r.grounded && inp.slide && !r.slideLock && r.vy < FAST_FALL_V) r.vy = FAST_FALL_V;
 
   if (r.grounded) {
     // 발밑이 끝났으면(구덩이 · 발판 끝) 떨어지기 시작한다
