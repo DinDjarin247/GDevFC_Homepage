@@ -8,7 +8,7 @@
   "intro": {
     "titleMain": "달려라",
     "titleSub": "우왕이",
-    "subtitle": "RUN, WOOWANG, RUN! · V2",
+    "subtitle": "RUN, WOOWANG, RUN! · V2 — 충북대 마스코트 여섯 명",
     "controlsHeading": "CONTROLS",
     "controls": [
       {
@@ -18,6 +18,10 @@
       {
         "key": "↓ / SLIDE",
         "desc": "슬라이드로 매달린 현수막 밑을 빠져나간다 · 공중에선 빨리 내려오기"
+      },
+      {
+        "key": "SHIFT / X / DASH",
+        "desc": "캐릭터 능력 — 타나의 불꽃 대시 (다른 캐릭터는 능력이 저절로 발휘된다)"
       },
       {
         "key": "HP",

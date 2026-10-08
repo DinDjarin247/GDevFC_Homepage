@@ -31,15 +31,36 @@ export type CharacterArt = {
   legsAt: number;
   pants: string;
   shoe: string;
+  /** 바지 양옆 줄무늬 (우왕이의 흰 줄) */
+  stripe?: string;
   /** 슬라이드 때 남길 줄들 (머리 · 몸에서 골라 눌러 담는다) */
   slideRows: number[];
+  /** 다리 줄을 직접 정한 캐릭터 (legsAt 줄부터 끼운다) — 없으면 우왕이식 다리를 만든다 */
+  legs?: { runA: string[]; runB: string[]; jump: string[] };
 };
+
+/**
+ * 사람 모양 캐릭터의 다리 — 반바지(top) 한 줄, 다리(leg) 두 줄, 신발(shoe) 한 줄.
+ * 달리기 두 장은 한 발씩 들고, 점프는 무릎을 접는다.
+ */
+export function humanLegs(top: string, leg: string, shoe: string): NonNullable<CharacterArt['legs']> {
+  const shorts = row(range(4, 11, top));
+  return {
+    runA: [shorts, row({ 5: leg, 6: leg, 10: leg, 11: leg }), row({ 5: leg, 6: leg, 11: leg, 12: leg }), row({ 4: shoe, 5: shoe, 6: shoe, 12: shoe, 13: shoe })],
+    runB: [shorts, row({ 4: leg, 5: leg, 9: leg, 10: leg }), row({ 3: leg, 4: leg, 9: leg, 10: leg }), row({ 2: shoe, 3: shoe, 9: shoe, 10: shoe, 11: shoe })],
+    jump: [shorts, row({ 4: leg, 5: leg, 10: leg, 11: leg }), row({ 3: shoe, 4: shoe, 11: shoe, 12: shoe })],
+  };
+}
+
+/** 다리 줄 만들기 — 다른 파일에서도 같은 방식으로 적을 수 있게 */
+export { row as legRow, range as legRange };
 
 export const WOOWANG_ART: CharacterArt = {
   base: SPRITE_GRIDS['woowang'],
   legsAt: 15,
   pants: 'Y',
   shoe: 'k',
+  stripe: 'v',
   slideRows: [2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14],
 };
 
@@ -54,7 +75,12 @@ function withLegs(art: CharacterArt, legs: string[]) {
 export function poseGrid(art: CharacterArt, pose: Pose): string[] {
   const P = art.pants;
   const S = art.shoe;
-  const pants = row({ ...range(4, 11, P), 4: 'v', 11: 'v' });
+  const stripe: Record<number, string> = art.stripe ? { 4: art.stripe, 11: art.stripe } : {};
+  const pants = row({ ...range(4, 11, P), ...stripe });
+  if (art.legs && pose !== 'stand' && pose !== 'slide') {
+    const legs = pose === 'runA' ? art.legs.runA : pose === 'runB' ? art.legs.runB : art.legs.jump;
+    return withLegs(art, legs);
+  }
   switch (pose) {
     case 'stand':
       return art.base;

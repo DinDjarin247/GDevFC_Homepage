@@ -54,6 +54,18 @@ const PALETTE: Record<string, string> = {
   i: '#9fe8ff', // 수정구슬
   I: '#3f7fb3', // 수정구슬 테두리
   G: '#f5d76e', // 금빛 별 장식
+  // 충북대 마스코트 (달려라 우왕이 V2 플레이어블)
+  R: '#c4245e', // 학교 마젠타 — 옷의 C · U 글자
+  M: '#9aae3c', // 느루 올리브 티셔츠
+  T: '#7fc25a', // 느루 나뭇잎 하이라이트
+  K: '#f0a548', // 타나 호랑이 털
+  Q: '#f4a9c8', // 타나 분홍 후디
+  V: '#d97fa3', // 후디 그늘
+  W: '#9c6c45', // 스테디 곰 털
+  X: '#6e4a2e', // 곰 털 그늘
+  Z: '#c9ced8', // 흰 과잠 그늘
+  '1': '#5b8fc9', // 스테디 파란 반바지 · 가방
+  '2': '#f2cf4a', // 은송이 노란 원피스
 };
 
 /** 수동으로 16글자를 세는 실수를 막기 위한 그리드 빌더 (인덱스 → 문자) */
@@ -443,6 +455,136 @@ const WOOWANG_HELM_AIR = [
   EMPTY,
 ];
 
+/** 느루 — 느티나무 한 그루. 풍성한 초록 나뭇잎 머리, 올리브 티셔츠에 C. */
+const NEURU = [
+  '.....nnnnnn.....',
+  '..nnnTTnnnnnnn..',
+  '.nnnnnnnnnTnnnn.',
+  '.nnnTnnnnnnTnnn.',
+  '.nnnnnnnnnnnnnn.',
+  '.nnnnzzzzzznnTn.',
+  '.nTnzzzzzzzznnn.',
+  '.nnnzzkzzkzznnn.',
+  '.NnnxzzzzzzxnnN.',
+  '.nNnzzzSSzzznNn.',
+  '....MMMMMMMM....',
+  '...MMMMMMMMMM...',
+  '...MMMMRRMMMM...',
+  '...MMMRMMMMMM...',
+  '...zMMMRRMMMz...',
+  '....NNNNNNNN....',
+  '....rrrrrrrr....',
+  '.....rr..rr.....',
+  '.....rr..rr.....',
+  '....OOO..OOO....',
+  '................',
+  '................',
+];
+
+/** 타나 — 불과 별의 수호자 호랑이. 분홍 후디에 C, 한 손엔 휴대폰, 한 손은 번쩍. */
+const TANA = [
+  '................',
+  '..KxK......KxK..',
+  '..KKKKKKKKKKKK..',
+  '..KKKKKYYKKKKK..',
+  '..KKKKKYKKKKKK..',
+  '..KKKKKKKKKKKK..',
+  '..YYKkKKKKkKYY..',
+  '..KKKvvkkvvKKKK.',
+  '..YYxvvvvvvxYKK.',
+  '..KKKvvvvvvKKQ..',
+  '...VVVVVVVVVVQ..',
+  '..QQQQQQQQQQQQ..',
+  '.AAQQQQRRQQQQ...',
+  '.wAQQQRQQQQQQ...',
+  '.AAQQQQRRQQQQ...',
+  '...VVVVVVVVVV...',
+  '....vvvvvvvv....',
+  '.....KK..KK.....',
+  '.....KK..KK.....',
+  '....KKK..KKK....',
+  '................',
+  '................',
+];
+
+/** 좌왕이 — 우왕이 동생. 작고 동그란 주황 송아지, 꼬리 끝이 동그랗다. */
+const JWAWANG = [
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '.....v....v.....',
+  '......yyyy......',
+  '...Y.yyyyyy.Y...',
+  '....yyyyyyyy....',
+  '....yykyykyy....',
+  '.y.yyyyyyyyyy...',
+  '.yYYyxyYYyxyy...',
+  '....yyyyyyyy....',
+  '....yyyyyyyy....',
+  '....YYYYYYYY....',
+  '.....YY..YY.....',
+  '................',
+  '................',
+];
+
+/** 스테디 — 동그란 안경을 쓴 곰. 흰 과잠에 U, 마젠타 티, 파란 가방. */
+const STEADY = [
+  '..WWW......WWW..',
+  '..WWWWWWWWWWWW..',
+  '..WWWWWWWWWWWW..',
+  '..WWWWWWWWWWWW..',
+  '..WkkkkkkkkkkW..',
+  '..WkvkkWWkkvkW..',
+  '..WkkkkWWkkkkW..',
+  '..WWWvvkkvvWWW..',
+  '..WWWvvvvvvWWW..',
+  '.ZwwwwRRRR1wwwZ.',
+  '.ZwwwwRRRRw1wwZ.',
+  '.ZRwRwRRRRww1wZ.',
+  '.ZRRRwRRRRwww11.',
+  '.ZwwwwRRRRwww11.',
+  '.ZwwwwRRRRwww11.',
+  '.ZZZZZZZZZZZZZZ.',
+  '....11111111....',
+  '.....WW..WW.....',
+  '.....WW..WW.....',
+  '....XXX..XXX....',
+  '................',
+  '................',
+];
+
+/** 은송이 — 미선나무 꽃송이 요정. 금발에 하얀 꽃, 노란 원피스에 U, 하늘빛 날개. */
+const EUNSONG = [
+  '..........wwww..',
+  '....hhhhhwwGGww.',
+  '...hhhhhhhwwww..',
+  '...hhhhhhhhhh...',
+  '...hhzzzzzzhh...',
+  '...hhzzzzzzhh...',
+  '...hhzkzzkzhh...',
+  '...hhxzzzzxhh...',
+  '...HHzzzzzzHH...',
+  'iiiH22222222Hiii',
+  'iwiz22222222ziwi',
+  'iii.22R22R22.iii',
+  'iii.22RRRR22.iii',
+  '...2222222222...',
+  '...2222222222...',
+  '...GGGGGGGGGG...',
+  '......z..z......',
+  '......z..z......',
+  '......z..z......',
+  '......G..G......',
+  '................',
+  '................',
+];
+
 const SPRITES: Record<string, string[]> = {
   knight: KNIGHT,
   mage: MAGE,
@@ -461,6 +603,12 @@ const SPRITES: Record<string, string[]> = {
   'woowang-helm-walk': WOOWANG_HELM_WALK,
   'woowang-helm-crouch': WOOWANG_HELM_CROUCH,
   'woowang-helm-air': WOOWANG_HELM_AIR,
+  // 충북대 마스코트 — 달려라 우왕이 V2 의 캐릭터 선택
+  neuru: NEURU,
+  tana: TANA,
+  jwawang: JWAWANG,
+  steady: STEADY,
+  eunsong: EUNSONG,
 };
 
 /** 캔버스 게임이 같은 그림을 구워 쓰도록 그리드와 팔레트를 내보낸다 */

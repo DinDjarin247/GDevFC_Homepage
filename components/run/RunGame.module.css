@@ -328,6 +328,22 @@
   background: var(--magenta);
 }
 
+/* 타나의 대시 — 다시 쓸 수 있을 때까지 띠가 차오르고, 준비되면 빛난다 */
+.dashChip {
+  border-color: rgba(255, 138, 61, 0.45);
+  color: rgba(255, 138, 61, 0.6);
+}
+
+.dashChip::after {
+  background: #ff8a3d;
+}
+
+.dashChip[data-ready] {
+  border-color: #ff8a3d;
+  color: #ff8a3d;
+  box-shadow: 0 0 10px rgba(255, 138, 61, 0.35);
+}
+
 /* ---------- 일시정지 버튼 ---------- */
 
 .pauseBtn {
@@ -471,6 +487,17 @@
   color: var(--lime);
 }
 
+.tright {
+  display: flex;
+  gap: 2cqw;
+}
+
+.tdash {
+  width: 15cqw;
+  border-color: rgba(255, 138, 61, 0.6);
+  color: #ff8a3d;
+}
+
 .tbtn[data-pressed='true'] {
   background: rgba(201, 247, 61, 0.25);
   border-color: var(--lime);
@@ -611,6 +638,10 @@
 }
 
 .actions .primary {
+  grid-column: 1 / -1;
+}
+
+.actions .ghost:last-child {
   grid-column: 1 / -1;
 }
 

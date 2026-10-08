@@ -11,8 +11,8 @@ import play from '@/data/play.json';
 import ScoreSubmit from '@/components/play/ScoreSubmit';
 import { CHUNKS } from '@/lib/run/chunks';
 import { createRunBackground } from '@/lib/run/background';
+import { rollStats, type Character, type RunnerStats } from '@/lib/run/characters';
 import {
-  WOOWANG_ART,
   bakeCharacter,
   bakeProfessor,
   drawCoin,
@@ -90,37 +90,29 @@ const ITEM_LABEL: Record<ItemKind, { ko: string; en: string }> = {
   giant: { ko: '거대화', en: 'GIANT!' },
 };
 
-/**
- * 달리는 캐릭터의 능력치. 3단계에서 마스코트마다 다른 값을 넣는다.
- * itemMult — 아이템 지속시간 배율, coinMult — 학점 점수 배율, drainMult — 체력 감소 배율,
- * heartMult — 하트 회복 배율, startShield — 족보를 들고 시작.
- */
-export type RunnerStats = {
-  maxJumps: number;
-  itemMult: number;
-  coinMult: number;
-  drainMult: number;
-  heartMult: number;
-  startShield: boolean;
-};
-
-const DEFAULT_STATS: RunnerStats = {
-  maxJumps: 2,
-  itemMult: 1,
-  coinMult: 1,
-  drainMult: 1,
-  heartMult: 1,
-  startShield: false,
-};
+/** 타나의 불꽃 대시 — 중력 없이 앞으로 돌진하며 장애물을 부순다 */
+const DASH_TIME = 0.45;
+const DASH_SPEED = 2.2;
+const DASH_COOLDOWN = 6;
+/** 은송이의 활공 — 점프를 누르고 있으면 이 속도보다 빨리 떨어지지 않는다 */
+const GLIDE_VY = 55;
 
 type Mode = 'play' | 'paused' | 'over';
-type Input = { jump: boolean; slide: boolean };
+type Input = { jump: boolean; slide: boolean; ability: boolean };
 type Spark = { x: number; y: number; vx: number; vy: number; life: number; max: number; color: string; size: number; g: number };
 type Ring = { x: number; y: number; r: number; life: number; max: number; color: string };
 type Ghost = { x: number; y: number; life: number; pose: Pose };
 type Floater = { text: string; x: number; y: number; life: number; color: string };
 type Banner = { key: number; en: string; ko: string; sub: string; note?: string };
-type Result = { score: number; coins: number; meters: number; reached: string; newBest: boolean; cause: string };
+type Result = {
+  score: number;
+  coins: number;
+  meters: number;
+  reached: string;
+  newBest: boolean;
+  cause: string;
+  who: string;
+};
 
 const KEYS: Record<string, keyof Input> = {
   Space: 'jump',
@@ -128,6 +120,10 @@ const KEYS: Record<string, keyof Input> = {
   KeyW: 'jump',
   ArrowDown: 'slide',
   KeyS: 'slide',
+  ShiftLeft: 'ability',
+  ShiftRight: 'ability',
+  KeyX: 'ability',
+  KeyE: 'ability',
 };
 
 function readBest() {
@@ -147,7 +143,11 @@ function writeBest(v: number) {
 }
 
 type RunGameProps = {
+  /** 고른 캐릭터 */
+  character: Character;
   onExit: () => void;
+  /** 캐릭터 고르기 화면으로 돌아가기 */
+  onChangeCharacter: () => void;
 };
 
 /**
@@ -162,7 +162,7 @@ type RunGameProps = {
  * 게임 루프는 리렌더 없이 rAF 로만 돈다. HUD 숫자는 바뀔 때만 DOM 을 직접 고치고,
  * React 상태는 일시정지 · 결과 화면 · 구간 배너처럼 드물게 바뀌는 것에만 쓴다.
  */
-export default function RunGame({ onExit }: RunGameProps) {
+export default function RunGame({ character, onExit, onChangeCharacter }: RunGameProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hpFillRef = useRef<HTMLElement>(null);
@@ -173,8 +173,12 @@ export default function RunGame({ onExit }: RunGameProps) {
   const scoreRef = useRef<HTMLElement>(null);
   const zoneRef = useRef<HTMLSpanElement>(null);
   const chipRefs = useRef<Partial<Record<ItemKind, HTMLSpanElement | null>>>({});
-  const inputRef = useRef<Input>({ jump: false, slide: false });
+  const dashChipRef = useRef<HTMLSpanElement>(null);
+  const inputRef = useRef<Input>({ jump: false, slide: false, ability: false });
   const jumpLatchRef = useRef(false);
+  const abilityLatchRef = useRef(false);
+  /** 이번 판에 대시를 쓸 수 있는지 (타나, 또는 비밀의 힘으로 대시가 깃든 은송이) */
+  const [hasDash, setHasDash] = useState(false);
 
   const [paused, setPaused] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
@@ -201,9 +205,20 @@ export default function RunGame({ onExit }: RunGameProps) {
     ctx.imageSmoothingEnabled = false;
 
     const bg = createRunBackground();
-    const sprites = bakeCharacter(WOOWANG_ART);
+    const sprites = bakeCharacter(character.art);
     const prof = bakeProfessor();
-    const stats: RunnerStats = DEFAULT_STATS;
+    let stats: RunnerStats;
+    /** 판이 시작할 때 배너에 띄울 한 줄 — 은송이는 이번 판에 깃든 비밀의 힘 */
+    let startNote = '';
+    function roll() {
+      const r = rollStats(character);
+      stats = r.stats;
+      startNote = r.secretFrom
+        ? `비밀의 힘 — ${r.secretFrom.name}의 ${r.secretFrom.ability.name}!`
+        : '교수님이 출석부를 들고 쫓아온다!';
+      setHasDash(stats.dash);
+    }
+    roll();
     const calmMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
     // ---------- 판 상태 ----------
@@ -227,7 +242,9 @@ export default function RunGame({ onExit }: RunGameProps) {
     let boostFloor = false;
     let magnet = 0;
     let giant = 0;
-    let shield = stats.startShield;
+    let shield = stats!.startShield;
+    let dashLeft = 0;
+    let dashCd = 0;
     let zoneIdx = 0;
     let semester = 1;
     let prevZone = 0;
@@ -249,7 +266,7 @@ export default function RunGame({ onExit }: RunGameProps) {
       const z = ZONES[zoneIdx];
       setBanner({ key: ++bannerKey, en: z.en, ko: z.ko, sub: `${semester}학기`, note });
     }
-    showBanner('교수님이 출석부를 들고 쫓아온다!');
+    showBanner(startNote);
 
     // ---------- 화면 크기 ----------
 
@@ -298,7 +315,7 @@ export default function RunGame({ onExit }: RunGameProps) {
 
     // ---------- 물리 (1/120초 고정 스텝) ----------
 
-    const speedNow = () => RUN_SPEED * (boost > 0 ? BOOST_SPEED : 1);
+    const speedNow = () => RUN_SPEED * (dashLeft > 0 ? DASH_SPEED : boost > 0 ? BOOST_SPEED : 1);
 
     function nearSurfaces(): Surface[] {
       const near = course.surfacesNear(dist, 40);
@@ -345,11 +362,23 @@ export default function RunGame({ onExit }: RunGameProps) {
           runner.grounded = false;
           runner.airJumps = stats.maxJumps - 1;
         }
+      } else if (dashLeft > 0) {
+        // 불꽃 대시 — 그 높이 그대로 중력 없이 돌진한다 (구덩이도 건넌다)
+        jumpLatchRef.current = false;
+        dashLeft -= PHYS_DT;
+        runner.vy = 0;
+        if (Math.random() < 0.6) burst(dist - 6, runner.y - 4 - Math.random() * 14, 1, ['#ff8a3d', '#f5d76e', '#ff5a3d'], 40, 0, -20);
+        if (dashLeft <= 0) guard = Math.max(guard, 0.4);
       } else {
         const jumpPressed = jumpLatchRef.current;
         jumpLatchRef.current = false;
         const vyBefore = runner.vy;
         stepRunner(runner, dist, { jumpPressed, slide: input.slide }, near, stats.maxJumps);
+        // 활공 — 공중에서 점프를 누르고 있으면 사뿐히 내려온다
+        if (stats.glide && !runner.grounded && input.jump && !jumpPressed && runner.vy > GLIDE_VY) {
+          runner.vy = GLIDE_VY;
+          if (Math.random() < 0.25) burst(dist - 4, runner.y - 12, 1, ['#fff3c4', '#9fe8ff'], 20, 0, 30);
+        }
         if (jumpPressed && runner.vy < vyBefore - 50) {
           if (wasGrounded) burst(dist, runner.y, 5, ['#efe6d2'], 45, 0);
           else if (runner.airJumps < wasAirJumps) ring(dist, runner.y, 10, '#ffffff', 0.25);
@@ -358,6 +387,18 @@ export default function RunGame({ onExit }: RunGameProps) {
           burst(dist, runner.y, giant > 0 ? 12 : 4, ['#efe6d2'], giant > 0 ? 70 : 35, 0);
           if (giant > 0 && !calmMotion) shake = Math.max(shake, 0.12);
         }
+      }
+
+      // 능력 키 — 대시 (쿨다운이 끝났을 때만)
+      const abilityPressed = abilityLatchRef.current;
+      abilityLatchRef.current = false;
+      if (dashCd > 0) dashCd = Math.max(0, dashCd - PHYS_DT);
+      if (abilityPressed && stats.dash && dashCd <= 0 && dashLeft <= 0 && !rescuing) {
+        dashLeft = DASH_TIME;
+        dashCd = DASH_COOLDOWN;
+        ring(dist, runner.y - 10, 20, '#ff8a3d', 0.3);
+        float('불꽃 대시!', '#ff8a3d');
+        if (!calmMotion) shake = Math.max(shake, 0.08);
       }
 
       dist += speedNow() * PHYS_DT;
@@ -379,7 +420,7 @@ export default function RunGame({ onExit }: RunGameProps) {
       if (giant > 0) giant = Math.max(0, giant - PHYS_DT);
 
       // 학점 · 하트 · 아이템
-      const body = hitbox(runner, dist);
+      const body = hitbox(runner, dist, stats.standH);
       const grow = giant > 0 ? 8 : 0;
       for (const p of course.pickups) {
         if (p.x > dist + MAGNET_RANGE + 20) break;
@@ -407,7 +448,7 @@ export default function RunGame({ onExit }: RunGameProps) {
 
       // 장애물 — 질주 · 거대화면 부수고 지나가고, 족보가 있으면 한 번 막아 준다
       if (!rescuing) {
-        const crushing = boost > 0 || giant > 0;
+        const crushing = boost > 0 || giant > 0 || dashLeft > 0;
         for (const o of course.obstacles) {
           if (o.x > dist + 40) break;
           if (o.hit || o.x + o.w < dist - 40) continue;
@@ -585,7 +626,7 @@ export default function RunGame({ onExit }: RunGameProps) {
       const scale = giant > 0 ? (giant < 0.6 && Math.floor(t * 12) % 2 === 0 ? 1 : 2) : 1;
 
       // 질주 잔상
-      if (boost > 0) {
+      if (boost > 0 || dashLeft > 0) {
         ghostTimer -= dt;
         if (ghostTimer <= 0) {
           ghostTimer = 0.04;
@@ -688,6 +729,7 @@ export default function RunGame({ onExit }: RunGameProps) {
     let shownScore = -1;
     let shownZone = '';
     const shownChip: Partial<Record<ItemKind, number>> = {};
+    let shownDash = -1;
     const score = () => Math.floor(dist * 0.5) + Math.round(coins * COIN_POINTS * stats.coinMult) + bonus;
 
     function itemLeft(k: ItemKind) {
@@ -718,6 +760,15 @@ export default function RunGame({ onExit }: RunGameProps) {
         if (!el) continue;
         el.toggleAttribute('data-on', left > 0);
         el.style.setProperty('--left', String(left));
+      }
+      const dashEl = dashChipRef.current;
+      if (dashEl) {
+        const ready = Math.round((1 - dashCd / DASH_COOLDOWN) * 50) / 50;
+        if (ready !== shownDash) {
+          shownDash = ready;
+          dashEl.style.setProperty('--left', String(ready));
+          dashEl.toggleAttribute('data-ready', dashCd <= 0);
+        }
       }
       if (coins !== shownCoins && coinRef.current) {
         shownCoins = coins;
@@ -774,7 +825,9 @@ export default function RunGame({ onExit }: RunGameProps) {
     function releaseInput() {
       input.jump = false;
       input.slide = false;
+      input.ability = false;
       jumpLatchRef.current = false;
+      abilityLatchRef.current = false;
     }
 
     function pause() {
@@ -808,6 +861,7 @@ export default function RunGame({ onExit }: RunGameProps) {
         reached: `${reach.semester}학기 · ${ZONES[reach.index].ko}`,
         newBest,
         cause,
+        who: character.name,
       });
       shake = 0;
       flash = 0;
@@ -832,7 +886,10 @@ export default function RunGame({ onExit }: RunGameProps) {
       boostFloor = false;
       magnet = 0;
       giant = 0;
+      roll();
       shield = stats.startShield;
+      dashLeft = 0;
+      dashCd = 0;
       zoneIdx = 0;
       semester = 1;
       prevZone = 0;
@@ -845,7 +902,7 @@ export default function RunGame({ onExit }: RunGameProps) {
       floaters = [];
       mode = 'play';
       setResult(null);
-      showBanner('교수님이 출석부를 들고 쫓아온다!');
+      showBanner(startNote);
       start();
     }
 
@@ -872,6 +929,7 @@ export default function RunGame({ onExit }: RunGameProps) {
       if (!k) return;
       e.preventDefault();
       if (k === 'jump' && !input.jump) jumpLatchRef.current = true;
+      if (k === 'ability' && !input.ability) abilityLatchRef.current = true;
       input[k] = true;
     }
 
@@ -901,12 +959,13 @@ export default function RunGame({ onExit }: RunGameProps) {
       window.removeEventListener('blur', releaseInput);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, []);
+  }, [character]);
 
   /** 터치 버튼 — 누르는 동안만 켜진다 */
   function touchProps(key: keyof Input) {
     const set = (e: ReactPointerEvent<HTMLButtonElement>, on: boolean) => {
       if (key === 'jump' && on && !inputRef.current.jump) jumpLatchRef.current = true;
+      if (key === 'ability' && on && !inputRef.current.ability) abilityLatchRef.current = true;
       inputRef.current[key] = on;
       e.currentTarget.dataset.pressed = on ? 'true' : 'false';
     };
@@ -951,6 +1010,11 @@ export default function RunGame({ onExit }: RunGameProps) {
                   <span ref={coinRef}>0</span>
                 </div>
                 <div className={styles.chips}>
+                  {hasDash && (
+                    <span ref={dashChipRef} className={`${styles.chip} ${styles.dashChip}`} data-on="">
+                      대시
+                    </span>
+                  )}
                   {ITEM_ORDER.map((k) => (
                     <span
                       key={k}
@@ -1007,10 +1071,18 @@ export default function RunGame({ onExit }: RunGameProps) {
                 <span>▼</span>
                 SLIDE
               </button>
-              <button type="button" className={`${styles.tbtn} ${styles.tjump}`} tabIndex={-1} {...touchProps('jump')}>
-                <span>▲</span>
-                JUMP
-              </button>
+              <div className={styles.tright}>
+                {hasDash && (
+                  <button type="button" className={`${styles.tbtn} ${styles.tdash}`} tabIndex={-1} {...touchProps('ability')}>
+                    <span>»</span>
+                    DASH
+                  </button>
+                )}
+                <button type="button" className={`${styles.tbtn} ${styles.tjump}`} tabIndex={-1} {...touchProps('jump')}>
+                  <span>▲</span>
+                  JUMP
+                </button>
+              </div>
             </div>
           )}
 
@@ -1022,6 +1094,9 @@ export default function RunGame({ onExit }: RunGameProps) {
                 <p className={styles.cardSub}>일시정지 — 교수님도 잠시 멈췄다</p>
                 <button type="button" className={styles.primary} autoFocus onClick={() => resumeRef.current()}>
                   ▸ 계속 달리기
+                </button>
+                <button type="button" className={styles.ghost} onClick={onChangeCharacter}>
+                  캐릭터 바꾸기
                 </button>
                 <button type="button" className={styles.ghost} onClick={onExit}>
                   광장으로 나가기
@@ -1035,7 +1110,9 @@ export default function RunGame({ onExit }: RunGameProps) {
             <div className={styles.overlay} role="dialog" aria-modal="true" aria-label={play.gameOver.title}>
               <div className={`${styles.card} ${styles.resultCard}`}>
                 <p className={styles.overTitle}>{play.gameOver.title}</p>
-                <p className={styles.cause}>{result.cause}</p>
+                <p className={styles.cause}>
+                  {result.who} — {result.cause}
+                </p>
                 <div className={styles.bigScore}>
                   <span className={styles.statLabel}>{play.gameOver.scoreLabel}</span>
                   <b>{String(result.score).padStart(6, '0')}</b>
@@ -1059,6 +1136,9 @@ export default function RunGame({ onExit }: RunGameProps) {
                 <div className={styles.actions}>
                   <button type="button" className={styles.primary} onClick={() => retryRef.current()}>
                     {play.gameOver.retryLabel}
+                  </button>
+                  <button type="button" className={styles.ghost} onClick={onChangeCharacter}>
+                    CHARACTER
                   </button>
                   <button type="button" className={styles.ghost} onClick={() => captureRef.current()}>
                     {play.gameOver.captureLabel}

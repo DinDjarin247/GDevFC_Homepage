@@ -169,9 +169,9 @@ export function stepRunner(r: Runner, x: number, inp: RunInput, surfaces: readon
   }
 }
 
-/** 몸의 충돌 상자 (화면 y 기준) */
-export function hitbox(r: Runner, x: number) {
-  const h = r.sliding ? SLIDE_H : STAND_H;
+/** 몸의 충돌 상자 (화면 y 기준). standH 는 서 있을 때 키 — 작은 캐릭터는 더 낮다 */
+export function hitbox(r: Runner, x: number, standH = STAND_H) {
+  const h = r.sliding ? Math.min(SLIDE_H, standH) : standH;
   const half = r.sliding ? PLAYER_HALF_W + 2 : PLAYER_HALF_W;
   return { x0: x - half, x1: x + half, y0: r.y - h, y1: r.y };
 }
