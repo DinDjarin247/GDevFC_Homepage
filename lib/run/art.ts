@@ -292,22 +292,46 @@ export function drawPlatform(ctx: CanvasRenderingContext2D, zone: number, x: num
 
 /* ---------- 학점 · 하트 ---------- */
 
-/** 학점 동전 — 연두색에 A. 빙글빙글 돈다 (폭이 7 → 5 → 2 → 5) */
-export function drawCoin(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
+/** 학점 등급별 색 — B(초록 10점) · A(파랑 20점) · A+(금색 30점) */
+export const COIN_STYLE: Record<number, { fill: string; edge: string; ink: string; label: string }> = {
+  10: { fill: '#c9f73d', edge: '#7da61e', ink: '#2a3a08', label: 'B' },
+  20: { fill: '#6ec3ff', edge: '#2a6fb8', ink: '#0c2a4a', label: 'A' },
+  30: { fill: '#ffd34a', edge: '#b8860b', ink: '#4a3200', label: 'A+' },
+};
+
+/** 학점 동전 — 등급 색에 글자. 빙글빙글 돈다 (폭이 7 → 5 → 2 → 5). 금색 A+ 는 반짝인다 */
+export function drawCoin(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, value = 10) {
+  const st = COIN_STYLE[value] ?? COIN_STYLE[10];
   // 화면 왼쪽 밖(x < 0)에서도 음수 나머지가 나오지 않게
   const frame = (((Math.floor(t * 8 + x * 0.05) % 4) + 4) % 4) as 0 | 1 | 2 | 3;
   const w = [7, 5, 2, 5][frame];
   const cx = Math.round(x);
   const cy = Math.round(y);
   const left = cx - Math.ceil(w / 2);
-  r(ctx, '#7da61e', left, cy - 4, w, 9);
-  r(ctx, '#c9f73d', left + (w > 2 ? 1 : 0), cy - 3, w > 2 ? w - 2 : w, 7);
+  r(ctx, st.edge, left, cy - 4, w, 9);
+  r(ctx, st.fill, left + (w > 2 ? 1 : 0), cy - 3, w > 2 ? w - 2 : w, 7);
   if (w >= 5) {
-    // A
-    r(ctx, '#2a3a08', cx - 1, cy - 2, 1, 5);
-    r(ctx, '#2a3a08', cx + 1, cy - 2, 1, 5);
-    r(ctx, '#2a3a08', cx, cy - 3, 1, 1);
-    r(ctx, '#2a3a08', cx - 1, cy, 3, 1);
+    if (value === 10) {
+      // B
+      r(ctx, st.ink, cx - 1, cy - 2, 1, 5);
+      r(ctx, st.ink, cx, cy - 2, 1, 1);
+      r(ctx, st.ink, cx, cy, 1, 1);
+      r(ctx, st.ink, cx, cy + 2, 1, 1);
+      r(ctx, st.ink, cx + 1, cy - 1, 1, 1);
+      r(ctx, st.ink, cx + 1, cy + 1, 1, 1);
+    } else {
+      // A
+      r(ctx, st.ink, cx - 1, cy - 2, 1, 5);
+      r(ctx, st.ink, cx + 1, cy - 2, 1, 5);
+      r(ctx, st.ink, cx, cy - 3, 1, 1);
+      r(ctx, st.ink, cx - 1, cy, 3, 1);
+    }
+  }
+  if (value === 30) {
+    // A+ — 오른쪽 위의 + 와 반짝임
+    r(ctx, '#ffffff', cx + 4, cy - 6, 1, 3);
+    r(ctx, '#ffffff', cx + 3, cy - 5, 3, 1);
+    if (Math.floor(t * 6 + x * 0.1) % 3 === 0) r(ctx, '#fff6c8', cx - 5, cy - 5, 1, 1);
   }
 }
 

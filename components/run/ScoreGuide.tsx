@@ -24,10 +24,18 @@ export default function ScoreGuide() {
         <div className={`${styles.card} ${styles.key}`}>
           <i className={styles.iconCredit} aria-hidden="true" />
           <p className={styles.cardTitle}>학점</p>
-          <p className={styles.points}>1개 = {COIN_POINTS}점</p>
+          <p className={styles.grades}>
+            <span className={styles.gB}>B</span> {COIN_POINTS}점
+            <span className={styles.gA}>A</span> {COIN_POINTS * 2}점
+            <span className={styles.gAp}>A+</span> {COIN_POINTS * 3}점
+          </p>
           <p className={styles.desc}>
             쿠키런의 젤리처럼 길을 따라 줄지어 있다. <b>점수의 큰 몫</b> — 같은 거리를 달려도 학점을 얼마나
             모았느냐가 순위를 가른다. 포물선으로 놓인 줄은 점프 궤적 그대로, 낮게 깔린 줄은 슬라이드로 쓸어 담는다.
+          </p>
+          <p className={styles.desc}>
+            <b>갈림길</b> — 위 길(발판)은 위험하지만 파랑 A · 금색 A+ 가, 아래 길은 쉽지만 초록 B 가 놓여 있다.
+            위에서 떨어져도 아래 길로 떨어질 뿐이니 욕심낼지는 당신 몫.
           </p>
         </div>
         <div className={styles.card}>

@@ -98,7 +98,9 @@ export type PickupKind = 'coin' | 'heart' | 'item';
  * magnet(자석: 학점을 끌어당김) · giant(거대화: 장애물을 부수며 달림)
  */
 export type ItemKind = 'boost' | 'shield' | 'magnet' | 'giant';
-export type Pickup = { kind: PickupKind; x: number; y: number; item?: ItemKind; taken?: boolean };
+/** 학점 등급 — B(초록 10점) · A(파랑 20점) · A+(금색 30점). 위험한 길일수록 높은 학점이 놓인다 */
+export type CoinValue = 10 | 20 | 30;
+export type Pickup = { kind: PickupKind; x: number; y: number; item?: ItemKind; value?: CoinValue; taken?: boolean };
 
 /** 아이템이 나오는 비율 */
 const ITEM_WEIGHTS: [ItemKind, number][] = [
@@ -235,7 +237,8 @@ export type ChunkEl =
   | { t: 'plat'; x: number; h: number; w: number }
   | { t: 'low' | 'tall'; x: number; h?: number }
   | { t: 'hang'; x: number; w?: number; h?: number }
-  | { t: 'coins'; x: number; h: number; n: number; gap?: number; arc?: number }
+  /** 학점 줄 — v 는 등급(기본 B=10). arc 만큼 솟는 포물선이면 점프 궤적을 따라 먹게 된다 */
+  | { t: 'coins'; x: number; h: number; n: number; gap?: number; arc?: number; v?: CoinValue }
   | { t: 'heart'; x: number; h: number }
   /** 날아온다 — x 는 우왕이와 만나는 곳. high 는 머리 높이(슬라이드), low 는 발 높이(점프) */
   | { t: 'fly'; x: number; level: 'high' | 'low'; k?: number }
@@ -246,8 +249,19 @@ export type ChunkEl =
   /** 위에서 떨어져 쌓인다 — lead 만큼 앞에서 떨어지기 시작한다 */
   | { t: 'drop'; x: number; lead?: number };
 
-/** zones 를 주면 그 구간에서만 나온다 (구간에 어울리는 기믹) */
-export type Chunk = { id: string; tier: number; len: number; els: ChunkEl[]; zones?: number[] };
+/**
+ * 코스 조각. zones 를 주면 그 구간에서만 나온다 (구간에 어울리는 기믹).
+ * expect 는 이단 점프를 언제 눌러야 하는지에 대한 설계 의도 — 검증 스크립트가 실제로
+ * 그 타이밍이어야만 통과하는지 재 본다. quick(타탁) · late(타   탁, 정점 무렵) · dodge(날아오는 걸 보내고)
+ */
+export type Chunk = {
+  id: string;
+  tier: number;
+  len: number;
+  els: ChunkEl[];
+  zones?: number[];
+  expect?: 'quick' | 'late' | 'dodge';
+};
 
 /**
  * 조각 하나를 월드 x=base 에 놓았을 때의 실제 요소들. 게임 코스와 검증 스크립트가 같이 쓴다.
@@ -322,7 +336,7 @@ export function layoutChunk(c: Chunk, base: number) {
         break;
       }
       case 'coins':
-        pickups.push(...coinLine(x, GROUND_Y - e.h, e.n, e.gap ?? 20, e.arc ?? 0));
+        pickups.push(...coinLine(x, GROUND_Y - e.h, e.n, e.gap ?? 20, e.arc ?? 0, e.v ?? 10));
         break;
       case 'heart':
         pickups.push({ kind: 'heart', x, y: GROUND_Y - e.h });
@@ -334,11 +348,11 @@ export function layoutChunk(c: Chunk, base: number) {
 }
 
 /** 학점 한 줄 — arc 만큼 솟았다 내려오는 포물선이면 점프 궤적을 따라 먹게 된다 */
-export function coinLine(x: number, y: number, n: number, gap: number, arc: number): Pickup[] {
+export function coinLine(x: number, y: number, n: number, gap: number, arc: number, value: CoinValue = 10): Pickup[] {
   const out: Pickup[] = [];
   for (let i = 0; i < n; i++) {
     const t = n === 1 ? 0.5 : i / (n - 1);
-    out.push({ kind: 'coin', x: x + i * gap, y: y - arc * 4 * t * (1 - t) });
+    out.push({ kind: 'coin', x: x + i * gap, y: y - arc * 4 * t * (1 - t), value });
   }
   return out;
 }
@@ -360,13 +374,16 @@ export const ZONES: Zone[] = [
 /** 구간 하나의 길이 — 초속 15m 로 ~70초 */
 export const ZONE_LEN = 10500;
 
-/** 구간별로 뽑는 코스 조각 등급 [최소, 최대]. 학기가 올라가면 한 등급씩 어려워진다 */
+/**
+ * 구간별로 뽑는 코스 조각 등급 [최소, 최대]. 학기가 올라가면 한 등급씩 어려워진다.
+ * 한 구간 안에서도 앞쪽은 낮은 등급, 뒤쪽은 높은 등급이 더 자주 나온다 (Course.pick).
+ */
 const ZONE_TIERS: [number, number][] = [
-  [1, 1],
   [1, 2],
   [2, 3],
-  [2, 3],
+  [2, 4],
   [3, 4],
+  [3, 5],
   [4, 5],
 ];
 export const MAX_TIER = 5;
@@ -396,8 +413,11 @@ export function mulberry32(seed: number) {
   };
 }
 
-/** 조각 사이 숨 고르기 평지 — 하트는 여기에만 놓는다 */
-const BREATHER = 110;
+/**
+ * 하트 · 아이템이 나올 차례일 때만 조각 사이에 까는 짧은 평지. 그 밖엔 조각이 바로 이어진다 —
+ * 조각마다 앞뒤 40px 여유가 있어 이음매도 0.5초 남짓이다 (그냥 달리기만 하는 구간이 길지 않게).
+ */
+const BREATHER = 70;
 /** 이 거리(~16초)마다 한 번쯤 하트 — 체력은 초당 1.4 씩 줄고 하트 하나가 25 를 채운다 */
 const HEART_EVERY = 2400;
 /** 이 거리(~20초)마다 한 번쯤 아이템 */
@@ -455,7 +475,13 @@ export class Course {
     const pool = this.chunks.filter(
       (c) => c.tier >= lo && c.tier <= hi && c.id !== this.lastId && (!c.zones || c.zones.includes(zone))
     );
-    const weights = pool.map((c) => (1 + (c.tier - lo) * 0.6) * (c.zones ? 2.5 : 1));
+    // 구간 앞쪽(progress 0)은 낮은 등급, 뒤쪽(1)은 높은 등급이 자주 — 한 구간 안에서도 점점 어려워진다
+    const progress = (this.builtTo % ZONE_LEN) / ZONE_LEN;
+    const weights = pool.map((c) => {
+      const rel = hi > lo ? (c.tier - lo) / (hi - lo) : 0;
+      const lean = 0.3 + 2.4 * (rel * progress + (1 - rel) * (1 - progress));
+      return lean * (c.zones ? 2.5 : 1);
+    });
     let r = this.rng() * weights.reduce((a, b) => a + b, 0);
     for (let i = 0; i < pool.length; i++) {
       r -= weights[i];
@@ -489,20 +515,19 @@ export class Course {
   }
 
   private addBreather() {
-    const x = this.builtTo;
-    this.addFlat(BREATHER);
-    this.sinceHeart += BREATHER;
-    this.sinceItem += BREATHER;
     const heart = this.sinceHeart >= HEART_EVERY;
     const item = this.sinceItem >= ITEM_EVERY;
+    if (!heart && !item) return;
+    const x = this.builtTo;
+    this.addFlat(BREATHER);
     // 둘 다 나올 차례면 나란히 — 하트는 앞, 아이템은 뒤 (살짝 뛰어야 닿는 높이)
     if (heart) {
       this.sinceHeart = 0;
-      this.pickups.push({ kind: 'heart', x: x + (item ? 30 : BREATHER / 2), y: GROUND_Y - 30 });
+      this.pickups.push({ kind: 'heart', x: x + (item ? 18 : BREATHER / 2), y: GROUND_Y - 30 });
     }
     if (item) {
       this.sinceItem = 0;
-      this.pickups.push({ kind: 'item', item: this.pickItem(), x: x + (heart ? 80 : BREATHER / 2), y: GROUND_Y - 30 });
+      this.pickups.push({ kind: 'item', item: this.pickItem(), x: x + (heart ? 52 : BREATHER / 2), y: GROUND_Y - 30 });
     }
   }
 

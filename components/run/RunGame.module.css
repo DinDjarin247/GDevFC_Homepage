@@ -158,7 +158,7 @@
 }
 
 .coinIcon::after {
-  content: 'A';
+  content: 'B';
   position: absolute;
   inset: 0;
   display: grid;
@@ -737,6 +737,29 @@
 .calc td {
   font-family: var(--font-mono);
   color: var(--muted);
+}
+
+.gB,
+.gA,
+.gAp {
+  margin-right: 3px;
+  padding: 0 3px;
+  border-radius: var(--radius);
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: #0b0b0b;
+}
+
+.gB {
+  background: #c9f73d;
+}
+
+.gA {
+  background: #6ec3ff;
+}
+
+.gAp {
+  background: #ffd34a;
 }
 
 .calc td em {

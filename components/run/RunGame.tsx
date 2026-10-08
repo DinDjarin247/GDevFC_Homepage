@@ -15,6 +15,7 @@ import { rollStats, type Character, type RunnerStats } from '@/lib/run/character
 import {
   bakeCharacter,
   bakeProfessor,
+  COIN_STYLE,
   drawCoin,
   drawHang,
   drawHeart,
@@ -116,7 +117,16 @@ type Ghost = { x: number; y: number; life: number; pose: Pose };
 type Floater = { text: string; x: number; y: number; life: number; color: string };
 type Banner = { key: number; en: string; ko: string; sub: string; note?: string };
 /** 점수의 세 갈래 */
-type ScoreParts = { meters: number; run: number; coins: number; coinMult: number; credit: number; smashed: number; smash: number };
+type ScoreParts = {
+  meters: number;
+  run: number;
+  /** 등급별로 먹은 학점 수 — B(10) · A(20) · A+(30) */
+  grades: Record<10 | 20 | 30, number>;
+  coinMult: number;
+  credit: number;
+  smashed: number;
+  smash: number;
+};
 type Result = {
   score: number;
   parts: ScoreParts;
@@ -245,6 +255,9 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
     let runner = newRunner();
     let hp = HP_MAX;
     let coins = 0;
+    /** 먹은 학점의 원점수 합 (캐릭터 배율 전) · 등급별 개수 */
+    let creditRaw = 0;
+    let grades: Record<10 | 20 | 30, number> = { 10: 0, 20: 0, 30: 0 };
     /** 부순 장애물 수 */
     let smashed = 0;
     let guard = 0;
@@ -451,9 +464,13 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
         if (p.x + reach > body.x0 && p.x - reach < body.x1 && p.y + reach > body.y0 - grow * 2 && p.y - reach < body.y1) {
           p.taken = true;
           if (p.kind === 'coin') {
+            const value = p.value ?? COIN_POINTS;
             coins += 1;
-            burst(p.x, p.y, 3, ['#c9f73d', '#ffffff'], 40);
-            floaters.push({ text: `+${Math.round(COIN_POINTS * stats.coinMult)}`, x: p.x, y: p.y - 6, life: 0.6, color: '#c9f73d' });
+            creditRaw += value;
+            grades[value as 10 | 20 | 30] += 1;
+            const st = COIN_STYLE[value];
+            burst(p.x, p.y, value === 30 ? 8 : 3, [st.fill, '#ffffff'], value === 30 ? 70 : 40);
+            floaters.push({ text: `+${Math.round(value * stats.coinMult)}`, x: p.x, y: p.y - 6, life: 0.6, color: st.fill });
             coinPulse = true;
           } else if (p.kind === 'heart') {
             hp = Math.min(HP_MAX, hp + HP_HEART * stats.heartMult);
@@ -579,7 +596,7 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
       }
       for (const p of course.pickups) {
         if (p.taken || p.x < lo || p.x > hi) continue;
-        if (p.kind === 'coin') drawCoin(ctx, sx(p.x), p.y, t);
+        if (p.kind === 'coin') drawCoin(ctx, sx(p.x), p.y, t, p.value);
         else if (p.kind === 'heart') drawHeart(ctx, sx(p.x), p.y, t);
         else drawItem(ctx, p.item ?? 'shield', sx(p.x), p.y, t);
       }
@@ -778,9 +795,9 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
       return {
         meters,
         run: meters * POINTS_PER_M,
-        coins,
+        grades: { ...grades },
         coinMult: stats.coinMult,
-        credit: Math.round(coins * COIN_POINTS * stats.coinMult),
+        credit: Math.round(creditRaw * stats.coinMult),
         smashed,
         smash: smashed * SMASH_POINTS,
       };
@@ -960,6 +977,8 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
       runner = newRunner();
       hp = HP_MAX;
       coins = 0;
+      creditRaw = 0;
+      grades = { 10: 0, 20: 0, 30: 0 };
       smashed = 0;
       guard = 0;
       rescuing = false;
@@ -1092,7 +1111,6 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
                 <div ref={coinBlockRef} className={styles.coins}>
                   <i className={styles.coinIcon} aria-hidden="true" />
                   <span ref={coinRef}>0</span>
-                  <span className={styles.coinRate}>×{Math.round(COIN_POINTS * (character.stats.coinMult ?? 1))}</span>
                 </div>
                 <div className={styles.chips}>
                   {hasDash && (
@@ -1235,7 +1253,10 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
                         학점
                       </th>
                       <td>
-                        {result.parts.coins}개 × {COIN_POINTS}
+                        <span className={styles.gB}>B</span>
+                        {result.parts.grades[10]} · <span className={styles.gA}>A</span>
+                        {result.parts.grades[20]} · <span className={styles.gAp}>A+</span>
+                        {result.parts.grades[30]}
                         {result.parts.coinMult !== 1 && <em> × {result.parts.coinMult}</em>}
                       </td>
                       <td className={styles.calcPts}>{result.parts.credit}</td>
