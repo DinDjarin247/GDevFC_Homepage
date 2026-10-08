@@ -52,3 +52,23 @@
   font-size: 12px;
   color: var(--dim);
 }
+
+/* 캐릭터 아이콘 칸 — 순위와 이름 사이 */
+.row.withIcon {
+  grid-template-columns: 28px 18px 1fr auto;
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+}
+
+.icon {
+  display: block;
+  height: 22px;
+  width: auto;
+  aspect-ratio: 16 / 22;
+  image-rendering: pixelated;
+}

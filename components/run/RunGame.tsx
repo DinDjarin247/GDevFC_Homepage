@@ -1253,7 +1253,7 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
                   </tbody>
                 </table>
                 <p className={styles.reached}>도달 — {result.reached}</p>
-                <ScoreSubmit score={result.score} />
+                <ScoreSubmit score={result.score} character={character.id} />
                 <div className={styles.actions}>
                   <button type="button" className={styles.primary} onClick={() => retryRef.current()}>
                     {play.gameOver.retryLabel}

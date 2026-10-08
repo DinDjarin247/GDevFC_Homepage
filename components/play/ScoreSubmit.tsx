@@ -13,6 +13,8 @@ type ScoreSubmitProps = {
   /** 기록을 남길 랭킹 테이블 (기본: 달려라 우왕이) */
   table?: ScoreTable;
   formatScore?: (score: number) => string;
+  /** 어떤 캐릭터로 낸 기록인지 — 랭킹에 아이콘으로 보인다 (달려라 우왕이) */
+  character?: string;
 };
 
 /**
@@ -23,6 +25,7 @@ export default function ScoreSubmit({
   score,
   table = 'arcade_scores',
   formatScore = defaultScoreFormat,
+  character,
 }: ScoreSubmitProps) {
   const [name, setName] = useState(() => {
     if (typeof window === 'undefined') return '';
@@ -43,11 +46,11 @@ export default function ScoreSubmit({
     setError('');
     setSubmitting(true);
 
-    const { data, error: insertError } = await supabase
-      .from(table)
-      .insert({ player_name: trimmed.slice(0, MAX_NAME_LEN), score })
-      .select('id')
-      .single();
+    const row = { player_name: trimmed.slice(0, MAX_NAME_LEN), score };
+    const insert = (payload: Record<string, unknown>) => supabase.from(table).insert(payload).select('id').single();
+    let { data, error: insertError } = await insert(character ? { ...row, character } : row);
+    // character 칸을 만드는 마이그레이션(0006)을 아직 안 돌렸으면 캐릭터 없이라도 남긴다
+    if (insertError && character) ({ data, error: insertError } = await insert(row));
 
     setSubmitting(false);
 
