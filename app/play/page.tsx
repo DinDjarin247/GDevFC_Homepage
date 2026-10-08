@@ -8,6 +8,7 @@ import IntroScreen from '@/components/play/IntroScreen';
 import RotateGate from '@/components/play/RotateGate';
 import CharacterSelect from '@/components/run/CharacterSelect';
 import RunGame from '@/components/run/RunGame';
+import ScoreGuide from '@/components/run/ScoreGuide';
 import { characterById, type CharacterId } from '@/lib/run/characters';
 import play from '@/data/play.json';
 
@@ -27,7 +28,7 @@ export default function PlayPage() {
       immersiveMobile={step === 'run'}
     >
       <RotateGate>
-        {step === 'intro' && <IntroScreen onStart={() => setStep('select')} />}
+        {step === 'intro' && <IntroScreen onStart={() => setStep('select')} extra={<ScoreGuide />} />}
         {step === 'select' && (
           <CharacterSelect
             onPick={(id) => {

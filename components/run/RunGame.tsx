@@ -20,6 +20,9 @@ import {
   drawHeart,
   drawItem,
   drawLow,
+  drawMover,
+  drawShadow,
+  drawWarning,
   drawPlatform,
   drawTall,
   type Pose,
@@ -37,10 +40,12 @@ import {
   fellOut,
   hitbox,
   newRunner,
+  obstacleAt,
   stepRunner,
   touches,
   zoneAt,
   type ItemKind,
+  type Obstacle,
   type Surface,
 } from '@/lib/run/world';
 import styles from './RunGame.module.css';
@@ -58,9 +63,15 @@ const HP_HIT = 15;
 const HP_PIT = 25;
 /** 부딪힌 뒤 무적 시간 */
 const HIT_GUARD = 1;
-/** 학점 하나의 점수 — 점수는 달린 거리(px)의 절반 + 학점 x 5 + 부순 장애물 보너스 */
-const COIN_POINTS = 5;
-const SMASH_POINTS = 10;
+/**
+ * 점수 = 거리(1m 당 1점) + 학점(1개 10점) + 부순 장애물(1개 20점).
+ * 학점은 코스에 7m 에 하나꼴이라, 60~80% 를 먹으면 점수의 절반 가까이(45~52%)가 학점에서
+ * 나온다 — 같은 거리를 달려도 학점을 얼마나 모았느냐가 순위를 가른다.
+ * HUD 와 결과 화면에 세 갈래를 따로 보여준다.
+ */
+export const POINTS_PER_M = 1;
+export const COIN_POINTS = 10;
+export const SMASH_POINTS = 20;
 /** 구간이 바뀔 때 배경을 겹쳐 넘기는 시간 */
 const ZONE_FADE = 0.9;
 
@@ -104,10 +115,11 @@ type Ring = { x: number; y: number; r: number; life: number; max: number; color:
 type Ghost = { x: number; y: number; life: number; pose: Pose };
 type Floater = { text: string; x: number; y: number; life: number; color: string };
 type Banner = { key: number; en: string; ko: string; sub: string; note?: string };
+/** 점수의 세 갈래 */
+type ScoreParts = { meters: number; run: number; coins: number; coinMult: number; credit: number; smashed: number; smash: number };
 type Result = {
   score: number;
-  coins: number;
-  meters: number;
+  parts: ScoreParts;
   reached: string;
   newBest: boolean;
   cause: string;
@@ -171,6 +183,10 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
   const profBlockRef = useRef<HTMLDivElement>(null);
   const coinRef = useRef<HTMLSpanElement>(null);
   const scoreRef = useRef<HTMLElement>(null);
+  const runPtsRef = useRef<HTMLElement>(null);
+  const creditPtsRef = useRef<HTMLElement>(null);
+  const smashPtsRef = useRef<HTMLElement>(null);
+  const coinBlockRef = useRef<HTMLDivElement>(null);
   const zoneRef = useRef<HTMLSpanElement>(null);
   const chipRefs = useRef<Partial<Record<ItemKind, HTMLSpanElement | null>>>({});
   const dashChipRef = useRef<HTMLSpanElement>(null);
@@ -229,7 +245,8 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
     let runner = newRunner();
     let hp = HP_MAX;
     let coins = 0;
-    let bonus = 0;
+    /** 부순 장애물 수 */
+    let smashed = 0;
     let guard = 0;
     /** 구덩이에 빠졌다가 끌어올려지는 중 — 최소 rescueLeft 초, 그 뒤로도 발밑에 땅이 올 때까지 떠 있다 */
     let rescuing = false;
@@ -436,6 +453,8 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
           if (p.kind === 'coin') {
             coins += 1;
             burst(p.x, p.y, 3, ['#c9f73d', '#ffffff'], 40);
+            floaters.push({ text: `+${Math.round(COIN_POINTS * stats.coinMult)}`, x: p.x, y: p.y - 6, life: 0.6, color: '#c9f73d' });
+            coinPulse = true;
           } else if (p.kind === 'heart') {
             hp = Math.min(HP_MAX, hp + HP_HEART * stats.heartMult);
             burst(p.x, p.y, 10, ['#ff2f8f', '#ffd0e4'], 60);
@@ -453,14 +472,17 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
           if (o.x > dist + 40) break;
           if (o.hit || o.x + o.w < dist - 40) continue;
           const reachBox = giant > 0 ? { x0: body.x0 - 6, x1: body.x1 + 6, y0: body.y1 - 44, y1: body.y1 } : body;
-          if (!touches(reachBox, o)) continue;
+          // 움직이는 장애물은 지금 있는 자리로
+          const ob = obstacleAt(o, dist);
+          if (!touches(reachBox, ob)) continue;
           if (crushing) {
             o.hit = true;
             o.smashed = true;
-            bonus += SMASH_POINTS;
-            const cy = Math.max(10, Math.min(GROUND_Y - 8, o.y + o.h / 2));
-            burst(o.x + o.w / 2, cy, 14, ['#ffffff', '#c8ccd4', '#8a6a46', '#c9f73d'], 140, 80, 260);
-            ring(o.x + o.w / 2, cy, 16, '#ffffff', 0.25);
+            smashed += 1;
+            const cy = Math.max(10, Math.min(GROUND_Y - 8, ob.y + ob.h / 2));
+            burst(ob.x + ob.w / 2, cy, 14, ['#ffffff', '#c8ccd4', '#8a6a46', '#c9f73d'], 140, 80, 260);
+            ring(ob.x + ob.w / 2, cy, 16, '#ffffff', 0.25);
+            floaters.push({ text: `+${SMASH_POINTS}`, x: ob.x + ob.w / 2, y: cy - 10, life: 0.8, color: '#ffffff' });
             if (!calmMotion) shake = Math.max(shake, 0.1);
             continue;
           }
@@ -552,7 +574,8 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
         const z = zoneAt(o.x).index;
         if (o.kind === 'low') drawLow(ctx, z, sx(o.x), o.y);
         else if (o.kind === 'tall') drawTall(ctx, z, sx(o.x), o.y);
-        else drawHang(ctx, z, sx(o.x), o.w, o.y + o.h, t);
+        else if (o.kind === 'hang') drawHang(ctx, z, sx(o.x), o.w, o.y + o.h, t);
+        else drawMoving(o, z);
       }
       for (const p of course.pickups) {
         if (p.taken || p.x < lo || p.x > hi) continue;
@@ -589,11 +612,29 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
       }
     }
 
+    /** 움직이는 장애물 — 지금 자리에 그리고, 떨어질 곳 · 튀는 공 밑엔 그림자, 화면 밖에서 날아오면 경고 */
+    function drawMoving(o: Obstacle, zone: number) {
+      const ob = obstacleAt(o, dist);
+      const x = sx(ob.x);
+      const m = o.motion;
+      if (m?.type === 'drop' || m?.type === 'bounce') {
+        // 그림자 — 떨어지는 책은 가까워질수록 진해진다 (떨어지기 전부터 예고)
+        const k = m.type === 'drop' ? Math.min(1, Math.max(0, (dist - (m.start - 150)) / (m.span + 150))) : 1 - (m.floor - o.h - ob.y) / m.height;
+        if (m.type !== 'drop' || dist > m.start - 150) drawShadow(ctx, sx(o.x + o.w / 2), GROUND_Y, o.w + 4, k);
+      }
+      if (x > VIEW_W) {
+        // 아직 화면 밖 — 가까워지면 오른쪽 끝에 "!"
+        if (m?.type === 'approach' && x - VIEW_W < 200) drawWarning(ctx, VIEW_W - 12, ob.y + ob.h / 2, t);
+        return;
+      }
+      drawMover(ctx, o.kind, zone, x, ob.y, t);
+    }
+
     /** 교수님 — 거리에 따라 화면 왼쪽 밖에서 우왕이 바로 뒤까지 다가온다 */
     function drawProfessor() {
       const x = Math.round(PLAYER_SCREEN_X - 18 - profGap * 92);
       if (x < -20) return;
-      const frame = prof[Math.floor(t * 9) % 2];
+      const frame = prof[Math.abs(Math.floor(t * 9)) % 2];
       // 발밑이 구덩이면 폴짝 뛰어넘는 중으로 보이게
       const worldX = dist - (PLAYER_SCREEN_X - x - 8);
       const ground = course.surfaces.some((s) => s.kind === 'ground' && worldX >= s.x0 - 4 && worldX <= s.x1 + 4);
@@ -707,6 +748,7 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
         f.y -= 18 * dt;
       }
       floaters = floaters.filter((f) => f.life > 0);
+      if (floaters.length > 40) floaters.splice(0, floaters.length - 40);
       ctx.font = "8px 'Press Start 2P', 'Galmuri11', monospace";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
@@ -730,7 +772,26 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
     let shownZone = '';
     const shownChip: Partial<Record<ItemKind, number>> = {};
     let shownDash = -1;
-    const score = () => Math.floor(dist * 0.5) + Math.round(coins * COIN_POINTS * stats.coinMult) + bonus;
+    let coinPulse = false;
+    function parts(): ScoreParts {
+      const meters = Math.floor(dist / PX_PER_M);
+      return {
+        meters,
+        run: meters * POINTS_PER_M,
+        coins,
+        coinMult: stats.coinMult,
+        credit: Math.round(coins * COIN_POINTS * stats.coinMult),
+        smashed,
+        smash: smashed * SMASH_POINTS,
+      };
+    }
+    const score = () => {
+      const p = parts();
+      return p.run + p.credit + p.smash;
+    };
+    let shownRun = -1;
+    let shownCredit = -1;
+    let shownSmash = -1;
 
     function itemLeft(k: ItemKind) {
       if (k === 'shield') return shield ? 1 : 0;
@@ -774,10 +835,32 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
         shownCoins = coins;
         coinRef.current.textContent = String(coins);
       }
-      const sc = score();
+      const pt = parts();
+      const sc = pt.run + pt.credit + pt.smash;
       if (sc !== shownScore && scoreRef.current) {
         shownScore = sc;
         scoreRef.current.textContent = String(sc).padStart(6, '0');
+      }
+      // 점수의 세 갈래 — 어디서 점수가 나오는지 늘 보이게
+      if (pt.run !== shownRun && runPtsRef.current) {
+        shownRun = pt.run;
+        runPtsRef.current.textContent = String(pt.run);
+      }
+      if (pt.credit !== shownCredit && creditPtsRef.current) {
+        shownCredit = pt.credit;
+        creditPtsRef.current.textContent = String(pt.credit);
+      }
+      if (pt.smash !== shownSmash && smashPtsRef.current) {
+        shownSmash = pt.smash;
+        smashPtsRef.current.textContent = String(pt.smash);
+      }
+      if (coinPulse && coinBlockRef.current) {
+        // 학점을 먹으면 HUD 의 학점 칸이 톡 튄다 (애니메이션을 처음부터 다시)
+        coinPulse = false;
+        const el = coinBlockRef.current;
+        el.removeAttribute('data-pulse');
+        void el.offsetWidth;
+        el.setAttribute('data-pulse', '');
       }
       const zl = `${semester}학기 · ${ZONES[zoneIdx].ko}`;
       if (zl !== shownZone && zoneRef.current) {
@@ -798,7 +881,9 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
     let acc = 0;
 
     function frame(now: number) {
-      const dt = Math.min(0.1, (now - last) / 1000);
+      // rAF 가 넘겨주는 시각은 "이번 프레임이 시작된 시각"이라, 방금 start() 에서 잰 시각보다
+      // 이를 수 있다. 그대로 빼면 첫 프레임이 음수가 되어 시계가 거꾸로 간다 — 0 아래로는 막는다
+      const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
       last = now;
       t += dt;
       acc += dt;
@@ -856,8 +941,7 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
       const reach = zoneAt(dist);
       setResult({
         score: sc,
-        coins,
-        meters: Math.floor(dist / PX_PER_M),
+        parts: parts(),
         reached: `${reach.semester}학기 · ${ZONES[reach.index].ko}`,
         newBest,
         cause,
@@ -876,7 +960,7 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
       runner = newRunner();
       hp = HP_MAX;
       coins = 0;
-      bonus = 0;
+      smashed = 0;
       guard = 0;
       rescuing = false;
       rescueLeft = 0;
@@ -1005,9 +1089,10 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
                 <span className={styles.profWarn}>바짝!</span>
               </div>
               <div className={styles.hudRow}>
-                <div className={styles.coins}>
+                <div ref={coinBlockRef} className={styles.coins}>
                   <i className={styles.coinIcon} aria-hidden="true" />
                   <span ref={coinRef}>0</span>
+                  <span className={styles.coinRate}>×{Math.round(COIN_POINTS * (character.stats.coinMult ?? 1))}</span>
                 </div>
                 <div className={styles.chips}>
                   {hasDash && (
@@ -1034,6 +1119,20 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
               <div className={styles.score}>
                 <span className={styles.scoreLabel}>SCORE</span>
                 <b ref={scoreRef}>000000</b>
+              </div>
+              <div className={styles.breakdown}>
+                <span>
+                  <i className={styles.dotRun} />
+                  거리 <b ref={runPtsRef}>0</b>
+                </span>
+                <span>
+                  <i className={styles.dotCredit} />
+                  학점 <b ref={creditPtsRef}>0</b>
+                </span>
+                <span>
+                  <i className={styles.dotSmash} />
+                  부수기 <b ref={smashPtsRef}>0</b>
+                </span>
               </div>
               <span ref={zoneRef} className={styles.zone}>
                 1학기 · 교실
@@ -1118,20 +1217,42 @@ export default function RunGame({ character, onExit, onChangeCharacter }: RunGam
                   <b>{String(result.score).padStart(6, '0')}</b>
                   {result.newBest && <span className={styles.newBest}>{play.gameOver.newBestLabel}</span>}
                 </div>
-                <dl className={styles.stats}>
-                  <div>
-                    <dt>학점</dt>
-                    <dd>{result.coins}</dd>
-                  </div>
-                  <div>
-                    <dt>거리</dt>
-                    <dd>{result.meters}m</dd>
-                  </div>
-                  <div>
-                    <dt>도달</dt>
-                    <dd>{result.reached}</dd>
-                  </div>
-                </dl>
+                <table className={styles.calc}>
+                  <tbody>
+                    <tr>
+                      <th>
+                        <i className={styles.dotRun} />
+                        거리
+                      </th>
+                      <td>
+                        {result.parts.meters}m × {POINTS_PER_M}
+                      </td>
+                      <td className={styles.calcPts}>{result.parts.run}</td>
+                    </tr>
+                    <tr>
+                      <th>
+                        <i className={styles.dotCredit} />
+                        학점
+                      </th>
+                      <td>
+                        {result.parts.coins}개 × {COIN_POINTS}
+                        {result.parts.coinMult !== 1 && <em> × {result.parts.coinMult}</em>}
+                      </td>
+                      <td className={styles.calcPts}>{result.parts.credit}</td>
+                    </tr>
+                    <tr>
+                      <th>
+                        <i className={styles.dotSmash} />
+                        부수기
+                      </th>
+                      <td>
+                        {result.parts.smashed}개 × {SMASH_POINTS}
+                      </td>
+                      <td className={styles.calcPts}>{result.parts.smash}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className={styles.reached}>도달 — {result.reached}</p>
                 <ScoreSubmit score={result.score} />
                 <div className={styles.actions}>
                   <button type="button" className={styles.primary} onClick={() => retryRef.current()}>

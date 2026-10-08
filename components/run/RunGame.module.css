@@ -344,6 +344,80 @@
   box-shadow: 0 0 10px rgba(255, 138, 61, 0.35);
 }
 
+/* 학점 칸 — 몇 개 모았는지 + 하나에 몇 점인지. 먹을 때마다 톡 튄다 */
+.coinRate {
+  font-family: var(--font-mono);
+  font-size: max(7px, 2cqh);
+  color: var(--lime);
+  opacity: 0.75;
+}
+
+.coins[data-pulse] {
+  animation: coinPop 0.25s ease-out;
+}
+
+@keyframes coinPop {
+  0% {
+    transform: scale(1);
+    border-color: var(--lime);
+  }
+  40% {
+    transform: scale(1.12);
+    border-color: var(--lime);
+    box-shadow: 0 0 10px rgba(201, 247, 61, 0.45);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 점수의 세 갈래 — 어디서 점수가 나오는지 늘 보인다 */
+.breakdown {
+  display: flex;
+  gap: 1.2cqw;
+  padding: 0.5cqh 1cqw;
+  border-radius: var(--radius);
+  background: rgba(10, 10, 12, 0.55);
+  font-family: var(--font-pixel);
+  font-size: max(6px, 1.9cqh);
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.breakdown span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5cqw;
+}
+
+.breakdown b {
+  font-weight: 400;
+  color: #fff;
+}
+
+.dotRun,
+.dotCredit,
+.dotSmash {
+  display: inline-block;
+  width: max(4px, 1.4cqh);
+  height: max(4px, 1.4cqh);
+  flex: 0 0 auto;
+}
+
+.dotRun {
+  background: #7fe3ff;
+}
+
+.dotCredit {
+  background: var(--lime);
+  border-radius: 50%;
+}
+
+.dotSmash {
+  background: #ff8a3d;
+  transform: rotate(45deg);
+}
+
 /* ---------- 일시정지 버튼 ---------- */
 
 .pauseBtn {
@@ -628,6 +702,59 @@
   font-family: var(--font-pixel);
   font-size: 11px;
   color: var(--text);
+}
+
+.calc {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+
+.calc th,
+.calc td {
+  padding: 7px 6px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.calc th {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.calc th i {
+  width: 6px;
+  height: 6px;
+}
+
+.calc td {
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+.calc td em {
+  font-style: normal;
+  color: var(--lime);
+}
+
+.calc .calcPts {
+  text-align: right;
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: var(--lime);
+}
+
+.reached {
+  margin: 0;
+  font-size: 12px;
+  color: var(--dim);
 }
 
 .actions {

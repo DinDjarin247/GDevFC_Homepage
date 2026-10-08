@@ -46,7 +46,24 @@ export const PLAYER_HALF_W = 5;
 /** 밟을 수 있는 면 — 땅 조각이나 공중 발판. 아래에서는 통과하고 위에서만 밟힌다 */
 export type Surface = { x0: number; x1: number; y: number; kind: 'ground' | 'plat' };
 
-export type ObstacleKind = 'low' | 'tall' | 'hang';
+/**
+ * 장애물 종류. low · tall · hang 은 제자리에 있고, 나머지는 움직인다 —
+ * fly(날아온다: 종이비행기 · 식판 · 시험지) · roll(굴러온다: 청소 카트) ·
+ * bounce(제자리에서 통통 튄다: 축구공) · drop(위에서 떨어져 쌓인다: 책).
+ */
+export type ObstacleKind = 'low' | 'tall' | 'hang' | 'fly' | 'roll' | 'bounce' | 'drop';
+
+/**
+ * 움직이는 장애물의 움직임 — 시간이 아니라 "달린 거리(dist)"의 함수로 정한다.
+ * 속도가 일정하니 시간과 같은 말이고, 그래야 검증 스크립트가 게임과 똑같이 시뮬레이션한다.
+ */
+export type Motion =
+  /** x(dist) = x0 + (x0 - dist) * k — dist 가 x0 일 때 우왕이와 만난다. k 는 땅에 대한 상대 속도 */
+  | { type: 'approach'; k: number }
+  /** 제자리에서 튄다 — period 만큼 달릴 때마다 한 번, 높이 height */
+  | { type: 'bounce'; period: number; height: number; phase: number; floor: number }
+  /** dist 가 start 일 때 떨어지기 시작해 span 만큼 달리는 동안 바닥(floor)까지 */
+  | { type: 'drop'; start: number; span: number; floor: number };
 /** 부딪히면 다치는 것 (막지는 않는다 — 쿠키런처럼 지나가며 체력을 잃는다) */
 export type Obstacle = {
   kind: ObstacleKind;
@@ -58,7 +75,22 @@ export type Obstacle = {
   hit?: boolean;
   /** 질주 · 거대화로 부쉈다 (더 그리지 않는다) */
   smashed?: boolean;
+  /** 움직이는 장애물이면 그 움직임 (x · y 는 기준 위치) */
+  motion?: Motion;
 };
+
+/** dist 만큼 달렸을 때 장애물이 있는 자리 (제자리 장애물은 그대로) */
+export function obstacleAt(o: Obstacle, dist: number): { x: number; y: number; w: number; h: number } {
+  const m = o.motion;
+  if (!m) return o;
+  if (m.type === 'approach') return { x: o.x + (o.x - dist) * m.k, y: o.y, w: o.w, h: o.h };
+  if (m.type === 'bounce') {
+    const lift = Math.abs(Math.sin((Math.PI * (dist - o.x + m.phase)) / m.period)) * m.height;
+    return { x: o.x, y: m.floor - o.h - lift, w: o.w, h: o.h };
+  }
+  const p = Math.min(1, Math.max(0, (dist - m.start) / m.span));
+  return { x: o.x, y: -o.h - 10 + (m.floor - o.h + o.h + 10) * p * p, w: o.w, h: o.h };
+}
 
 export type PickupKind = 'coin' | 'heart' | 'item';
 /**
@@ -82,6 +114,10 @@ export const OBSTACLE_SIZE: Record<ObstacleKind, { w: number; h: number }> = {
   tall: { w: 16, h: 58 },
   // 매달린 것: 아래 끝이 발판에서 14px 위 — 선 키(20)는 걸리고 슬라이드(11)는 빠져나간다
   hang: { w: 30, h: 0 },
+  fly: { w: 12, h: 7 },
+  roll: { w: 14, h: 13 },
+  bounce: { w: 10, h: 10 },
+  drop: { w: 12, h: 10 },
 };
 export const HANG_CLEARANCE = 14;
 
@@ -200,9 +236,18 @@ export type ChunkEl =
   | { t: 'low' | 'tall'; x: number; h?: number }
   | { t: 'hang'; x: number; w?: number; h?: number }
   | { t: 'coins'; x: number; h: number; n: number; gap?: number; arc?: number }
-  | { t: 'heart'; x: number; h: number };
+  | { t: 'heart'; x: number; h: number }
+  /** 날아온다 — x 는 우왕이와 만나는 곳. high 는 머리 높이(슬라이드), low 는 발 높이(점프) */
+  | { t: 'fly'; x: number; level: 'high' | 'low'; k?: number }
+  /** 굴러온다 — 점프로 넘는다 */
+  | { t: 'roll'; x: number; k?: number }
+  /** 제자리에서 튄다 — 공이 떠 있을 때 밑으로, 내려왔을 때 위로 */
+  | { t: 'bounce'; x: number; height?: number; period?: number; phase?: number }
+  /** 위에서 떨어져 쌓인다 — lead 만큼 앞에서 떨어지기 시작한다 */
+  | { t: 'drop'; x: number; lead?: number };
 
-export type Chunk = { id: string; tier: number; len: number; els: ChunkEl[] };
+/** zones 를 주면 그 구간에서만 나온다 (구간에 어울리는 기믹) */
+export type Chunk = { id: string; tier: number; len: number; els: ChunkEl[]; zones?: number[] };
 
 /**
  * 조각 하나를 월드 x=base 에 놓았을 때의 실제 요소들. 게임 코스와 검증 스크립트가 같이 쓴다.
@@ -238,6 +283,42 @@ export function layoutChunk(c: Chunk, base: number) {
         // 천장에서 내려와 발판 14px 위에서 끝난다
         const bottom = GROUND_Y - (e.h ?? 0) - HANG_CLEARANCE;
         obstacles.push({ kind: 'hang', x, y: -8, w: e.w ?? OBSTACLE_SIZE.hang.w, h: bottom + 8 });
+        break;
+      }
+      case 'fly': {
+        const size = OBSTACLE_SIZE.fly;
+        // high: 아래 끝이 땅 14px 위(슬라이드로 빠져나간다) · low: 발목 높이(뛰어넘는다)
+        const y = e.level === 'high' ? GROUND_Y - HANG_CLEARANCE - size.h : GROUND_Y - 11;
+        obstacles.push({ kind: 'fly', x, y, w: size.w, h: size.h, motion: { type: 'approach', k: e.k ?? 1 } });
+        break;
+      }
+      case 'roll': {
+        const size = OBSTACLE_SIZE.roll;
+        obstacles.push({ kind: 'roll', x, y: GROUND_Y - size.h, w: size.w, h: size.h, motion: { type: 'approach', k: e.k ?? 0.5 } });
+        break;
+      }
+      case 'bounce': {
+        const size = OBSTACLE_SIZE.bounce;
+        obstacles.push({
+          kind: 'bounce',
+          x,
+          y: GROUND_Y - size.h,
+          w: size.w,
+          h: size.h,
+          motion: { type: 'bounce', period: e.period ?? 120, height: e.height ?? 46, phase: e.phase ?? 0, floor: GROUND_Y },
+        });
+        break;
+      }
+      case 'drop': {
+        const size = OBSTACLE_SIZE.drop;
+        obstacles.push({
+          kind: 'drop',
+          x,
+          y: GROUND_Y - size.h,
+          w: size.w,
+          h: size.h,
+          motion: { type: 'drop', start: x - (e.lead ?? 220), span: 80, floor: GROUND_Y },
+        });
         break;
       }
       case 'coins':
@@ -276,8 +357,8 @@ export const ZONES: Zone[] = [
   { id: 'exam', ko: '시험장', en: 'EXAM HALL' },
 ];
 
-/** 구간 하나의 길이 — 초속 15m 로 ~47초 */
-export const ZONE_LEN = 7000;
+/** 구간 하나의 길이 — 초속 15m 로 ~70초 */
+export const ZONE_LEN = 10500;
 
 /** 구간별로 뽑는 코스 조각 등급 [최소, 최대]. 학기가 올라가면 한 등급씩 어려워진다 */
 const ZONE_TIERS: [number, number][] = [
@@ -368,9 +449,13 @@ export class Course {
 
   private pick(): Chunk {
     const [lo, hi] = tiersAt(this.builtTo);
-    // 등급 범위 안에서 고르되, 높은 등급을 조금 더 자주. 같은 조각이 연달아 나오지 않게
-    const pool = this.chunks.filter((c) => c.tier >= lo && c.tier <= hi && c.id !== this.lastId);
-    const weights = pool.map((c) => 1 + (c.tier - lo) * 0.6);
+    const zone = zoneAt(this.builtTo).index;
+    // 등급 범위 안에서 고르되, 높은 등급을 조금 더 자주. 같은 조각이 연달아 나오지 않게.
+    // 구간 전용 기믹 조각은 그 구간에서만, 일반 조각보다 2.5배 자주
+    const pool = this.chunks.filter(
+      (c) => c.tier >= lo && c.tier <= hi && c.id !== this.lastId && (!c.zones || c.zones.includes(zone))
+    );
+    const weights = pool.map((c) => (1 + (c.tier - lo) * 0.6) * (c.zones ? 2.5 : 1));
     let r = this.rng() * weights.reduce((a, b) => a + b, 0);
     for (let i = 0; i < pool.length; i++) {
       r -= weights[i];

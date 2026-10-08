@@ -274,4 +274,163 @@ export const CHUNKS: Chunk[] = [
       { t: 'coins', x: 410, h: 52, n: 2, gap: 18 },
     ],
   },
+  // ================= 구간 전용 기믹 (zones 의 구간에서만 나온다) =================
+
+  // ---------- 교실 — 날아오는 종이비행기 ----------
+  {
+    id: 'c-plane-high',
+    tier: 1,
+    zones: [0],
+    len: 400,
+    els: [
+      // 머리 높이로 날아온다 — 슬라이드로 피한다
+      { t: 'fly', x: 230, level: 'high' },
+      { t: 'coins', x: 190, h: 5, n: 5, gap: 18 },
+    ],
+  },
+  {
+    id: 'c-plane-low',
+    tier: 1,
+    zones: [0],
+    len: 400,
+    els: [
+      // 발목 높이로 낮게 — 뛰어넘는다
+      { t: 'fly', x: 230, level: 'low' },
+      { t: 'coins', x: 180, h: 12, n: 6, gap: 18, arc: 44 },
+    ],
+  },
+  {
+    id: 'c-plane-pair',
+    tier: 2,
+    zones: [0],
+    len: 480,
+    els: [
+      { t: 'fly', x: 170, level: 'high' },
+      { t: 'fly', x: 340, level: 'low' },
+      { t: 'coins', x: 130, h: 5, n: 4, gap: 18 },
+      { t: 'coins', x: 290, h: 12, n: 6, gap: 18, arc: 44 },
+    ],
+  },
+
+  // ---------- 복도 — 굴러오는 청소 카트 ----------
+  {
+    id: 'h-cart',
+    tier: 1,
+    zones: [1],
+    len: 420,
+    els: [
+      { t: 'roll', x: 240 },
+      { t: 'coins', x: 190, h: 12, n: 6, gap: 18, arc: 48 },
+    ],
+  },
+  {
+    id: 'h-cart-hang',
+    tier: 2,
+    zones: [1],
+    len: 500,
+    els: [
+      { t: 'roll', x: 170 },
+      { t: 'hang', x: 350, w: 30 },
+      { t: 'coins', x: 330, h: 5, n: 4, gap: 18 },
+    ],
+  },
+
+  // ---------- 캠퍼스 — 통통 튀는 축구공 ----------
+  {
+    id: 'p-ball',
+    tier: 2,
+    zones: [2],
+    len: 440,
+    els: [
+      // 공이 떠 있을 때 밑으로 지나가거나, 내려왔을 때 넘어간다
+      { t: 'bounce', x: 230, height: 50, period: 130 },
+      { t: 'coins', x: 170, h: 8, n: 7, gap: 18 },
+    ],
+  },
+  {
+    id: 'p-two-balls',
+    tier: 3,
+    zones: [2],
+    len: 520,
+    els: [
+      { t: 'bounce', x: 170, height: 50, period: 130 },
+      { t: 'bounce', x: 330, height: 50, period: 130, phase: 65 },
+      { t: 'coins', x: 140, h: 20, n: 12, gap: 20 },
+    ],
+  },
+
+  // ---------- 학생식당 — 날아오는 식판 ----------
+  {
+    id: 'f-tray',
+    tier: 2,
+    zones: [3],
+    len: 420,
+    els: [
+      { t: 'fly', x: 240, level: 'low', k: 1.3 },
+      { t: 'coins', x: 190, h: 12, n: 6, gap: 18, arc: 44 },
+    ],
+  },
+  {
+    id: 'f-tray-volley',
+    tier: 3,
+    zones: [3],
+    len: 520,
+    els: [
+      { t: 'fly', x: 160, level: 'low', k: 1.3 },
+      { t: 'fly', x: 320, level: 'high', k: 1.3 },
+      { t: 'low', x: 420 },
+      { t: 'coins', x: 290, h: 5, n: 4, gap: 18 },
+    ],
+  },
+
+  // ---------- 중앙도서관 — 위에서 떨어지는 책 ----------
+  {
+    id: 'l-book',
+    tier: 3,
+    zones: [4],
+    len: 440,
+    els: [
+      // 그림자가 먼저 생기고 책이 떨어져 쌓인다 — 쌓인 책은 뛰어넘는다
+      { t: 'drop', x: 240 },
+      { t: 'coins', x: 190, h: 12, n: 6, gap: 18, arc: 48 },
+    ],
+  },
+  {
+    id: 'l-book-rain',
+    tier: 4,
+    zones: [4],
+    len: 560,
+    els: [
+      { t: 'drop', x: 160, lead: 200 },
+      { t: 'drop', x: 300, lead: 240 },
+      { t: 'hang', x: 430, w: 30 },
+      { t: 'coins', x: 410, h: 5, n: 4, gap: 18 },
+    ],
+  },
+
+  // ---------- 시험장 — 시험지 뭉치 · 전공책 · 구덩이를 한꺼번에 ----------
+  {
+    id: 'e-sheets',
+    tier: 4,
+    zones: [5],
+    len: 520,
+    els: [
+      { t: 'fly', x: 160, level: 'high', k: 1.2 },
+      { t: 'fly', x: 320, level: 'low', k: 1.2 },
+      { t: 'coins', x: 120, h: 5, n: 4, gap: 18 },
+      { t: 'coins', x: 270, h: 12, n: 6, gap: 18, arc: 44 },
+    ],
+  },
+  {
+    id: 'e-finals',
+    tier: 5,
+    zones: [5],
+    len: 600,
+    els: [
+      { t: 'drop', x: 140 },
+      { t: 'fly', x: 300, level: 'low', k: 1.2 },
+      { t: 'pit', x: 420, w: 64 },
+      { t: 'coins', x: 400, h: 14, n: 6, gap: 20, arc: 48 },
+    ],
+  },
 ];

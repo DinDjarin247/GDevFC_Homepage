@@ -14,6 +14,8 @@ type IntroScreenProps = {
   intro?: IntroContent;
   /** 랭킹 자리에 넣을 내용 (기본: 달려라 우왕이 TOP 5) */
   ranking?: ReactNode;
+  /** 랭킹 앞에 끼워 넣을 섹션 (예: 점수 계산법) */
+  extra?: ReactNode;
 };
 
 /**
@@ -21,7 +23,7 @@ type IntroScreenProps = {
  * 끝까지 스크롤해야 "TOUCH TO START" 가 활성화된다 (짧아서 스크롤이 필요
  * 없는 화면에서는 마운트 시점에 곧바로 활성화된다).
  */
-export default function IntroScreen({ onStart, intro = play.intro, ranking }: IntroScreenProps) {
+export default function IntroScreen({ onStart, intro = play.intro, ranking, extra }: IntroScreenProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -71,6 +73,8 @@ export default function IntroScreen({ onStart, intro = play.intro, ranking }: In
             ))}
           </div>
         </section>
+
+        {extra}
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>{intro.rankingHeading}</h2>

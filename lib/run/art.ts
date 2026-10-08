@@ -294,7 +294,8 @@ export function drawPlatform(ctx: CanvasRenderingContext2D, zone: number, x: num
 
 /** 학점 동전 — 연두색에 A. 빙글빙글 돈다 (폭이 7 → 5 → 2 → 5) */
 export function drawCoin(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
-  const frame = Math.floor(t * 8 + x * 0.05) % 4;
+  // 화면 왼쪽 밖(x < 0)에서도 음수 나머지가 나오지 않게
+  const frame = (((Math.floor(t * 8 + x * 0.05) % 4) + 4) % 4) as 0 | 1 | 2 | 3;
   const w = [7, 5, 2, 5][frame];
   const cx = Math.round(x);
   const cy = Math.round(y);
@@ -454,3 +455,106 @@ export function drawItem(ctx: CanvasRenderingContext2D, kind: string, x: number,
       break;
   }
 }
+
+/* ---------- 움직이는 장애물 ---------- */
+
+/**
+ * 움직이는 장애물 — 구간마다 어울리는 물건으로.
+ * fly: 교실 종이비행기 · 학생식당 식판 · 시험장 시험지 뭉치 / roll: 복도 청소 카트(그 밖엔 농구공) /
+ * bounce: 캠퍼스 축구공 / drop: 도서관 책 · 시험장 전공책. (x, y) 는 충돌 상자의 왼쪽 위.
+ */
+export function drawMover(ctx: CanvasRenderingContext2D, kind: string, zone: number, x: number, y: number, t: number) {
+  const X = Math.round(x);
+  const Y = Math.round(y);
+  const f = Math.floor(t * 10) % 2;
+  switch (kind) {
+    case 'fly':
+      if (zone === 3) {
+        // 식판 — 빙글빙글 돌며 날아온다 (두께가 바뀐다), 위엔 반찬
+        r(ctx, '#e07a3a', X, Y + 2, 12, f ? 3 : 2);
+        r(ctx, '#f0a060', X, Y + 2, 12, 1);
+        r(ctx, '#7ac05a', X + 2, Y + 1, 2, 1);
+        r(ctx, '#e0443a', X + 6, Y + 1, 2, 1);
+        r(ctx, '#f4f1e8', X + 9, Y + 1, 2, 1);
+      } else if (zone === 5) {
+        // 시험지 뭉치 — 빨간 줄과 펄럭이는 귀퉁이
+        r(ctx, '#e8e4da', X, Y + 1, 12, 6);
+        r(ctx, '#ffffff', X, Y + 1, 12, 1);
+        r(ctx, '#c4402f', X + 2, Y + 3, 8, 1);
+        r(ctx, '#c4402f', X + 2, Y + 5, 5, 1);
+        r(ctx, '#ffffff', X + 9, Y + (f ? -1 : 0), 3, 2);
+      } else {
+        // 종이비행기 — 뾰족한 쪽이 앞(왼쪽)
+        r(ctx, '#ffffff', X, Y + 3, 12, 1);
+        r(ctx, '#ffffff', X + 2, Y + 2, 9, 1);
+        r(ctx, '#ffffff', X + 5, Y + 1 - f, 6, 1);
+        r(ctx, '#ffffff', X + 8, Y + (f ? -1 : 0), 3, 1);
+        r(ctx, '#c8ccd4', X + 2, Y + 4, 8, 1);
+        r(ctx, '#9aa3ad', X + 5, Y + 5, 5, 1);
+      }
+      break;
+    case 'roll':
+      if (zone === 1) {
+        // 청소 카트 — 노란 양동이, 대걸레 자루, 굴러가는 바퀴
+        r(ctx, '#6b4a2c', X + 10, Y - 7, 2, 9);
+        r(ctx, '#d9cfa8', X + 9, Y - 8, 4, 2);
+        r(ctx, '#f2c230', X, Y + 1, 14, 8);
+        r(ctx, '#ffe066', X, Y + 1, 14, 2);
+        r(ctx, '#3d8fd6', X + 2, Y + 2, 6, 1);
+        r(ctx, '#2a2a2a', X + 1, Y + 9, 4, 4);
+        r(ctx, '#2a2a2a', X + 9, Y + 9, 4, 4);
+        r(ctx, '#8a8f99', X + 2 + f, Y + 10 + f, 1, 1);
+        r(ctx, '#8a8f99', X + 10 + f, Y + 10 + f, 1, 1);
+      } else {
+        // 농구공
+        r(ctx, '#e8702a', X + 2, Y, 10, 13);
+        r(ctx, '#e8702a', X, Y + 2, 14, 9);
+        r(ctx, '#7a3a14', X + 6 + (f ? 1 : -1), Y, 1, 13);
+        r(ctx, '#7a3a14', X, Y + 6, 14, 1);
+      }
+      break;
+    case 'bounce': {
+      // 축구공 — 흰 바탕에 검은 조각이 굴러가며 바뀐다
+      r(ctx, '#ffffff', X + 2, Y, 6, 10);
+      r(ctx, '#ffffff', X, Y + 2, 10, 6);
+      r(ctx, '#ffffff', X + 1, Y + 1, 8, 8);
+      r(ctx, '#2a2a2a', X + 4, Y + 4, 2, 2);
+      if (f) {
+        r(ctx, '#2a2a2a', X + 1, Y + 2, 2, 2);
+        r(ctx, '#2a2a2a', X + 7, Y + 6, 2, 2);
+      } else {
+        r(ctx, '#2a2a2a', X + 7, Y + 2, 2, 2);
+        r(ctx, '#2a2a2a', X + 1, Y + 6, 2, 2);
+      }
+      break;
+    }
+    default: {
+      // drop — 책. 도서관은 색색, 시험장은 두꺼운 검붉은 전공책
+      const cover = zone === 5 ? '#7a1f2e' : ['#c4402f', '#3d5fd6', '#4f7a62', '#d9a43c'][Math.abs(Math.round(x / 40)) % 4];
+      r(ctx, cover, X, Y, 12, 10);
+      r(ctx, '#f4f1e8', X + 1, Y + 1, 10, 2);
+      r(ctx, 'rgba(0,0,0,0.25)', X, Y + 8, 12, 2);
+      r(ctx, '#f5d76e', X + 4, Y + 5, 4, 1);
+      break;
+    }
+  }
+}
+
+/** 바닥 그림자 — 떨어지는 책 · 튀는 공 아래. k(0~1) 가 클수록 진하고 크다 */
+export function drawShadow(ctx: CanvasRenderingContext2D, cx: number, groundY: number, w: number, k: number) {
+  const half = Math.max(2, Math.round((w / 2) * (0.5 + k * 0.5)));
+  ctx.fillStyle = `rgba(0, 0, 0, ${0.15 + k * 0.3})`;
+  ctx.fillRect(Math.round(cx) - half, groundY - 1, half * 2, 2);
+  ctx.fillRect(Math.round(cx) - half + 2, groundY - 2, half * 2 - 4, 1);
+}
+
+/** 화면 오른쪽 끝의 경고 — 화면 밖에서 무언가 날아오고 있다 */
+export function drawWarning(ctx: CanvasRenderingContext2D, x: number, cy: number, t: number) {
+  if (Math.floor(t * 8) % 2 === 1) return;
+  const X = Math.round(x);
+  const Y = Math.round(cy) - 5;
+  for (let i = 0; i < 5; i++) r(ctx, '#f5d76e', X + 4 - i, Y + i * 2, 1 + i * 2, 2);
+  r(ctx, '#1a1a1a', X + 4, Y + 3, 1, 4);
+  r(ctx, '#1a1a1a', X + 4, Y + 8, 1, 1);
+}
+

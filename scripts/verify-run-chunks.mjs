@@ -72,7 +72,8 @@ function solve(chunk) {
           break;
         }
         const box = W.hitbox(next, sx);
-        if (course.obstacles.some((o) => W.touches(box, o))) {
+        // 움직이는 장애물은 지금(달린 거리 sx) 있는 자리로 본다
+        if (course.obstacles.some((o) => W.touches(box, W.obstacleAt(o, sx)))) {
           ok = false;
           break;
         }

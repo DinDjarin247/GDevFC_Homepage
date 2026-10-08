@@ -965,7 +965,9 @@ export default function JumpGame({ onExit }: JumpGameProps) {
     let acc = 0;
 
     function frame(now: number) {
-      const dt = Math.min(0.1, (now - last) / 1000);
+      // rAF 가 넘겨주는 시각은 "이번 프레임이 시작된 시각"이라, 방금 start() 에서 잰 시각보다
+      // 이를 수 있다. 그대로 빼면 첫 프레임이 음수가 되어 시계가 거꾸로 간다 — 0 아래로는 막는다
+      const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
       last = now;
       t += dt;
 
