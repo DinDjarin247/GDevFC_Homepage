@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Frame from '@/components/Frame';
 import ScreenHeader from '@/components/ScreenHeader';
 import IntroScreen from '@/components/play/IntroScreen';
-import WoowangGame from '@/components/play/WoowangGame';
+import RunGame from '@/components/run/RunGame';
 import RotateGate from '@/components/play/RotateGate';
 import play from '@/data/play.json';
 
@@ -22,7 +22,7 @@ export default function PlayPage() {
     >
       <RotateGate>
         {started ? (
-          <WoowangGame onExit={() => router.push('/select')} />
+          <RunGame onExit={() => router.push('/select')} />
         ) : (
           <IntroScreen onStart={() => setStarted(true)} />
         )}

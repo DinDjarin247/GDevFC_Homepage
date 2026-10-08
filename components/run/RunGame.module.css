@@ -1,0 +1,519 @@
+/* 달려라 우왕이 V2 — 사이트 톤(딥 차콜 패널 · 라임/마젠타 · 픽셀 폰트 · 얇은 테두리)에 맞춘 게임 UI.
+   글자 크기는 무대(.stage) 크기 기준(cqh/cqw)이라 어떤 화면에서도 게임 그림과 같은 비율로 커진다. */
+
+.wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.box {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #050507;
+  overflow: hidden;
+}
+
+/* 384x216 을 비율 그대로 — 크기는 JS 가 정한다 */
+.stage {
+  position: relative;
+  container-type: size;
+  overflow: hidden;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+/* 화면 전체에 얇은 스캔라인 — 사이트 패널과 같은 질감 */
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.03) 0px,
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* ---------- HUD ---------- */
+
+.hud {
+  position: absolute;
+  top: 3cqh;
+  left: 2.4cqw;
+  right: 9cqw;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hudLeft,
+.hudRight {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6cqh;
+}
+
+.hudRight {
+  align-items: flex-end;
+}
+
+.hp {
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+  padding: 0.8cqh 1cqw;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius);
+  background: rgba(10, 10, 12, 0.62);
+}
+
+.hpLabel {
+  font-family: var(--font-pixel);
+  font-size: max(7px, 2.6cqh);
+  line-height: 1;
+  color: var(--lime);
+  text-shadow: -1px 0 0 var(--magenta);
+}
+
+.hpBar {
+  position: relative;
+  display: block;
+  width: 24cqw;
+  height: max(5px, 2.4cqh);
+  padding: 1px;
+  background: rgba(0, 0, 0, 0.6);
+  outline: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 칸칸이 끊긴 픽셀 게이지 */
+.hpFill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(0, 0, 0, 0.35) calc(10% - 1px) 10%),
+    linear-gradient(var(--lime), #8fbf1f);
+  transition: width 0.15s linear;
+}
+
+.hp[data-low] .hpFill {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(0, 0, 0, 0.35) calc(10% - 1px) 10%),
+    linear-gradient(var(--magenta), #b81d63);
+  animation: lowBlink 0.6s steps(2) infinite;
+}
+
+.hp[data-low] .hpLabel {
+  color: var(--magenta);
+}
+
+@keyframes lowBlink {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8cqw;
+  align-self: flex-start;
+  padding: 0.6cqh 1cqw;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius);
+  background: rgba(10, 10, 12, 0.5);
+  font-family: var(--font-pixel);
+  font-size: max(7px, 2.6cqh);
+  line-height: 1;
+  color: #fff;
+}
+
+/* 학점 동전 — 연두 원 안의 A */
+.coinIcon {
+  position: relative;
+  width: max(7px, 2.8cqh);
+  height: max(7px, 2.8cqh);
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: inset 0 0 0 1px #7da61e;
+}
+
+.coinIcon::after {
+  content: 'A';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-pixel);
+  font-size: max(4px, 1.6cqh);
+  font-style: normal;
+  color: #2a3a08;
+}
+
+.score {
+  display: flex;
+  align-items: baseline;
+  gap: 1cqw;
+  padding: 0.8cqh 1.2cqw;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius);
+  background: rgba(10, 10, 12, 0.62);
+}
+
+.scoreLabel {
+  font-family: var(--font-mono);
+  font-size: max(7px, 2.2cqh);
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.score b {
+  font-family: var(--font-pixel);
+  font-weight: 400;
+  font-size: max(9px, 3.6cqh);
+  line-height: 1;
+  color: var(--lime);
+  text-shadow: -2px 0 0 var(--magenta);
+}
+
+.zone {
+  padding: 0.5cqh 1cqw;
+  border-left: 2px solid var(--lime);
+  background: rgba(10, 10, 12, 0.55);
+  font-family: var(--font-pixel);
+  font-size: max(7px, 2.3cqh);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ---------- 일시정지 버튼 ---------- */
+
+.pauseBtn {
+  position: absolute;
+  top: 3cqh;
+  right: 2.4cqw;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: max(26px, 6.4cqh);
+  height: max(26px, 6.4cqh);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius);
+  background: rgba(10, 10, 12, 0.62);
+  color: #fff;
+  font-family: var(--font-kr);
+  font-size: max(11px, 2.8cqh);
+  cursor: pointer;
+}
+
+.pauseBtn:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+/* ---------- 구간 배너 ---------- */
+
+.banner {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1cqh;
+  padding: 2cqh 4cqw;
+  border: 1px solid var(--lime-soft);
+  border-radius: var(--radius);
+  background: rgba(10, 10, 12, 0.78);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 24px rgba(201, 247, 61, 0.15);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: banner 2.6s ease forwards;
+}
+
+.bannerSub {
+  font-family: var(--font-mono);
+  font-size: max(7px, 2.2cqh);
+  letter-spacing: 0.2em;
+  color: var(--muted);
+}
+
+.bannerEn {
+  font-family: var(--font-pixel);
+  font-size: max(11px, 4.6cqh);
+  letter-spacing: 0.06em;
+  color: var(--lime);
+  text-shadow: -2px 0 0 var(--magenta);
+}
+
+.bannerKo {
+  font-family: var(--font-pixel);
+  font-size: max(8px, 2.8cqh);
+  color: #fff;
+}
+
+@keyframes banner {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 1.5cqh);
+  }
+  12%,
+  78% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -1cqh);
+  }
+}
+
+/* ---------- 터치 버튼 (터치 화면에서만) ---------- */
+
+.touch {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .touch {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 3cqw 4cqh;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
+.tbtn {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6cqh;
+  width: 19cqw;
+  height: 22cqh;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  background: rgba(10, 10, 12, 0.35);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-pixel);
+  font-size: max(8px, 2.6cqh);
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tbtn span {
+  font-family: var(--font-kr);
+  font-size: max(12px, 4cqh);
+  line-height: 1;
+}
+
+.tjump {
+  border-color: var(--lime-soft);
+  color: var(--lime);
+}
+
+.tbtn[data-pressed='true'] {
+  background: rgba(201, 247, 61, 0.25);
+  border-color: var(--lime);
+}
+
+/* ---------- 일시정지 · 결과 카드 ---------- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3cqh 3cqw;
+  background: rgba(4, 4, 8, 0.62);
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: min(100%, 320px);
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 22px 20px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  text-align: center;
+}
+
+/* 패널 윗변에 걸친 라임 띠 — 사이트 배지와 같은 표식 */
+.card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 18px;
+  width: 42px;
+  height: 3px;
+  background: var(--lime);
+}
+
+.cardTitle,
+.overTitle {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: 18px;
+  color: var(--lime);
+  text-shadow: -2px 0 0 var(--magenta);
+}
+
+.overTitle {
+  color: var(--magenta);
+  text-shadow: -2px 0 0 var(--lime);
+}
+
+.cardSub,
+.cause {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.resultCard {
+  width: min(100%, 380px);
+}
+
+.bigScore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 2px;
+}
+
+.statLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--dim);
+}
+
+.bigScore b {
+  font-family: var(--font-pixel);
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--lime);
+  text-shadow: -2px 0 0 var(--magenta);
+}
+
+.newBest {
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  background: var(--magenta);
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: #fff;
+  animation: lowBlink 0.8s steps(2) infinite;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 0 0 4px;
+}
+
+.stats div {
+  padding: 8px 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+}
+
+.stats dt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+}
+
+.stats dd {
+  margin: 4px 0 0;
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: var(--text);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.actions .primary {
+  grid-column: 1 / -1;
+}
+
+.primary,
+.ghost {
+  padding: 11px 12px;
+  border-radius: var(--radius);
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    filter 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.primary {
+  border: 0;
+  background: var(--lime);
+  color: #0b0b0b;
+}
+
+.primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 16px rgba(201, 247, 61, 0.32);
+}
+
+.ghost {
+  border: 1px solid #565656;
+  background: none;
+  color: var(--muted);
+}
+
+.ghost:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}

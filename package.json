@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "npx serve out",
     "lint": "next lint",
+    "verify:run": "node scripts/verify-run-chunks.mjs",
     "gen:members": "node scripts/generate-members.mjs"
   },
   "dependencies": {
