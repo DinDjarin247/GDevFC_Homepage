@@ -204,6 +204,130 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* 교수님과의 거리 — 길수록 안전. 짧아지면 마젠타로 깜빡이며 "바짝!" */
+.prof {
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+  padding: 0.6cqh 1cqw;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius);
+  background: rgba(10, 10, 12, 0.5);
+}
+
+.profLabel {
+  font-family: var(--font-pixel);
+  font-size: max(7px, 2.1cqh);
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.profBar {
+  position: relative;
+  display: block;
+  width: 17cqw;
+  height: max(4px, 1.6cqh);
+  padding: 1px;
+  background: rgba(0, 0, 0, 0.6);
+  outline: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.profFill {
+  display: block;
+  height: 100%;
+  width: 70%;
+  background: linear-gradient(90deg, #ffffff, #c8ccd4);
+  transition: width 0.2s linear;
+}
+
+.profWarn {
+  display: none;
+  font-family: var(--font-pixel);
+  font-size: max(7px, 2.1cqh);
+  line-height: 1;
+  color: var(--magenta);
+}
+
+.prof[data-danger] {
+  border-color: var(--magenta-soft);
+}
+
+.prof[data-danger] .profFill {
+  background: var(--magenta);
+  animation: lowBlink 0.4s steps(2) infinite;
+}
+
+.prof[data-danger] .profWarn {
+  display: inline;
+  animation: lowBlink 0.4s steps(2) infinite;
+}
+
+.hudRow {
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+}
+
+/* 쓰는 중인 아이템 — 남은 시간만큼 아래 띠가 줄어든다 */
+.chips {
+  display: flex;
+  gap: 0.8cqw;
+}
+
+.chip {
+  position: relative;
+  display: none;
+  padding: 0.5cqh 1cqw 0.9cqh;
+  border: 1px solid var(--lime-soft);
+  border-radius: var(--radius);
+  background: rgba(10, 10, 12, 0.62);
+  font-family: var(--font-pixel);
+  font-size: max(7px, 2.1cqh);
+  line-height: 1;
+  color: var(--lime);
+}
+
+.chip[data-on] {
+  display: inline-block;
+}
+
+.chip::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: calc(var(--left, 1) * 100%);
+  background: var(--lime);
+}
+
+.chip[data-item='shield'] {
+  border-color: rgba(127, 227, 255, 0.6);
+  color: #7fe3ff;
+}
+
+.chip[data-item='shield']::after {
+  background: #7fe3ff;
+}
+
+.chip[data-item='magnet'] {
+  border-color: rgba(224, 68, 58, 0.6);
+  color: #ff8a7a;
+}
+
+.chip[data-item='magnet']::after {
+  background: #e0443a;
+}
+
+.chip[data-item='giant'] {
+  border-color: var(--magenta-soft);
+  color: var(--magenta);
+}
+
+.chip[data-item='giant']::after {
+  background: var(--magenta);
+}
+
 /* ---------- 일시정지 버튼 ---------- */
 
 .pauseBtn {
@@ -269,6 +393,15 @@
   font-family: var(--font-pixel);
   font-size: max(8px, 2.8cqh);
   color: #fff;
+}
+
+.bannerNote {
+  margin-top: 0.6cqh;
+  padding-top: 1cqh;
+  border-top: 1px dashed rgba(255, 255, 255, 0.2);
+  font-family: var(--font-pixel);
+  font-size: max(7px, 2.2cqh);
+  color: var(--magenta);
 }
 
 @keyframes banner {

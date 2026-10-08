@@ -298,3 +298,133 @@ export function drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, t
   r(ctx, '#ffd0e4', cx + 2, cy + 1, 2, 2);
 }
 
+/* ---------- 교수님 ---------- */
+
+/**
+ * 출석부를 든 교수님 (16x20, 오른쪽을 보고 쫓아온다). 은발 · 안경 · 콧수염 · 남색 정장 ·
+ * 빨간 넥타이. 다리만 다른 두 장으로 달린다.
+ */
+const PROF_PALETTE: Record<string, string> = {
+  h: '#c8c8c8',
+  s: '#e8c49a',
+  g: '#2a2a2a',
+  m: '#7a7a7a',
+  w: '#f4f4f4',
+  t: '#c4402f',
+  n: '#2f3a5a',
+  N: '#222a42',
+  b: '#7a4a2a',
+  l: '#c9f73d',
+  p: '#3a3d44',
+  k: '#1a1a1a',
+};
+const PROF_TOP = [
+  '......hhhh......',
+  '.....hhhhhhh....',
+  '....hhssssshh...',
+  '....hssssssss...',
+  '....hsggggggs...',
+  '....sssssssss...',
+  '.....sssmmss....',
+  '......ssssss....',
+  '.....wwwtwww....',
+  '....nnnwtwnnbb..',
+  '...nnnnwtwnnbbl.',
+  '...nnnnntnnnbbb.',
+  '...nnnnnnnnsbb..',
+  '...nnnnnnnnn....',
+  '....nnnnnnnn....',
+  '....NNNNNNNN....',
+];
+const PROF_LEGS_A = [
+  '....ppp..ppp....',
+  '....ppp...ppp...',
+  '...ppp.....pp...',
+  '...kkk.....kkk..',
+];
+const PROF_LEGS_B = [
+  '....ppp..ppp....',
+  '...ppp...ppp....',
+  '....pp..ppp.....',
+  '...kkk..kkk.....',
+];
+
+function bakeWith(grid: string[], palette: Record<string, string>) {
+  const c = document.createElement('canvas');
+  c.width = grid[0].length;
+  c.height = grid.length;
+  const g = c.getContext('2d');
+  if (!g) return c;
+  grid.forEach((line, y) => {
+    for (let x = 0; x < line.length; x++) {
+      const color = palette[line[x]];
+      if (!color) continue;
+      g.fillStyle = color;
+      g.fillRect(x, y, 1, 1);
+    }
+  });
+  return c;
+}
+
+export function bakeProfessor(): [HTMLCanvasElement, HTMLCanvasElement] {
+  return [bakeWith([...PROF_TOP, ...PROF_LEGS_A], PROF_PALETTE), bakeWith([...PROF_TOP, ...PROF_LEGS_B], PROF_PALETTE)];
+}
+
+/* ---------- 아이템 ---------- */
+
+/** 아이템 — 빛나는 고리 안에 아이콘. (x, y) 가 가운데 */
+export function drawItem(ctx: CanvasRenderingContext2D, kind: string, x: number, y: number, t: number) {
+  const bob = Math.round(Math.sin(t * 4 + x * 0.1) * 1.5);
+  const cx = Math.round(x);
+  const cy = Math.round(y) + bob;
+  // 빛 — 깜빡이는 마름모 테두리
+  const glow = Math.floor(t * 6) % 2 === 0 ? 'rgba(201,247,61,0.85)' : 'rgba(255,255,255,0.7)';
+  ctx.fillStyle = glow;
+  for (let i = -8; i <= 8; i++) {
+    const d = 8 - Math.abs(i);
+    ctx.fillRect(cx + i, cy - d, 1, 1);
+    ctx.fillRect(cx + i, cy + d, 1, 1);
+  }
+  ctx.fillStyle = 'rgba(10,10,12,0.7)';
+  for (let i = -6; i <= 6; i++) {
+    const d = 6 - Math.abs(i);
+    ctx.fillRect(cx + i, cy - d, 1, d * 2 + 1);
+  }
+  const p = (c: string, dx: number, dy: number, w: number, h: number) => {
+    ctx.fillStyle = c;
+    ctx.fillRect(cx + dx, cy + dy, w, h);
+  };
+  switch (kind) {
+    case 'boost': // 아메리카노 — 흰 컵 · 연두 슬리브 · 김
+      p('#f4f1e8', -3, -3, 7, 7);
+      p('#5a3a1c', -2, -3, 5, 1);
+      p('#c9f73d', -3, -1, 7, 2);
+      p('#2a2a2a', -4, -5, 9, 2);
+      p('rgba(255,255,255,0.8)', -1, -8 + (Math.floor(t * 4) % 2), 1, 2);
+      p('rgba(255,255,255,0.8)', 1, -9 + (Math.floor(t * 4 + 1) % 2), 1, 2);
+      break;
+    case 'shield': // 족보 — 낡은 노트와 연두 책갈피
+      p('#8a5a2c', -4, -4, 8, 9);
+      p('#f4f1e8', 3, -3, 1, 7);
+      p('#f5d76e', -2, -2, 4, 1);
+      p('#f5d76e', -2, 0, 3, 1);
+      p('#c9f73d', 1, -5, 2, 4);
+      break;
+    case 'magnet': // 자석 — 빨간 U 에 은빛 끝
+      p('#e0443a', -4, -3, 2, 6);
+      p('#e0443a', 2, -3, 2, 6);
+      p('#e0443a', -4, 2, 8, 2);
+      p('#e8ecf2', -4, -4, 2, 2);
+      p('#e8ecf2', 2, -4, 2, 2);
+      break;
+    default: // 거대화 — 마젠타 원에 겹 화살표
+      p('#ff2f8f', -4, -4, 9, 9);
+      p('#ffffff', 0, -3, 1, 1);
+      p('#ffffff', -1, -2, 3, 1);
+      p('#ffffff', -2, -1, 5, 1);
+      p('#ffffff', 0, 1, 1, 1);
+      p('#ffffff', -1, 2, 3, 1);
+      p('#ffffff', -2, 3, 5, 1);
+      break;
+  }
+}

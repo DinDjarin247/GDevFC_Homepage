@@ -48,10 +48,33 @@ export type Surface = { x0: number; x1: number; y: number; kind: 'ground' | 'pla
 
 export type ObstacleKind = 'low' | 'tall' | 'hang';
 /** 부딪히면 다치는 것 (막지는 않는다 — 쿠키런처럼 지나가며 체력을 잃는다) */
-export type Obstacle = { kind: ObstacleKind; x: number; y: number; w: number; h: number; hit?: boolean };
+export type Obstacle = {
+  kind: ObstacleKind;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** 이미 한 번 부딪혔다 (다시 다치지 않는다) */
+  hit?: boolean;
+  /** 질주 · 거대화로 부쉈다 (더 그리지 않는다) */
+  smashed?: boolean;
+};
 
-export type PickupKind = 'coin' | 'heart';
-export type Pickup = { kind: PickupKind; x: number; y: number; taken?: boolean };
+export type PickupKind = 'coin' | 'heart' | 'item';
+/**
+ * 아이템 — boost(아메리카노: 무적 질주) · shield(족보: 한 번 막아 줌) ·
+ * magnet(자석: 학점을 끌어당김) · giant(거대화: 장애물을 부수며 달림)
+ */
+export type ItemKind = 'boost' | 'shield' | 'magnet' | 'giant';
+export type Pickup = { kind: PickupKind; x: number; y: number; item?: ItemKind; taken?: boolean };
+
+/** 아이템이 나오는 비율 */
+const ITEM_WEIGHTS: [ItemKind, number][] = [
+  ['shield', 0.3],
+  ['boost', 0.25],
+  ['magnet', 0.25],
+  ['giant', 0.2],
+];
 
 /** 장애물 크기 — 낮은 것은 한 번, 높은 것은 이단 점프로 넘고, 매달린 것은 슬라이드로 지나간다 */
 export const OBSTACLE_SIZE: Record<ObstacleKind, { w: number; h: number }> = {
@@ -296,6 +319,8 @@ export function mulberry32(seed: number) {
 const BREATHER = 110;
 /** 이 거리(~16초)마다 한 번쯤 하트 — 체력은 초당 1.4 씩 줄고 하트 하나가 25 를 채운다 */
 const HEART_EVERY = 2400;
+/** 이 거리(~20초)마다 한 번쯤 아이템 */
+const ITEM_EVERY = 3000;
 /** 출발 직후의 안전한 평지 */
 const START_FLAT = 520;
 
@@ -312,6 +337,7 @@ export class Course {
   private readonly rng: () => number;
   private readonly chunks: readonly Chunk[];
   private sinceHeart = 0;
+  private sinceItem = 1200;
   private lastId = '';
 
   constructor(seed: number, chunks: readonly Chunk[]) {
@@ -381,10 +407,27 @@ export class Course {
     const x = this.builtTo;
     this.addFlat(BREATHER);
     this.sinceHeart += BREATHER;
-    if (this.sinceHeart >= HEART_EVERY) {
+    this.sinceItem += BREATHER;
+    const heart = this.sinceHeart >= HEART_EVERY;
+    const item = this.sinceItem >= ITEM_EVERY;
+    // 둘 다 나올 차례면 나란히 — 하트는 앞, 아이템은 뒤 (살짝 뛰어야 닿는 높이)
+    if (heart) {
       this.sinceHeart = 0;
-      this.pickups.push({ kind: 'heart', x: x + BREATHER / 2, y: GROUND_Y - 30 });
+      this.pickups.push({ kind: 'heart', x: x + (item ? 30 : BREATHER / 2), y: GROUND_Y - 30 });
     }
+    if (item) {
+      this.sinceItem = 0;
+      this.pickups.push({ kind: 'item', item: this.pickItem(), x: x + (heart ? 80 : BREATHER / 2), y: GROUND_Y - 30 });
+    }
+  }
+
+  private pickItem(): ItemKind {
+    let r = this.rng() * ITEM_WEIGHTS.reduce((a, [, w]) => a + w, 0);
+    for (const [k, w] of ITEM_WEIGHTS) {
+      r -= w;
+      if (r <= 0) return k;
+    }
+    return 'shield';
   }
 
   private addChunk(c: Chunk) {
@@ -398,5 +441,6 @@ export class Course {
     this.pickups.sort((a, b) => a.x - b.x);
     this.builtTo += c.len;
     this.sinceHeart += c.len;
+    this.sinceItem += c.len;
   }
 }
