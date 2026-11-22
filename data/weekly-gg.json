@@ -34,7 +34,8 @@
     "howToRun": "실행 방법",
     "windowsOnly": "Windows PC 전용 빌드입니다.",
     "back": "의뢰 게시판으로",
-    "howToPlay": "플레이 방법"
+    "howToPlay": "플레이 방법",
+    "page": "미니게임"
   },
   "submit": {
     "cardTitle": "의뢰 등록",
@@ -51,6 +52,38 @@
     "againLabel": "하나 더 제출하기"
   },
   "games": [
+    {
+      "id": "run-woowang",
+      "title": "달려라 우왕이",
+      "creator": "G DEV. F.C.",
+      "stage": "beta",
+      "engine": "Canvas",
+      "genre": "횡스크롤 러너",
+      "tagline": "교수님이 쫓아온다. 충북대 마스코트 여섯 중 하나를 골라 점프·슬라이드로 끝까지 달리는 러너.",
+      "description": "",
+      "controls": [],
+      "thumbnail": null,
+      "play": {
+        "type": "page",
+        "href": "/play"
+      }
+    },
+    {
+      "id": "jump-woowang",
+      "title": "뛰어라 우왕이",
+      "creator": "G DEV. F.C.",
+      "stage": "beta",
+      "engine": "Canvas",
+      "genre": "탑 오르기",
+      "tagline": "힘을 모았다 떼는 순간 뛴다. 한 번 삐끗하면 저 아래로 떨어지는 점프킹식 탑 오르기.",
+      "description": "",
+      "controls": [],
+      "thumbnail": null,
+      "play": {
+        "type": "page",
+        "href": "/jump"
+      }
+    },
     {
       "id": "golem",
       "title": "고려골렘술사",

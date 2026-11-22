@@ -92,6 +92,9 @@ export default function GamePlayer({ game }: { game: WeeklyGame }) {
     );
   }
 
+  // 자체 페이지 게임은 상세 화면이 없다 (목록에서 바로 이동) — 타입을 좁히기 위한 가드
+  if (play.type === 'page') return null;
+
   if (play.type === 'soon') {
     return (
       <div className={`${styles.stageBox} ${styles.stagePanel}`}>

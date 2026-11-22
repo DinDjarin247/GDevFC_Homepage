@@ -23,7 +23,7 @@ export default function JumpPage() {
   return (
     <Frame
       badge={jump.badge}
-      header={<ScreenHeader title={jump.heading} />}
+      header={<ScreenHeader title={jump.heading} backHref="/weekly-gg" />}
       fullBleedBody
       immersiveMobile={started}
     >

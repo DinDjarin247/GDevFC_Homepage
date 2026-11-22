@@ -38,7 +38,10 @@ export default function WeeklyGGPage() {
         <ul className={styles.grid}>
           {games.map((game, i) => (
             <li key={game.id}>
-              <Link href={`/weekly-gg/${game.id}`} className={styles.card}>
+              <Link
+                href={game.play.type === 'page' ? game.play.href : `/weekly-gg/${game.id}`}
+                className={styles.card}
+              >
                 <QuestPoster game={game} no={pad(i + 1)} />
                 <div className={styles.cardBody}>
                   <div className={styles.cardTags}>

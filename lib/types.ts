@@ -47,6 +47,8 @@ export type WeeklyPlay =
       scroll?: boolean;
     }
   | { type: 'download'; file: string; size: string; run: string }
+  /** 홈페이지에 직접 만든 게임 — iframe 이 아니라 그 페이지로 바로 보낸다 (리더보드 등 자체 화면이 있다) */
+  | { type: 'page'; href: string }
   | { type: 'soon'; note: string };
 
 export type WeeklyGame = {

@@ -60,15 +60,15 @@ export type PlazaSpot = {
 export const PLAZA_SPOTS: Record<string, PlazaSpot> = {
   // 도적 — 광장 왼쪽 큰 나무의 왼쪽 가지 위 (단풍 앞이라 실루엣이 잘 보인다)
   board: { x: 44, y: 102, scale: 0.72, place: '광장 어귀 큰 나무', idle: 'perch' },
-  // 우왕이 — 선술집 앞 솥에서 요리 중
-  play: {
-    x: 144,
-    y: 152,
+  // 우왕이 — 선술집 앞에 소파와 TV 를 내놓고 게임기를 붙잡고 있다 (주간줴줴).
+  // 달려라·뛰어라 우왕이가 주간줴줴로 합쳐지면서 미니게임 자리를 물려받았다
+  'weekly-gg': {
+    x: 135,
+    y: 153,
     scale: 0.84,
-    flip: true,
-    place: '선술집 앞 가마솥',
-    altSprite: 'woowang-stir',
-    idle: 'cook',
+    place: '선술집 앞 게임 소파',
+    altSprite: 'woowang-couch-press',
+    idle: 'rest',
   },
   // 점성술사 — 천막 입구 바로 앞 (입구 삼각형이 x=356 에 있다)
   events: { x: 356, y: 167, scale: 0.88, place: '점성술 천막', idle: 'read' },
@@ -85,11 +85,6 @@ export const PLAZA_SPOTS: Record<string, PlazaSpot> = {
   showcase: { x: 366, y: 218, scale: 1.06, flip: true, place: '마법 두루마리 좌판', idle: 'browse' },
   // 기사 — 광장 벤치와 화톳불
   about: { x: 112, y: 215, scale: 1.06, place: '광장 벤치', idle: 'rest' },
-  // 투구 쓴 우왕이 — 시계탑 왼쪽 골목 앞에서 힘을 모았다 뛰었다 한다 (뛰어라 우왕이).
-  // 왼쪽 좌판 차양(y 134~)보다 뒤, 먼 길 행인들(y ≤ 127)보다는 앞이다
-  jump: { x: 197, y: 128, scale: 0.8, place: '시계탑 옆', idle: 'hop' },
-  // 길드 접수원 — 동상 오른쪽, 의뢰 게시판 앞 (주간줴줴)
-  'weekly-gg': { x: 296, y: 204, scale: 0.98, flip: true, place: '길드 의뢰 게시판', idle: 'rest' },
   // 바드 — 광장 앞을 오가며 노래
   gallery: {
     x: 240,

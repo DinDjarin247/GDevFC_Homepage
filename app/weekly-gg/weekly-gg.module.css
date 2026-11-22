@@ -194,6 +194,10 @@
   color: #b9c2cc;
 }
 
+.page {
+  color: #ffb547;
+}
+
 .soon,
 .engine {
   color: var(--dim);

@@ -348,28 +348,58 @@ const ROGUE = [
   buildRow(W, {}),
 ];
 
-/** 주간줴줴 모드용 — 깃 꽂은 초록 모자의 길드 접수원. 한 손에 의뢰서 두루마리를 들었다 */
-const GUILD = [
+/**
+ * 주간줴줴 모드용 — 소파에 앉아 게임 패드를 쥔 우왕이.
+ * 소파·TV·게임기는 배경 캔버스(PlazaScene 의 drawGameCorner)가 그리고, 여기는 앉은 몸만 그린다.
+ * 다리를 앞으로 뻗고 앉았으니 서 있는 우왕이보다 세 줄 짧다.
+ */
+const WOOWANG_COUCH = [
   '................',
-  '.....nnnnnn.....',
-  '....nnnnnnnng...',
-  '...nnnnnnnnnng..',
-  '...NNNNNNNNNN...',
-  '....rssssssr....',
-  '....rsesessr....',
-  '....rssssssr....',
-  '.....ssSSss.....',
-  '....nnnggnnn....',
-  '...nnnnggnnnn...',
-  '..snnnnnnnnnnww.',
-  '..snnnNNNNnnnww.',
-  '...nnnnnnnnnnww.',
-  '...ooooggoooo...',
-  '...nnnnnnnnnn...',
-  '...nnnNnnNnnn...',
-  '....rrr..rrr....',
-  '....rrr..rrr....',
-  '....kkk..kkk....',
+  '......v..v......',
+  '.....vv..vv.....',
+  '....yyyyyyyy....',
+  '...YyyyyyyyyY...',
+  '..yyyzkzzkzyyy..',
+  '..yxyzzzzzzyxy..',
+  '..yyyyzkkzyyyy..',
+  '...YYYYYYYYYY...',
+  '..jjjjjvjjjjjj..',
+  '..JjjyaaaayjjJ..',
+  '..JjjyAkAkyjjJ..',
+  '...jjjjjjjjjj...',
+  '....JJJJJJJJ....',
+  '...vYYYYYYYYv...',
+  '...vYYYYYYYYv...',
+  '...YYY....YYY...',
+  '...YYY....YYY...',
+  '...kkk....kkk...',
+  '................',
+  '................',
+  '................',
+];
+
+/** 단추를 누르는 프레임 — 패드가 들리고 불이 들어온다 */
+const WOOWANG_COUCH_PRESS = [
+  '................',
+  '......v..v......',
+  '.....vv..vv.....',
+  '....yyyyyyyy....',
+  '...YyyyyyyyyY...',
+  '..yyyzkzzkzyyy..',
+  '..yxyzzzzzzyxy..',
+  '..yyyyzkkzyyyy..',
+  '...YYYYYYYYYY...',
+  '..jjjjjvjjjjjj..',
+  '..JjyaawaayjjJ..',
+  '..JjjyAAAAyjjJ..',
+  '...jjjjjjjjjj...',
+  '....JJJJJJJJ....',
+  '...vYYYYYYYYv...',
+  '...vYYYYYYYYv...',
+  '...YYY....YYY...',
+  '...YYY....YYY...',
+  '...kkk....kkk...',
+  '................',
   '................',
   '................',
 ];
@@ -620,10 +650,11 @@ const SPRITES: Record<string, string[]> = {
   bard: BARD,
   rogue: ROGUE,
   astrologer: ASTROLOGER,
-  guild: GUILD,
   // 광장 idle 용 2프레임 (기본 프레임과 번갈아 렌더링한다)
   'archer-draw': ARCHER_DRAW,
   'woowang-stir': WOOWANG_STIR,
+  'woowang-couch': WOOWANG_COUCH,
+  'woowang-couch-press': WOOWANG_COUCH_PRESS,
   'bard-strum': BARD_STRUM,
   // 뛰어라 우왕이 — 광장 카드와 게임 속 자세
   'woowang-helm': WOOWANG_HELM,

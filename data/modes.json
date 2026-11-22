@@ -49,13 +49,13 @@
       "alt": "바드 캐릭터 - 갤러리 모드"
     },
     {
-      "id": "play",
+      "id": "weekly-gg",
       "no": "06",
-      "label": "달려라 우왕이",
-      "href": "/play",
+      "label": "주간줴줴",
+      "href": "/weekly-gg",
       "image": null,
-      "sprite": "woowang",
-      "alt": "우왕이 캐릭터 - 미니게임 모드"
+      "sprite": "woowang-couch",
+      "alt": "소파에 앉아 게임기를 하는 우왕이 - 주간줴줴 게임 게시판"
     },
     {
       "id": "events",
@@ -65,24 +65,6 @@
       "image": null,
       "sprite": "astrologer",
       "alt": "점성술사 캐릭터 - 캘린더 모드"
-    },
-    {
-      "id": "jump",
-      "no": "08",
-      "label": "뛰어라 우왕이",
-      "href": "/jump",
-      "image": null,
-      "sprite": "woowang-helm",
-      "alt": "투구 쓴 우왕이 캐릭터 - 뛰어라 우왕이 미니게임"
-    },
-    {
-      "id": "weekly-gg",
-      "no": "09",
-      "label": "주간줴줴",
-      "href": "/weekly-gg",
-      "image": null,
-      "sprite": "guild",
-      "alt": "길드 접수원 캐릭터 - 주간줴줴 게임 게시판"
     }
   ]
 }

@@ -23,7 +23,7 @@ export default function PlayPage() {
   return (
     <Frame
       badge={play.badge}
-      header={<ScreenHeader title={play.heading} />}
+      header={<ScreenHeader title={play.heading} backHref="/weekly-gg" />}
       fullBleedBody
       immersiveMobile={step === 'run'}
     >

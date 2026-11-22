@@ -938,38 +938,6 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
       ctx.fillStyle = '#4e351e';
       ctx.fillRect(Math.round(wx - 2 + bob), wy - 24, 7, 1);
 
-      /* 길드 의뢰 게시판 — 주간줴줴 접수원이 서는 자리. 붙은 종이 한 장이 게임 한 편이다 */
-      const gx = 316;
-      const gy = 201;
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-      ctx.beginPath();
-      ctx.ellipse(gx, gy + 1, 13, 3, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#4a3320';
-      ctx.fillRect(gx - 11, gy - 24, 2, 24); // 기둥
-      ctx.fillRect(gx + 9, gy - 24, 2, 24);
-      ctx.fillStyle = '#7a5630';
-      ctx.fillRect(gx - 12, gy - 23, 24, 15); // 판
-      ctx.fillStyle = '#5e3f21';
-      ctx.fillRect(gx - 12, gy - 23, 24, 1);
-      ctx.fillRect(gx - 12, gy - 9, 24, 1);
-      ctx.fillStyle = '#6b4a2c';
-      ctx.fillRect(gx - 14, gy - 26, 28, 3); // 지붕 가로대
-      // 의뢰서 — 한 장은 라임색으로 눈에 띄게
-      const papers: [number, number, string][] = [
-        [-10, -21, '#e8e2d0'],
-        [-4, -20, '#c9f73d'],
-        [3, -21, '#e8e2d0'],
-        [-8, -14, '#d9c58f'],
-        [1, -14, '#e8e2d0'],
-      ];
-      for (const [px, py, tone] of papers) {
-        ctx.fillStyle = tone;
-        ctx.fillRect(gx + px, gy + py, 5, 5);
-        ctx.fillStyle = 'rgba(40, 30, 20, 0.55)';
-        ctx.fillRect(gx + px + 1, gy + py + 2, 3, 1);
-      }
-
       /* 건초 수레 — 오른쪽 담벼락 앞 */
       const kx = 424;
       const ky = 218;
@@ -1054,47 +1022,116 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
       }
     }
 
-    /** 선술집 앞 가마솥 — 우왕이 자리 */
-    function drawCauldron(t: number) {
-      ctx.fillStyle = '#2f2b2c';
+    /**
+     * 주간줴줴 게임 코너 — 선술집 앞에 내놓은 소파와 브라운관 TV, 게임기.
+     * 우왕이(DOM 스프라이트)가 소파에 앉으므로 등받이·팔걸이를 그보다 넓게 그려
+     * 양옆으로 소파가 보이게 한다. 중세 광장 한복판의 게임기는 일부러 넣은 농담이다.
+     */
+    function drawGameCorner(t: number) {
+      // 오른쪽 좌판 차양(x 158~)에 소파가 가리지 않도록 코너 전체를 왼쪽으로 당겨 그린다
+      ctx.save();
+      ctx.translate(-9, 0);
+      // ── 소파 ── 우왕이 스프라이트가 화면에서 20px 남짓이라, 그보다 넉넉히 넓어야
+      // "소파에 파묻힌" 모양이 된다. 바닥 중심(144,156)을 기준으로 1.3배 키워 그린다
+      ctx.save();
+      ctx.translate(144, 156);
+      ctx.scale(1.3, 1.3);
+      ctx.translate(-144, -156);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
       ctx.beginPath();
-      ctx.ellipse(124, 150, 11, 8, 0, 0, Math.PI * 2);
+      ctx.ellipse(144, 158, 21, 4, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#1e1a1b';
-      ctx.beginPath();
-      ctx.ellipse(124, 145, 10, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle = '#2f5f7a'; // 등받이
+      ctx.fillRect(129, 134, 30, 18);
+      ctx.fillStyle = '#3f7896';
+      ctx.fillRect(129, 134, 30, 3);
+      ctx.fillStyle = '#254c62'; // 등받이 누빔 선
+      ctx.fillRect(139, 138, 1, 12);
+      ctx.fillRect(149, 138, 1, 12);
+      ctx.fillStyle = '#356b88'; // 앉는 면
+      ctx.fillRect(129, 150, 30, 5);
+      ctx.fillStyle = '#3f7896'; // 팔걸이
+      ctx.fillRect(125, 142, 5, 14);
+      ctx.fillRect(158, 142, 5, 14);
+      ctx.fillStyle = '#4c8cad';
+      ctx.fillRect(125, 142, 5, 2);
+      ctx.fillRect(158, 142, 5, 2);
+      ctx.fillStyle = '#3a2718'; // 나무 다리
+      ctx.fillRect(127, 156, 3, 2);
+      ctx.fillRect(158, 156, 3, 2);
+      ctx.restore();
 
-      const flick = reduced ? 1 : 1 + Math.sin(t * 9) * 0.18;
-      ctx.fillStyle = '#ff7b2e';
+      // ── 브라운관 TV (나무 궤짝 위) ──
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
       ctx.beginPath();
-      ctx.ellipse(124, 158, 8, 4 * flick, 0, 0, Math.PI * 2);
+      ctx.ellipse(102, 159, 13, 3, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#ffd166';
-      ctx.beginPath();
-      ctx.ellipse(124, 158, 4, 2.2 * flick, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (!reduced) {
-        for (let i = 0; i < 3; i++) {
-          const p = (t * 0.45 + i / 3) % 1;
-          ctx.globalAlpha = 0.32 * (1 - p);
-          ctx.fillStyle = '#e8ddd0';
-          ctx.fillRect(Math.round(124 + Math.sin((p + i) * 5) * 4), Math.round(142 - p * 30), 2, 2);
-        }
-        ctx.globalAlpha = 1;
-      }
-
-      // 옆에 쌓아둔 통과 자루
-      ctx.fillStyle = '#6b4a2a';
-      ctx.fillRect(94, 142, 13, 16);
+      ctx.fillStyle = '#6b4a2a'; // 궤짝
+      ctx.fillRect(92, 147, 20, 11);
       ctx.fillStyle = '#4a3320';
-      ctx.fillRect(94, 146, 13, 1);
-      ctx.fillRect(94, 153, 13, 1);
-      ctx.fillStyle = '#b9a276';
+      ctx.fillRect(92, 147, 20, 1);
+      ctx.fillRect(92, 152, 20, 1);
+      ctx.fillStyle = '#3b3a40'; // TV 몸통
+      ctx.fillRect(90, 128, 24, 19);
+      ctx.fillStyle = '#55545c';
+      ctx.fillRect(90, 128, 24, 2);
+      ctx.fillStyle = '#2a292e';
+      ctx.fillRect(111, 131, 2, 13); // 다이얼 쪽 패널
+      ctx.fillStyle = '#c9f73d';
+      ctx.fillRect(111, 132, 2, 2); // 전원 불
+      ctx.strokeStyle = '#3b3a40'; // 안테나
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.ellipse(86, 154, 7, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(100, 128);
+      ctx.lineTo(95, 120);
+      ctx.moveTo(103, 128);
+      ctx.lineTo(108, 120);
+      ctx.stroke();
+
+      // 화면 — 달리는 우왕이: 바닥선 위로 장애물이 흘러오고, 주인공이 주기적으로 뛴다
+      const sx = 92;
+      const sy = 131;
+      const sw = 18;
+      const sh = 13;
+      const flick = reduced ? 0 : Math.sin(t * 23) * 0.04;
+      ctx.fillStyle = '#14213d';
+      ctx.fillRect(sx, sy, sw, sh);
+      ctx.fillStyle = '#2a4a7a';
+      ctx.fillRect(sx, sy, sw, 5);
+      ctx.fillStyle = '#c9f73d';
+      ctx.fillRect(sx, sy + 10, sw, 1); // 바닥선
+      const run = reduced ? 0.4 : (t * 0.55) % 1;
+      ctx.fillStyle = '#ff2f8f';
+      ctx.fillRect(sx + Math.round((1 - run) * (sw - 2)), sy + 8, 2, 2); // 장애물
+      const hop = reduced ? 0 : Math.max(0, Math.sin(t * 0.55 * Math.PI * 2 + 1.2)) * 4;
+      ctx.fillStyle = '#e8935a';
+      ctx.fillRect(sx + 4, sy + 7 - Math.round(hop), 2, 3); // 우왕이
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.07 + flick})`;
+      ctx.fillRect(sx, sy, sw, sh); // 주사선 번쩍임
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
+      ctx.fillRect(sx + 1, sy + 1, 4, 1); // 유리 반사
+
+      // 화면 빛이 소파 쪽 바닥에 번진다
+      const glow = ctx.createRadialGradient(108, 150, 2, 108, 150, 26);
+      glow.addColorStop(0, `rgba(120, 190, 255, ${0.16 + flick})`);
+      glow.addColorStop(1, 'rgba(120, 190, 255, 0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(82, 126, 52, 40);
+
+      // ── 게임기 본체와 패드 선 ──
+      ctx.fillStyle = '#c9ccd3';
+      ctx.fillRect(114, 155, 9, 4);
+      ctx.fillStyle = '#8f939c';
+      ctx.fillRect(114, 158, 9, 1);
+      ctx.fillStyle = '#3b3a40';
+      ctx.fillRect(117, 156, 3, 1); // 디스크 덮개
+      ctx.fillStyle = '#ff2f8f';
+      ctx.fillRect(121, 156, 1, 1); // 전원 불
+      ctx.strokeStyle = 'rgba(30, 30, 34, 0.8)'; // 패드 선 — 본체에서 소파 위 우왕이 손까지
+      ctx.beginPath();
+      ctx.moveTo(123, 157);
+      ctx.quadraticCurveTo(131, 162, 138, 150);
+      ctx.stroke();      ctx.restore();
     }
 
     /** 점성술 천막 — 점성술사는 천막 왼쪽 앞에 서므로 천막은 그보다 오른쪽에 친다 */
@@ -1506,7 +1543,7 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
       drawMarket();
       drawNpcs('front', t, dt); // 광장을 지나다니는 사람들
       drawVillageProps(t);
-      drawCauldron(t);
+      drawGameCorner(t);
       drawAstrologerTent(t);
       drawArchery(t);
       drawLamps(t);

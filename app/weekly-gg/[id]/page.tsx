@@ -13,7 +13,8 @@ const games = weekly.games as WeeklyGame[];
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return games.map((game) => ({ id: game.id }));
+  // 자체 페이지가 있는 게임(달려라·뛰어라 우왕이)은 목록에서 그 페이지로 바로 간다
+  return games.filter((game) => game.play.type !== 'page').map((game) => ({ id: game.id }));
 }
 
 type Params = { params: Promise<{ id: string }> };
