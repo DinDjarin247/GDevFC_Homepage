@@ -37,7 +37,7 @@ export type JoinField = {
 export type WeeklyPlay =
   | {
       type: 'web';
-      /** public/ 기준 빌드 진입 파일 */
+      /** public/ 기준 빌드 폴더 — 끝을 "/" 로 맺는다 (index.html 을 적으면 Vercel 에서 404) */
       src: string;
       /** CSS aspect-ratio 값 (예: "16 / 9") */
       aspect: string;

@@ -89,7 +89,7 @@
       "thumbnail": null,
       "play": {
         "type": "web",
-        "src": "/wgg-builds/golem/index.html",
+        "src": "/wgg-builds/golem/",
         "aspect": "16 / 10",
         "mobile": false
       },
@@ -157,7 +157,7 @@
       "thumbnail": null,
       "play": {
         "type": "web",
-        "src": "/wgg-builds/basement/index.html",
+        "src": "/wgg-builds/basement/",
         "aspect": "16 / 9",
         "mobile": false
       }
@@ -208,7 +208,7 @@
       "thumbnail": "/wgg-builds/silent-line/thumb.png",
       "play": {
         "type": "web",
-        "src": "/wgg-builds/silent-line/index.html",
+        "src": "/wgg-builds/silent-line/",
         "aspect": "16 / 9",
         "mobile": false,
         "scroll": true
@@ -248,7 +248,7 @@
       "thumbnail": null,
       "play": {
         "type": "web",
-        "src": "/wgg-builds/airband/index.html",
+        "src": "/wgg-builds/airband/",
         "aspect": "16 / 10",
         "mobile": false,
         "scroll": true
@@ -280,7 +280,7 @@
       "thumbnail": null,
       "play": {
         "type": "web",
-        "src": "/wgg-builds/castee/index.html",
+        "src": "/wgg-builds/castee/",
         "aspect": "16 / 9",
         "mobile": false
       }

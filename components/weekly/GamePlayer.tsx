@@ -102,6 +102,10 @@ export default function GamePlayer({ game }: { game: WeeklyGame }) {
   }
 
   const pcOnly = !play.mobile && touchOnly;
+  // 빌드 주소는 폴더("/wgg-builds/<id>/")로 적는다. Vercel 은 폴더 주소만 열고
+  // ".../index.html" 은 404 로 돌리는데, next dev 는 반대로 public 폴더의 index.html 을
+  // 폴더 주소로 내주지 않는다. 그래서 개발 서버에서만 파일 이름을 붙인다.
+  const src = process.env.NODE_ENV === 'development' ? `${play.src}index.html` : play.src;
 
   return (
     <div className={styles.player}>
@@ -134,7 +138,7 @@ export default function GamePlayer({ game }: { game: WeeklyGame }) {
               key={run}
               ref={frameRef}
               className={styles.frame}
-              src={play.src}
+              src={src}
               title={game.title}
               scrolling={play.scroll ? 'auto' : 'no'}
               sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-modals allow-popups allow-downloads"
@@ -180,7 +184,7 @@ export default function GamePlayer({ game }: { game: WeeklyGame }) {
         <button type="button" className={styles.tool} onClick={start} disabled={phase === 'idle'}>
           ↻ {labels.restart}
         </button>
-        <a className={styles.tool} href={play.src} target="_blank" rel="noreferrer">
+        <a className={styles.tool} href={src} target="_blank" rel="noreferrer">
           ↗ {labels.newTab}
         </a>
       </div>

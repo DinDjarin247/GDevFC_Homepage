@@ -400,6 +400,7 @@ DOM 으로 얹습니다. 물리 · 코스는 `lib/run/`, 화면은 `components/r
 
 - **Unity WebGL** 은 압축을 끈(Compression Format: Disabled) 빌드를 쓴다. `.gz`/`.br` 빌드는 서버가 `Content-Encoding` 헤더를 맞춰 줘야 실행되는데, 압축을 풀어 올리면 그 문제가 없다(전송 압축은 호스팅이 한다). `index.html` 은 기존 `castee/index.html` 을 복사해 파일 이름만 바꾸면 로딩 진행률이 바깥 페이지의 로딩바로 전달된다.
 - 소개가 한 문단으로 모자라면 항목에 `guide` 를 더한다 — `steps`(제목·설명·세부 항목)가 번호 붙은 "플레이 방법"으로, `note` 가 그 아래 한 줄로 나온다 (`golem` 항목 참고).
+- `web` 의 `src` 는 폴더 주소(`/wgg-builds/<id>/`)로 적는다. Vercel 은 `.../index.html` 을 404 로 돌린다.
 - ▶ PLAY 를 누르기 전에는 빌드를 받지 않는다.
 - iframe 은 게임과 홈페이지가 서로 방해하지 않게 하는 용도다. 세이브(localStorage · IndexedDB) 때문에 같은 출처로 열어두므로 보안 경계는 아니다 — **운영진이 확인한 빌드만 올린다.**
 - 파일 하나가 100MB 를 넘으면 GitHub 가 받지 않는다. 큰 빌드는 외부 저장소(예: GitHub Releases)에 두고 `file` 에 그 주소를 적는다.
