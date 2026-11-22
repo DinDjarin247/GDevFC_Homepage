@@ -938,6 +938,38 @@ export default function PlazaScene({ className, phase }: PlazaSceneProps) {
       ctx.fillStyle = '#4e351e';
       ctx.fillRect(Math.round(wx - 2 + bob), wy - 24, 7, 1);
 
+      /* 길드 의뢰 게시판 — 주간줴줴 접수원이 서는 자리. 붙은 종이 한 장이 게임 한 편이다 */
+      const gx = 316;
+      const gy = 201;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.beginPath();
+      ctx.ellipse(gx, gy + 1, 13, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#4a3320';
+      ctx.fillRect(gx - 11, gy - 24, 2, 24); // 기둥
+      ctx.fillRect(gx + 9, gy - 24, 2, 24);
+      ctx.fillStyle = '#7a5630';
+      ctx.fillRect(gx - 12, gy - 23, 24, 15); // 판
+      ctx.fillStyle = '#5e3f21';
+      ctx.fillRect(gx - 12, gy - 23, 24, 1);
+      ctx.fillRect(gx - 12, gy - 9, 24, 1);
+      ctx.fillStyle = '#6b4a2c';
+      ctx.fillRect(gx - 14, gy - 26, 28, 3); // 지붕 가로대
+      // 의뢰서 — 한 장은 라임색으로 눈에 띄게
+      const papers: [number, number, string][] = [
+        [-10, -21, '#e8e2d0'],
+        [-4, -20, '#c9f73d'],
+        [3, -21, '#e8e2d0'],
+        [-8, -14, '#d9c58f'],
+        [1, -14, '#e8e2d0'],
+      ];
+      for (const [px, py, tone] of papers) {
+        ctx.fillStyle = tone;
+        ctx.fillRect(gx + px, gy + py, 5, 5);
+        ctx.fillStyle = 'rgba(40, 30, 20, 0.55)';
+        ctx.fillRect(gx + px + 1, gy + py + 2, 3, 1);
+      }
+
       /* 건초 수레 — 오른쪽 담벼락 앞 */
       const kx = 424;
       const ky = 218;

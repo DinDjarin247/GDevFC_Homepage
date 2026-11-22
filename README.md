@@ -380,6 +380,33 @@ DOM 으로 얹습니다. 물리 · 코스는 `lib/run/`, 화면은 `components/r
 - **랭킹**: `jump_scores` 테이블 (`supabase/migrations/0005_jump_scores.sql` — 달려라 우왕이와
   점수 단위가 달라 테이블을 분리). 개인 최고기록은 `localStorage` 키 `gdevfc_jump_best`.
 
+## 주간줴줴 — 게임 게시판 (`/weekly-gg`)
+
+동아리원이 만든 게임을 계정 없이 바로 플레이하는 "길드 의뢰 게시판". 게임 한 편이 의뢰서 한 장이다.
+
+- `/weekly-gg` 목록 · `/weekly-gg/<id>` 플레이+소개+조작법 · `/weekly-gg/submit` 게임 제출
+- 정보는 `data/weekly-gg.json` 의 `games`, 빌드는 `public/wgg-builds/<id>/` (페이지 경로 `/weekly-gg/<id>/` 와 겹치면 export 때 서로 덮어쓰므로 폴더를 따로 둔다)
+
+### 게임 추가
+
+1. 빌드를 `public/wgg-builds/<id>/` 에 넣는다 (진입 파일은 `index.html`).
+2. `data/weekly-gg.json` 의 `games` 에 한 항목을 더한다. `play.type` 이 내보이는 방식을 정한다.
+
+| `play.type` | 쓰는 경우 | 필요한 값 |
+|---|---|---|
+| `web` | HTML5 · Unity WebGL — 페이지 안 iframe 에서 실행 | `src`, `aspect`("16 / 9"), `mobile`, (`scroll`) |
+| `download` | Windows exe 등 — zip 을 `public/wgg-builds/downloads/` 에 두고 버튼으로 받는다 | `file`, `size`, `run` |
+| `soon` | 빌드를 아직 못 받은 게임 | `note` |
+
+- **Unity WebGL** 은 압축을 끈(Compression Format: Disabled) 빌드를 쓴다. `.gz`/`.br` 빌드는 서버가 `Content-Encoding` 헤더를 맞춰 줘야 실행되는데, 압축을 풀어 올리면 그 문제가 없다(전송 압축은 호스팅이 한다). `index.html` 은 기존 `castee/index.html` 을 복사해 파일 이름만 바꾸면 로딩 진행률이 바깥 페이지의 로딩바로 전달된다.
+- ▶ PLAY 를 누르기 전에는 빌드를 받지 않는다.
+- iframe 은 게임과 홈페이지가 서로 방해하지 않게 하는 용도다. 세이브(localStorage · IndexedDB) 때문에 같은 출처로 열어두므로 보안 경계는 아니다 — **운영진이 확인한 빌드만 올린다.**
+- 파일 하나가 100MB 를 넘으면 GitHub 가 받지 않는다. 큰 빌드는 외부 저장소(예: GitHub Releases)에 두고 `file` 에 그 주소를 적는다.
+
+### 게임 제출
+
+`/weekly-gg/submit` 폼은 구글 드라이브 링크를 지원 폼과 같은 Formspree 로 보낸다(메일 제목 `[주간줴줴 게임 제출] 제목`, 답장 주소 = 제출자 이메일). 받은 빌드를 확인한 뒤 위 순서대로 직접 올린다.
+
 ## 디자인 토큰
 
 색상·폰트·간격은 `app/globals.css` 의 CSS 변수에 모여 있습니다.

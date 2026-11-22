@@ -74,6 +74,15 @@
       "image": null,
       "sprite": "woowang-helm",
       "alt": "투구 쓴 우왕이 캐릭터 - 뛰어라 우왕이 미니게임"
+    },
+    {
+      "id": "weekly-gg",
+      "no": "09",
+      "label": "주간줴줴",
+      "href": "/weekly-gg",
+      "image": null,
+      "sprite": "guild",
+      "alt": "길드 접수원 캐릭터 - 주간줴줴 게임 게시판"
     }
   ]
 }

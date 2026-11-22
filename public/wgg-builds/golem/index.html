@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <!-- 주간줴줴: 호스팅이 주소 끝의 index.html·슬래시를 어떻게 다루든 상대 경로가 이 폴더를 가리키게 한다 -->
+    <base href="/wgg-builds/golem/">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Golem</title>
+    <style>
+      /* 주간줴줴 임베드용 — 캔버스가 iframe 을 꽉 채운다. 틀·전체화면 단추는 바깥 페이지가 맡는다 */
+      html, body { margin: 0; height: 100%; background: #0b0b0b; overflow: hidden; }
+      #unity-canvas { display: block; width: 100vw; height: 100vh; background: #0b0b0b; }
+    </style>
+  </head>
+  <body>
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+    <script>
+      // 로딩 진행률은 바깥 페이지(같은 출처)의 픽셀 로딩바가 그린다
+      function report(type, value) {
+        try { parent.postMessage({ source: 'weekly-gg', type: type, value: value }, location.origin); } catch (e) {}
+      }
+      var buildUrl = "Build";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/golem.data",
+        frameworkUrl: buildUrl + "/golem.framework.js",
+        codeUrl: buildUrl + "/golem.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "Golem",
+        productVersion: "0.1",
+        showBanner: function (msg, type) { if (type === 'error') report('error', String(msg)); },
+      };
+      var script = document.createElement("script");
+      script.src = buildUrl + "/golem.loader.js";
+      script.onload = function () {
+        createUnityInstance(document.querySelector("#unity-canvas"), config, function (p) { report('progress', p); })
+          .then(function () { report('ready', 1); })
+          .catch(function (message) { report('error', String(message)); });
+      };
+      script.onerror = function () { report('error', 'loader'); };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>

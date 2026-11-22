@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <!-- 주간줴줴: 호스팅이 주소 끝의 index.html·슬래시를 어떻게 다루든 상대 경로가 이 폴더를 가리키게 한다 -->
+    <base href="/wgg-builds/basement/">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>충북대 S4-1 건물 지하실 — 도트 3D 미로 공포</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Archivo+Black&family=Black+Han+Sans&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#07080a;--ink:#c9d1d3;--dim:#7a868a;--red:#d8352f;--gold:#e0b84a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#07080a;--ink:#c9d1d3}}
+:root[data-theme="dark"]{--bg:#07080a;--ink:#c9d1d3}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'DotGothic16','Courier New',monospace}
+body{display:flex;align-items:center;justify-content:center;overflow:hidden}
+#wrap{position:relative;width:min(100vw,calc(100vh*16/9));aspect-ratio:16/9;background:#000;container-type:inline-size;overflow:hidden}
+canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+#haze{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(170,178,184,.1) 35%,rgba(0,0,0,.78) 100%)}
+#warn{position:absolute;top:3cqw;left:0;right:0;text-align:center;font-size:3cqw;color:var(--red);text-shadow:0 0 .8cqw #000,.2cqw .2cqw 0 #000;letter-spacing:.3cqw;display:none;animation:bl .5s steps(2) infinite}
+@keyframes bl{50%{opacity:.25}}
+#hud{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;gap:2cqw;padding:1.2cqw 2cqw;background:rgba(5,6,8,.72);border-top:.3cqw solid #3a4247;font-size:2.2cqw}
+#ks.on{color:var(--gold)}#ks{color:var(--dim);white-space:nowrap}
+#dt{color:var(--dim);white-space:nowrap}#dt.on{color:#7fd69a}#dt.hot{color:var(--red)}
+#ms{text-align:right}
+#ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2cqw;background:rgba(4,5,7,.86);text-align:center;padding:4cqw}
+#ov h1{margin:0;font-size:5.5cqw;font-weight:400;color:var(--ink);text-shadow:.4cqw .4cqw 0 #5a1511}
+#ov p{margin:0;font-size:2.2cqw;line-height:1.7;color:var(--dim);max-width:70cqw;white-space:pre-line}
+button{font:inherit;font-size:2.6cqw;padding:1cqw 4cqw;background:#14181b;color:var(--ink);border:.35cqw solid var(--ink);cursor:pointer}
+button:hover,button:focus-visible{background:var(--ink);color:#000;outline:none}
+#pm{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,5,7,.4)}
+#pm .pn{display:flex;flex-direction:column;align-items:center;gap:1.6cqw;padding:3cqw 4cqw;background:rgba(6,7,9,.92);border:.35cqw solid #3a4247}
+#pm h1{margin:0 0 .5cqw;font-size:4.2cqw;font-weight:400;text-shadow:.3cqw .3cqw 0 #5a1511}
+#pm .r{display:flex;align-items:center;gap:2cqw;font-size:2.2cqw;width:58cqw}
+#pm .r span{width:19cqw}#pm .r input{flex:1;accent-color:#d8352f}
+#pm .r b{width:7cqw;font-weight:400;color:var(--gold);text-align:right}
+#pm .bt{display:flex;gap:1.5cqw;margin-top:1cqw}#pm button{font-size:2.1cqw;padding:.8cqw 2.2cqw}
+#pm p{margin:0;font-size:1.7cqw;color:var(--dim)}
+#obj{position:absolute;right:1.5cqw;top:1cqw;max-width:46cqw;padding:.8cqw 1.2cqw;font-size:1.6cqw;line-height:1.6;text-align:right;white-space:pre-line;color:var(--ink);background:rgba(5,6,8,.55);border-right:.3cqw solid var(--gold);text-shadow:.15cqw .15cqw 0 #000;pointer-events:none;display:none}
+#gp{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,5,7,.65)}
+#gp .ps{position:relative;width:70cqw;padding:2.6cqw 3.6cqw 2.4cqw;background:#1e3a2c;color:#f1efe0;font-family:'Courier New',monospace;font-weight:700;transform:rotate(.8deg);box-shadow:.8cqw 1cqw 0 rgba(0,0,0,.55),0 0 6cqw rgba(0,0,0,.6);overflow:hidden}
+#gp .tb{display:flex;justify-content:space-between;font-size:1.5cqw;letter-spacing:.1cqw}
+#gp .pr{margin:3cqw 0 .8cqw;font-size:1.8cqw;color:#f6e04a}
+#gp .gj{margin:0;font-family:'Archivo Black','Impact',sans-serif;font-weight:400;font-size:9.4cqw;line-height:1.05;color:#c9a9ec;text-shadow:.7cqw .7cqw 0 #f6e04a;white-space:nowrap}
+#gp .bn{display:inline-block;margin:3cqw 0 0 -1.2cqw;padding:1.3cqw 5cqw;background:#f6e04a;color:#1e3a2c;font-family:'Black Han Sans','Noto Sans KR','Malgun Gothic',sans-serif;font-size:3.6cqw;font-weight:400;transform:rotate(-1.8deg)}
+#gp .ft{margin-top:2.6cqw;font-size:1.5cqw;line-height:1.8;color:#d9d6c0}
+#gp small{display:block;margin-top:1.4cqw;font-size:1.4cqw;color:#8fa898;text-align:center}
+#dvbd{position:absolute;top:1cqw;left:1.5cqw;font-size:1.7cqw;color:#7fd69a;display:none;text-shadow:.15cqw .15cqw 0 #000;pointer-events:none}
+#hint{position:absolute;bottom:7cqw;left:0;right:0;text-align:center;font-size:2.4cqw;color:var(--ink);text-shadow:.2cqw .2cqw 0 #000;display:none;pointer-events:none}
+#qp{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,5,7,.6)}
+#qp .pn{position:relative;width:54cqw;padding:3.2cqw 3.6cqw 2.6cqw;background:repeating-linear-gradient(0deg,rgba(120,100,60,.05) 0 .3cqw,transparent .3cqw .9cqw),#e9e0c3;color:#2a2418;border:.2cqw solid #b9ad88;box-shadow:.8cqw 1cqw 0 rgba(0,0,0,.55),0 0 6cqw rgba(0,0,0,.6);transform:rotate(-1.4deg);display:block}
+#qp .pn::before{content:"";position:absolute;top:-1.6cqw;left:50%;width:9cqw;height:3cqw;margin-left:-4.5cqw;background:rgba(210,200,150,.75);transform:rotate(2deg);box-shadow:0 0 .4cqw rgba(0,0,0,.4)}
+#qp h1{margin:0 0 1.6cqw;padding-bottom:1cqw;border-bottom:.3cqw double #5a4e32;font-size:3.6cqw;font-weight:400;letter-spacing:1cqw;text-align:center;color:#2a2418}
+#qp p{margin:0;font-size:1.65cqw;line-height:1.75;color:#2a2418;white-space:pre-line;text-align:left}
+#qp small{display:block;margin-top:1.8cqw;font-size:1.5cqw;color:#7a6c48;text-align:center}
+#qp .st{position:absolute;right:3cqw;bottom:4.6cqw;padding:.2cqw 1cqw;border:.3cqw solid #b3261e;color:#b3261e;font-size:2.4cqw;transform:rotate(-12deg);opacity:.75}
+#tm{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,5,7,.72)}
+#tm .tw{display:flex;flex-direction:column;width:82cqw;height:46cqw;background:#0c1210;border:.3cqw solid #2c4a3a;box-shadow:0 0 6cqw rgba(0,0,0,.7),0 0 3cqw rgba(60,220,110,.15)}
+#tm .tt{display:flex;justify-content:space-between;padding:.6cqw 1.2cqw;background:#1d2a24;color:#9fc4ad;font:1.5cqw 'Courier New','DotGothic16',monospace}
+#to{flex:1;overflow-y:auto;padding:1cqw 1.4cqw 0;font:1.7cqw/1.45 'Courier New','DotGothic16',monospace;color:#c8e6d2;white-space:pre-wrap;word-break:break-all}
+#to .e{color:#ff8a80}#to .g{color:#7fd69a}#to .y{color:#e0b84a}#to .d{color:#6fa8ff;font-weight:700}#to .m{color:#8aa093}
+#tm .tl{display:flex;align-items:center;padding:.6cqw 1.4cqw 1cqw;font:1.7cqw 'Courier New','DotGothic16',monospace;color:#7fd69a}
+#tp{white-space:pre}
+#ti{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#e6f5ea;font:inherit;caret-color:#7fd69a;padding:0;margin:0}
+#mp{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;background:rgba(4,5,7,.5)}
+#mp .mw{padding:1cqw 1.4cqw 1cqw;background:rgba(10,12,14,.94);border:.3cqw solid #3a4247;box-shadow:0 0 5cqw rgba(0,0,0,.7)}
+#mp .mt{display:flex;justify-content:space-between;margin-bottom:.8cqw;font-size:1.9cqw;color:var(--gold)}
+#mp .mt span+span{color:var(--dim)}
+#mc{width:88cqw;height:auto;display:block}
+#mp .ml{margin-top:.8cqw;font-size:1.5cqw;color:var(--dim);text-align:center}
+#mh{position:absolute;left:1.5cqw;bottom:7cqw;font-size:1.6cqw;color:var(--dim);display:none;pointer-events:none;text-shadow:.15cqw .15cqw 0 #000}
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="c"></canvas><div id="haze"></div><div id="warn"></div><div id="dvbd"></div><div id="hint"></div><div id="obj"></div>
+<div id="hud"><span id="ks"></span><span id="dt"></span><span id="ms"></span></div>
+<div id="ov"><h1 id="ot"></h1><p id="od"></p><button id="ob"></button></div>
+<div id="pm"><div class="pn"><h1>일시정지</h1><div id="sl"></div><div class="bt"><button id="pr">계속하기</button><button id="pd">기본값</button><button id="pq">처음부터 다시</button></div><div class="bt" id="dv" style="display:none"><button id="d1">열쇠 바로 획득</button><button id="d2">탐지기 획득</button><button id="d3">무적 : OFF</button><button id="d4">새 미로</button><button id="d5">2단계 클리어</button></div><p>ESC : 계속하기 / 일시정지</p></div></div>
+<div id="gp"><div class="ps"><div class="tb"><span>▶ PLAY &nbsp; SP</span><span>SAT NOV.14 2026 &nbsp;14:00</span></div><div class="pr">G DEV. F.C. × SATURN PRESENTS</div><div class="gj">GAME JAM</div><div class="bn">저퀄로 경쟁합니다</div><div class="ft">GAME JAM CONTEST<br>일시 : 2026. 11. 14 (SAT) 14:00<br>문의 : G Dev. F.C. 동아리방</div><small>F / ESC : 닫기</small></div></div><div id="qp"><div class="pn"><h1 id="qt"></h1><p id="qb"></p><span class="st">확인</span><small>F : 닫기</small></div></div>
+<div id="mp"><div class="mw"><div class="mt"><span id="mtt"></span><span>M : 닫기</span></div><canvas id="mc" width="880" height="368"></canvas><div class="ml">▶ 현재 위치 &nbsp;&nbsp; ★ 진행할 퀘스트 &nbsp;&nbsp; ▲▼ 계단 &nbsp;&nbsp; 금색 선 : 문</div></div></div><div id="mh">M : 지도</div>
+<div id="tm"><div class="tw"><div class="tt"><span>opensw@cbnu-linux : 터미널</span><span>ESC : 터미널 닫기</span></div><div id="to"></div><div class="tl"><span id="tp"></span><input id="ti" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div></div></div>
+</div>
+<script>
+const W=480,H=270,N=31,TS=128,TA=64;
+const S={sens:1,bri:1,fog:1,soft:.65},SD={...S};try{Object.assign(S,JSON.parse(localStorage.getItem('b3s')||'{}'))}catch(e){}
+const fog=d=>Math.min(.94,(.05+Math.pow(d/(stage==2?15:7.6),1.15)*.9)*S.fog);
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+cv.width=W;cv.height=H;
+const img=ctx.createImageData(W,H),buf=img.data,zb=new Float32Array(W);
+const NT=new Float32Array(65536);for(let i=0;i<65536;i++)NT[i]=Math.random();
+let seed=1;function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
+function hash(x,y){let h=(x*374761393+y*668265263)|0;h=(h^(h>>>13))*1274126177|0;return((h^(h>>>16))>>>0)/4294967296}
+
+/* ---------- 절차적 텍스처 ---------- */
+function mk(fn,wp){const A=new Float32Array(TA*TA*3);for(let y=0;y<TA;y++)for(let x=0;x<TA;x++){const c=fn(x,y),i=(y*TA+x)*3;A[i]=c[0];A[i+1]=c[1];A[i+2]=c[2]}
+ if(wp){const B=A.slice(),q=2*Math.PI/TA;for(let y=0;y<TA;y++)for(let x=0;x<TA;x++){const sx=x+2.4*Math.sin(2*q*y+q*x)+.9*Math.sin(5*q*y)+TA*2,sy=y+2.4*Math.sin(2*q*x+q*y)+.9*Math.sin(4*q*x)+TA*2,x0=Math.floor(sx),y0=Math.floor(sy),fx=sx-x0,fy=sy-y0,ya=y0%TA,yb=(y0+1)%TA,xa=x0%TA,xb=(x0+1)%TA,i00=(ya*TA+xa)*3,i10=(ya*TA+xb)*3,i01=(yb*TA+xa)*3,i11=(yb*TA+xb)*3;
+  for(let k=0;k<3;k++){const o=(y*TA+x)*3+k;A[o]=(B[i00+k]*(1-fx)+B[i10+k]*fx)*(1-fy)+(B[i01+k]*(1-fx)+B[i11+k]*fx)*fy}}}
+ const t=new Uint8ClampedArray(TS*TS*3),r=TA/TS;
+ for(let y=0;y<TS;y++){const v=(y+.5)*r-.5,y0=Math.floor(v),fy=v-y0,ya=(y0+TA)%TA,yb=(y0+1+TA)%TA;
+  for(let x=0;x<TS;x++){const u=(x+.5)*r-.5,x0=Math.floor(u),fx=u-x0,xa=(x0+TA)%TA,xb=(x0+1+TA)%TA,g=(hash(x,y+999)-.5)*9;
+   for(let k=0;k<3;k++){const a=A[(ya*TA+xa)*3+k]*(1-fx)+A[(ya*TA+xb)*3+k]*fx,b=A[(yb*TA+xa)*3+k]*(1-fx)+A[(yb*TA+xb)*3+k]*fx;t[(y*TS+x)*3+k]=a*(1-fy)+b*fy+g}}}
+ return t}
+let dtG=.016,pitch=0,locked=false,drag=false;
+const AOT=new Float32Array(TS);for(let i=0;i<TS;i++)AOT[i]=.62+.5*Math.sin(Math.PI*(i+.5)/TS);
+const dust=[];for(let i=0;i<140;i++)dust.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*6,vy:Math.random()*4+1,a:Math.random()});
+let curP=0;
+let curSd=0;
+function vn(x,y,s){const gx=x/s,gy=y/s,x0=Math.floor(gx),y0=Math.floor(gy),fx=gx-x0,fy=gy-y0,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy),a=hash(x0,y0),b=hash(x0+1,y0),c=hash(x0,y0+1),d=hash(x0+1,y0+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+function base(x,y){
+ const sd=curSd,n1=vn(x+sd*17,y+sd*9,16)-.5,n2=hash(x,y+sd)-.5;
+ if(y>=58){const t=y-58,k=t==0?1.3:t<2?1:.78,c=curP==3?[72,52,38]:[64,66,66];return[c[0]*k+n2*5,c[1]*k+n2*5,c[2]*k+n2*5]}
+ if(curP==2){let v=128+n1*26+n2*8+(vn(x*4+sd,y,14)-.5)*10;const sx=x%32,sy=y%32;
+  if(sx==0)v-=34;else if(sx==1)v+=10;if(sy==0)v-=30;else if(sy==1)v+=8;
+  if(sx>=14&&sx<=17&&sy>=14&&sy<=17)v-=Math.hypot(sx-15.5,sy-15.5)<2.2?30:8;
+  if(y>40)v-=(y-40)*.5;if(y<5)v*=.9+y*.02;
+  const st=vn(x+sd*5,y*.7+sd*3,20);if(st>.6)v*=1-Math.min(1,(st-.6)*3)*.25;
+  return[v*.97,v,v*.94]}
+ if(curP==3){
+  if(y>=34){const lx=x%9,th=hash((x/9)|0,7+sd%5),g=(vn(x*3+sd*5,y,18)-.5)*26,k=.9+th*.2,d=1-Math.max(0,y-46)*.015;
+   const c=lx==0?[38,26,18]:[(104+g)*k,(70+g*.7)*k,(46+g*.5)*k];return[c[0]*d+n2*4,c[1]*d+n2*4,c[2]*d+n2*4]}
+  if(y==32)return[196,168,124];if(y==33)return[100,76,52];
+  const pt=vn(x+sd*11,y+sd*3,9);
+  if(pt>.74&&y<30){const by=y&7,bx=(x+((y>>3)&1)*4)&7;return by==0||bx==0?[102,94,86]:[138+n2*24,70+n2*12,52+n2*10]}
+  let k=.86+.14*y/32;if(y<5)k*=.9+y*.02;let c=[170*k+n1*22+n2*7,152*k+n1*20+n2*7,114*k+n1*18+n2*6];
+  if(pt>.68&&y<30){c=[c[0]*.78,c[1]*.76,c[2]*.72]}
+  const st=vn(x+sd*5,y*.7+sd*3,20);if(st>.6){const q=Math.min(1,(st-.6)*3)*.28;c=[c[0]*(1-q*.6),c[1]*(1-q*.8),c[2]*(1-q)]}
+  return c}
+ if(y>=34){const th=hash(x>>3,(y-2)>>3),gr=(x&7)==0||(y&7)==2;
+  if(gr)return[72+n2*12,78+n2*12,74+n2*12];
+  const tp=curP==1?[104,118,142]:[106,130,118],k=(.93+th*.14)*(1-.24*Math.pow((y-34)/24,2))*(1+(vn(x+sd*3,y,7)-.5)*.1);
+  return[tp[0]*k+n2*5,tp[1]*k+n2*5,tp[2]*k+n2*5]}
+ if(y==32)return[204,200,184];if(y==33)return[112,108,96];
+ const tp=curP==1?[154,160,158]:[172,168,150];let k=.86+.14*y/32;if(y<5)k*=.9+y*.02;
+ let c=[tp[0]*k+n1*24+n2*7,tp[1]*k+n1*24+n2*7,tp[2]*k+n1*22+n2*7];
+ const st=vn(x+sd*5,y*.7+sd*3,20);if(st>.6){const q=Math.min(1,(st-.6)*3)*.28;c=[c[0]*(1-q*.6),c[1]*(1-q*.8),c[2]*(1-q)]}
+ const sk=vn(x*4+sd*13,y*.35,10);if(sk>.66&&y>6){const q=Math.min(.1,(sk-.66)*.5);c=[c[0]*(1-q),c[1]*(1-q),c[2]*(1-q)]}
+ return c}
+function wallPx(x,y,v){
+ let c=base(x,y);
+ if(v==0){const k=hash(x>>2,3)>.72?(y/TS)*.5:0;c=[c[0]*(1-k),c[1]*(1-k),c[2]*(1-k)]}
+ if(v==1){for(const p0 of[9,19]){const d=y-p0;if(d>=0&&d<5){const s=.55+.5*Math.sin((d+.5)/5*Math.PI);c=hash(x>>2,p0)>.8?[120*s,64*s,36*s]:[88*s+hash(x,y)*8,96*s,104*s]}}
+  if(x%24<3&&y>6&&y<26)c=[50,52,54]}
+ if(v==2&&x>=12&&x<52&&y>=8&&y<30){const fr=x<14||x>=50||y<10||y>=28;c=fr?[84,58,40]:[150+hash(x>>1,y>>1)*20,112,76];
+  const pa=Math.floor((x-14)/9),on=hash(pa,5)>.35,p0=10+((hash(pa,9)*5)|0),lx=(x-14)%9;
+  if(!fr&&on&&lx<7&&y>=p0&&y<p0+11){c=[225,222,208-((x+y)&1)*8];if(lx<6&&y>p0+2&&(y-p0)%3==0)c=[90,90,95];if(lx==3&&y==p0)c=[200,40,40]}}
+ if(v==3&&x>=4&&x<60&&y>=4&&y<57){const lx=(x-4)%14,s=.8+hash(x>>1,y>>3)*.12;
+  c=(lx==0||lx==13)?[40,44,46]:[108*s,120*s,126*s];
+  if(lx>3&&lx<10&&y>=8&&y<=14&&(y&1))c=[48,52,54];if(lx==10&&y>26&&y<32)c=[30,30,32]}
+ if(v==4){if(x>=14&&x<50&&y>=6&&y<34){const fr=x<17||x>=47||y<9||y>=31||x==31;
+  c=fr?[70,74,76]:[12+hash(x,y)*8,18+hash(x,y)*8,26+hash(x,y)*10];if(!fr&&((x+y*2)%23<2))c=[40,52,64]}
+  if(y==34&&x>=12&&x<52)c=[130,130,124]}
+ if(curP<2&&y>=34&&y<58&&!((x&7)==0||(y&7)==2)){if((y&7)==3||(x&7)==1)c=[c[0]*1.15,c[1]*1.15,c[2]*1.15];else if((y&7)==7||(x&7)==7)c=[c[0]*.84,c[1]*.84,c[2]*.84]}
+ if(v!=3&&v!=2&&y<32&&Math.abs(x-(10+hash(v,1)*40+Math.sin(y*.45)*3))<.6)c=[56,54,48];
+ if(y<32&&vn(x+curSd*7,y*1.3,5)>.8&&hash(x,y)>.45)c=[c[0]*.7,c[1]*.7,c[2]*.68];
+ if(y>44&&y<58){const mo=vn(x+curSd*3,y*1.5,6)+(y-44)*.012;if(mo>.78){const q=Math.min(.55,(mo-.78)*2.2);c=[c[0]*(1-q*.6),c[1]*(1-q*.15),c[2]*(1-q*.6)]}};
+ if(v==0&&Math.abs(x-46)+Math.abs(y-12)<=8){c=Math.abs(x-46)+Math.abs(y-12)>=7?[30,28,20]:[228,192,40];if((x==46&&y>=8&&y<=13)||(x==46&&y==15))c=[28,26,20]}
+ if(v==1&&x>=8&&x<=18&&y>=30&&y<=52){const s=1.15-(x-8)/10*.5;c=y<33?[30,30,32]:[190*s,34*s,30*s];if(y>=38&&y<=44&&x>=10&&x<=16)c=[225*s,225*s,215*s]}
+ if(x<3||x>60)c=[c[0]*.85,c[1]*.85,c[2]*.85];
+ return c}
+const WC=[],FX=[0,1,2,3,4,5,5,6,7,8,9,10,11],DC=[0,0,0,1,2,3,4,5,6,7],FX2=[5,5,5,5,11,11,9,4,3,2],DC2=[0,0,0,0,0,0,2,6];
+function getWall(mx,my,fc){if(stage==2)return s2Tex(mx,my,fc);
+ const h=(a,b)=>hash(mx*a+fc*3+b,my*(a+6)+fc*7+b),F=stage==2?FX2:FX,D=stage==2?DC2:DC,f=F[(h(7,1)*F.length)|0],p=((h(11,2)*(stage==2?2:4))|0),d=D[(h(5,3)*D.length)|0],k=(f*4+p)*8+d;
+ if(WC[k])return WC[k];
+ if(genB<=0&&anyTex)return anyTex;
+ genB--;curP=p;curSd=k%97;return anyTex=WC[k]=mk((x,y)=>wall2(x,y,f,d,p),1)}
+let genB=1,anyTex=null;
+const PQ=[];for(const f of new Set(FX))for(let p=0;p<4;p++)for(let d=0;d<8;d++)PQ.push((f*4+p)*8+d);
+for(let i=PQ.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[PQ[i],PQ[j]]=[PQ[j],PQ[i]]}
+function pre(dl){let n=0;while(PQ.length&&(dl&&dl.timeRemaining?dl.timeRemaining()>9:n++<1)){const k=PQ.pop();if(WC[k])continue;const d=k%8,p=((k/8)|0)%4,f=(k/32)|0;curP=p;curSd=k%97;WC[k]=mk((x,y)=>wall2(x,y,f,d,p),1)}
+ if(PQ.length){if(self.requestIdleCallback)requestIdleCallback(pre,{timeout:400});else setTimeout(pre,50)}}
+setTimeout(pre,400);
+function wall2(x,y,f,d,p){
+ let c=wallPx(x,y,f<5?f:9);const R=k=>hash(f*31+p*7+d,k),m=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],n=hash(x>>1,y>>1);
+ const inb=(a,b,e,g)=>x>=a&&x<b&&y>=e&&y<g;
+ if(f==6&&inb(18,46,6,36)){const fr=x<20||x>=44||y<8||y>=34,cx=x-32,cy=y-19;let on=Math.hypot(cx,cy)<2.4;
+  for(let k=0;k<3;k++){const a=-1.571+k*2.094,q=Math.hypot(cx-Math.cos(a)*6.5,cy-Math.sin(a)*6.5);if(q<6&&q>3.6)on=true}
+  c=fr||on?[26,22,12]:[232,190,36];if(y>=31&&y<33&&x>=22&&x<42&&x%4<3)c=[26,22,12]}
+ if(f==7&&inb(12,52,10,34)){const fr=x<15||x>=49||y<13||y>=31;c=fr?[78,82,84]:(y-13)%3==0?[120,124,126]:[14,16,18];
+  if(!fr&&(p&1)&&y>=20&&y<=22&&(x==26||x==27||x==33||x==34))c=[220,30,30]}
+ if(f==7&&y>=34&&y<52&&x>=16&&x<48&&hash(x>>1,77)>.75&&y<34+hash(x>>1,78)*18)c=m(c,[120,62,34],.7);
+ if(f==8&&inb(18,46,6,34)){const fr=x<20||x>=44||y<8||y>=32,t=y-10;c=fr?[60,64,60]:[112+n*10,118,110];if(x==31)c=[70,74,70];
+  if(inb(34,37,18,22))c=[200,200,190];if(t>=0&&t<7&&Math.abs(x-25)<=t*.5)c=Math.abs(x-25)<1&&t>1?[30,26,14]:[232,196,40]}
+ if(f==8&&y>=34&&y<58)for(let k=0;k<3;k++)if(y<46+k*5&&Math.abs(x-(22+k*9+Math.sin(y*.3+k)*2.5))<.9)c=[[200,40,40],[30,30,34],[220,180,40]][k];
+ if(f==9&&inb(6,58,6,32)){const fr=x<8||x>=56||y<8||y>=30,r=((y-9)/5)|0,q=((x-10)/3)|0;c=fr?[92,64,40]:[26+n*8,48,40];
+  if(!fr&&r>=0&&r<4&&(y-9)%5<4&&x>=10&&x<38&&hash(q,r+31)>.45&&(x-10)%3<2&&((y-9)%5!=1||hash(q,r+57)>.5))c=[222,222,212];
+  if(!fr&&Math.abs(Math.hypot(x-46,y-19)-6)<.8)c=[210,40,36];if(y>=30)c=[120,90,60]}
+ if(f==10&&inb(4,60,6,58)){c=x<6||x>=58?[80,56,40]:[44+n*10,36,32];
+  for(const l of[22,40,58]){if(y>=l-2&&y<l)c=[96,68,46];else if(y<l-2&&y>=l-14){const j=((x-6)/9)|0,lx=(x-6)%9,top=l-2-((8+hash(j,l+9)*5)|0);
+   if(lx>=1&&lx<=7&&hash(j,l+3)>.2&&y>=top){const e=lx==1||lx==7||y==top,u=hash(j,l+1),b=u<.33?[70,150,90]:u<.66?[190,140,50]:[150,170,180],s=.7+.5*Math.sin((lx-1)/6*Math.PI);
+    c=e?[34,38,36]:[b[0]*s,b[1]*s,b[2]*s];if(!e&&y>top+4&&y<top+7&&lx>1&&lx<7)c=[220,216,200];if(!e&&hash(j,l+20)>.7&&Math.abs(lx-4)<2&&y>top+8)c=[225,205,195]}}}}
+ if(f==11&&inb(8,56,3,58)){const fr=x<11||x>=53||y<6;c=fr?[44,46,48]:[96+n*12,104+n*12,100+n*10];
+  if(inb(24,40,12,28)){c=[14+(y-12),22+(y-12),26+(y-12)];if((x-24)%4==0||(y-12)%4==0)c=[60,66,60];if(x==24||x==39||y==12||y==27)c=[40,42,44]}
+  if(inb(26,38,32,37))c=y>33&&y<36&&(x-27)%4<2?[30,30,30]:[226,226,214];if(inb(46,49,36,40))c=[190,176,110];if(inb(14,18,12,16))c=[200,40,36];if(y>=50)c=[70,66,60]}
+ if(d==1)for(let i=0;i<3;i++){const xi=8+R(1+i)*48,y0=3+R(9+i)*12;if(Math.abs(x-xi-Math.sin(y*.2+i)*.7)<1+(i==0)*.4&&y>=y0&&y<y0+14+R(5+i)*30)c=m(c,[130,14,16],.85)}
+ if(d==2){const cx=8+R(2)*48+Math.sin(y*.55+R(3)*6)*2.5+Math.sin(y*1.7)*.8;if(Math.abs(x-cx)<.7&&y<20+R(4)*38||y>20&&y<38&&Math.abs(x-cx-(y-20)*.7)<.6)c=[20,20,20]}
+ if(d==3){const hx=14+R(1)*36,hy=22+R(2)*14;let q=((x-hx)/5)**2+((y-hy)/6)**2<1||((x-hx-6)/3)**2+((y-hy+1)/1.6)**2<1;
+  for(let k=0;k<4;k++)q=q||((x-hx+4.5-k*3)/1.4)**2+((y-hy+8+(k==1||k==2)*2)/4)**2<1;
+  if(q&&hash(x,y)>.15||Math.abs(x-hx)<1&&y>hy+6&&y<hy+15)c=m(c,[140,16,20],.8)}
+ if(d==4)for(let g=0;g<1+((R(3)*3)|0);g++){const bx=8+R(1)*14+g*13,e=y-(14+R(2)*12);
+  if(e>=0&&e<8&&((x>=bx&&x<bx+7&&(x-bx)%2==0)||(Math.abs(e-(bx+7-x))<.8&&x>=bx-1&&x<=bx+8)))c=m(c,[30,26,24],.8)}
+ if(d==5){const ey=44+(Math.sin(x*.21+R(1)*9)*.5+Math.sin(x*.07+R(2)*9)*.5)*8;if(y>ey&&y<58&&hash(x>>1,y>>1)>.25)c=m(c,[46,70,40],.6)}
+ if(d==6){const cx=10+R(1)*44,t=((x-cx)/(14+R(2)*8))**2+(y/(20+R(3)*14))**2;if(t<1)c=m(c,t>.8?[86,70,40]:[96,80,52],t>.8?.5:.3*(1-t)+.15)}
+ if(d==7)for(let i=0;i<5;i++){const ax=6+R(i*4+1)*50,ay=8+R(i*4+2)*30,vx=(R(i*4+3)-.5)*22,vy=R(i*4+4)*16,
+  t=Math.max(0,Math.min(1,((x-ax)*vx+(y-ay)*vy)/(vx*vx+vy*vy)));if(Math.hypot(x-ax-vx*t,y-ay-vy*t)<.75)c=m(c,[150,16,18],.85)}
+ return c}
+const soft=new Uint8ClampedArray(W*H*4);
+function soften(){const W4=W*4;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const o=(y*W+x)*4,l=x?o-4:o,r=x<W-1?o+4:o;for(let k=0;k<3;k++)soft[o+k]=(buf[l+k]+2*buf[o+k]+buf[r+k])>>2}
+ for(let y=0;y<H;y++){const u=y?-W4:0,d=y<H-1?W4:0;for(let x=0;x<W;x++){const o=(y*W+x)*4;for(let k=0;k<3;k++)buf[o+k]=(buf[o+k]*(1-S.soft)+((soft[o+u+k]+2*soft[o+k]+soft[o+d+k])>>2)*S.soft)*S.bri}}}
+
+const doorT=mk((x,y)=>{let v=70+hash(x,y)*14;if(x<3||x>60||y<3)v=38;if(y%12<2&&x>6&&x<57)v=44;
+ let c=[v*.7,v*.85,v*.8];
+ if(x>26&&x<38&&y>24&&y<32)c=[205,40,36];
+ if(x>44&&x<54&&y>30&&y<40)c=[28,28,28];
+ if(x>48&&x<50&&y>32&&y<37)c=[220,190,80];
+ if(y>52&&y<60)c=((x+y)>>3)&1?[190,160,30]:[30,30,30];
+ return c});
+const floorT=mk((x,y)=>{const g=(x&7)==0||(y&7)==0,ck=((x>>3)^(y>>3))&1,tx=x&7,ty=y&7,th=hash(x>>3,y>>3);
+ let v=g?22:(ck?70:88)+(th-.5)*22+hash(x>>1,y>>1)*10+(hash(x,y)-.5)*10;
+ if(!g){if(tx==1||ty==1)v+=14;if(tx==7||ty==7)v-=12;if(th>.93)v-=26}
+ if(hash(x>>2,y)>.965)v+=26;if(!g&&hash(x>>3,y>>3)>.9)v-=24;
+ if(Math.abs(x-(20+Math.sin(y*.5)*4))<.6&&y>8&&y<46)v-=34;
+ if(hash(x>>2,y>>3)>.93&&((x*3+y)&3)==0)v+=20;
+ return[v*.86,v*.95,v*.9]});
+const ceilT=mk((x,y)=>{const g=(x&31)==0||(y&31)==0;let v=g?24:60+hash(x>>1,y>>1)*10;if(!g&&hash(x,y)>.82)v-=14;
+ if(x>16&&x<47&&y>26&&y<37)return[215+hash(x,y)*20,220+hash(x,y)*20,195];
+ if(x>13&&x<50&&y>23&&y<40)return[40,42,40];
+ return[v*.9,v,v*.95]});
+
+/* ---------- 스프라이트 (픽셀 단위 직접 작성) ---------- */
+function mkSpr(w,h,fn){const s={w,h,d:new Uint8Array(w*h*4)};
+ const P=(x,y,c)=>{if(x<0||y<0||x>=w||y>=h)return;const i=(y*w+x)*4;s.d[i]=c[0];s.d[i+1]=c[1];s.d[i+2]=c[2];s.d[i+3]=255};
+ const R=(x,y,ww,hh,c)=>{for(let j=0;j<hh;j++)for(let i=0;i<ww;i++)P(x+i,y+j,c)};
+ fn(P,R);return s}
+const profS=mkSpr(56,92,(P0,R0)=>{
+ const S=1.4,skin=[200,178,160],hair=[38,34,40],coat=[214,214,208],pant=[46,46,60],blood=[230,30,30],ring=[92,58,82],dk=[26,26,30],M=(c,k)=>[c[0]*k,c[1]*k,c[2]*k];
+ const P=(x,y,c)=>P0(Math.round(x*S),Math.round(y*S),c);
+ const R=(x,y,w,h,c)=>R0(Math.round(x*S),Math.round(y*S),Math.max(1,Math.round(w*S)),Math.max(1,Math.round(h*S)),c);
+ const E=(cx,cy,rx,ry,c)=>{cx*=S;cy*=S;rx*=S;ry*=S;for(let y=Math.floor(cy-ry);y<=cy+ry;y++)for(let x=Math.floor(cx-rx);x<=cx+rx;x++){const u=(x-cx)/rx,v=(y-cy)/ry;if(u*u+v*v<=1)P0(x,y,M(c,1-.3*u-.15*v+(hash(x,y)-.5)*.1))}};
+ const Ln=(x0,y0,x1,y1,w,c)=>{const n=Math.ceil(Math.hypot(x1-x0,y1-y0)*S*1.5)+1,r=Math.max(.5,w/2);for(let i=0;i<=n;i++){const t=i/n;E(x0+(x1-x0)*t,y0+(y1-y0)*t,r,r,c)}};
+ const Po=(pts,c)=>{pts=pts.map(p=>[p[0]*S,p[1]*S]);let y0=1e9,y1=-1e9;for(const p of pts){y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1])}
+  for(let y=Math.ceil(y0);y<=y1;y++){const xs=[];for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];if((a[1]<=y&&b[1]>y)||(b[1]<=y&&a[1]>y))xs.push(a[0]+(y-a[1])/(b[1]-a[1])*(b[0]-a[0]))}
+   xs.sort((m,n)=>m-n);for(let k=0;k+1<xs.length;k+=2)for(let x=Math.ceil(xs[k]);x<=xs[k+1];x++)P0(x,y,M(c,1.12-(x/S-6)/28*.35+(hash(x,y)-.5)*.08))}};
+ Ln(16,40,15,60,4.5,pant);Ln(24,40,25,60,4.5,pant);Ln(16,46,15.5,58,.5,[30,30,42]);Ln(24,46,24.5,58,.5,[30,30,42]);
+ E(14,62,4.5,2,[24,24,26]);E(26,62,4.5,2,[24,24,26]);P(12,61,[90,90,96]);P(24,61,[90,90,96]);
+ Po([[8,27],[12,21],[28,21],[32,27],[35,53],[5,53]],coat);E(20,24,12,4,coat);Ln(5,53,35,53,.8,[132,132,134]);
+ Ln(20,27,20,53,.8,[112,112,120]);Po([[18,26],[22,26],[21.5,38],[18.5,38]],[190,200,206]);Ln(20,29,20.6,41,1.4,[120,30,42]);
+ for(let i=0;i<14;i++){const x=8+hash(i,1)*22,y=28+hash(i,2)*22;Ln(x,y,x+4,y+2+hash(i,3)*3,.7,[158,158,160])}
+ for(const y of[32,40,48])P(22,y,[170,170,172]);
+ R(25,38,5,5,[178,178,176]);R(27,36,1,3,[200,40,40]);R(12,32,5,4,[232,232,238]);R(12,32,5,1,[40,80,160]);Ln(14,26,14.5,32,.5,[40,80,160]);
+ E(13,46,3,2,[178,146,100]);E(29,50,2,1.5,[150,120,110]);
+ Ln(10,25,6,38,5.5,coat);Ln(6,38,8,52,4.5,coat);E(8.5,55,2.6,3.2,skin);R(5.5,51,5,1,[140,140,142]);
+ Ln(30,25,34,38,5.5,coat);Ln(34,38,32,52,4.5,coat);E(31.5,55,2.6,3.2,skin);R(29.5,51,5,1,[140,140,142]);Ln(6.5,26,5.5,38,.8,[140,140,142]);
+ Ln(7,57,6.5,60.5,.9,skin);Ln(8.7,57.5,8.7,61,.9,skin);Ln(10,57,10.6,60,.9,skin);Ln(30.4,57,30,60.5,.9,skin);Ln(32,57.5,32,61,.9,skin);Ln(33.2,57,33.8,60,.9,skin);
+ Ln(19,19,19,23,6,skin);E(11.5,14,1.6,2.6,skin);E(27.5,14,1.6,2.6,skin);E(19.5,14,8,9.5,skin);E(12.5,18.5,2,3,M(skin,.82));E(26.5,18.5,2,3,M(skin,.82));
+ E(19.5,7,9.5,6,hair);E(11,10,3,5,hair);E(28,10,3,5,hair);
+ for(let i=0;i<34;i++){const a=Math.PI+hash(i,4)*Math.PI,r=8+hash(i,6)*3;Ln(19.5+Math.cos(a)*7,9+Math.sin(a)*5,19.5+Math.cos(a)*(r+4),9+Math.sin(a)*r*.7,.9,hair)}
+ for(let i=0;i<22;i++)P(10+hash(i,8)*20,2+hash(i,9)*8,[128,128,134]);
+ Ln(13,8.2,26,8.4,.5,[165,140,125]);Ln(14,6.6,24,6.8,.4,[165,140,125]);
+ E(15.5,14,3.4,2.5,ring);E(23.5,14,3.4,2.5,ring);E(15.5,13.4,2.3,1.7,[240,232,232]);E(23.5,13.4,2.3,1.7,[240,232,232]);
+ E(15.8,13.4,1.3,1.3,blood);E(23.2,13.4,1.3,1.3,blood);P(16,13,[0,0,0]);P(23,13,[0,0,0]);
+ Ln(13.5,13.2,14.5,12.2,.6,blood);Ln(25.5,13.2,24.5,12.2,.6,blood);Ln(17,14.5,17.8,15.2,.5,blood);
+ for(let a=0;a<6.3;a+=.2){P(15.5+Math.cos(a)*3.7,13.6+Math.sin(a)*3,dk);P(23.5+Math.cos(a)*3.7,14.4+Math.sin(a)*3,dk)}
+ Ln(19,13.8,20,14.3,.6,dk);Ln(13.6,12,17,15.2,.4,[225,225,230]);
+ Ln(13,17.4,18,18.2,1,[78,50,76]);Ln(21,18.2,26,17.4,1,[78,50,76]);
+ Ln(11.5,10.2,18,11.8,1.5,hair);Ln(27.5,10.2,21,11.8,1.5,hair);
+ Ln(19.5,14,19,19,1,[166,140,126]);P(18,19,[130,100,92]);P(20,19,[130,100,92]);
+ R(17,20,5,1,[206,200,176]);Ln(15.5,21.5,23.5,21.5,1.4,[58,14,20]);Ln(14,19.5,15.5,21.5,.5,[150,120,108]);Ln(25,19.5,23.5,21.5,.5,[150,120,108]);
+ for(let i=0;i<40;i++){const x=13+hash(i,11)*13,y=19+hash(i,12)*5;if(Math.hypot(x-19.5,(y-14)*.85)<8.6)P(x,y,[110,100,98])}
+});
+const _oldProf2=mkSpr(40,64,(P,R)=>{
+ const skin=[200,178,160],hair=[38,34,40],coat=[214,214,208],pant=[46,46,60],blood=[230,30,30],ring=[92,58,82],M=(c,k)=>[c[0]*k,c[1]*k,c[2]*k];
+ const E=(cx,cy,rx,ry,c)=>{for(let y=Math.floor(cy-ry);y<=cy+ry;y++)for(let x=Math.floor(cx-rx);x<=cx+rx;x++){const u=(x-cx)/rx,v=(y-cy)/ry;if(u*u+v*v<=1)P(x,y,M(c,1-.28*u-.14*v+(hash(x,y)-.5)*.08))}};
+ const Ln=(x0,y0,x1,y1,w,c)=>{const n=Math.ceil(Math.hypot(x1-x0,y1-y0)*2)+1,r=Math.max(.7,w/2);for(let i=0;i<=n;i++){const t=i/n;E(x0+(x1-x0)*t,y0+(y1-y0)*t,r,r,c)}};
+ const Po=(pts,c)=>{let y0=1e9,y1=-1e9;for(const p of pts){y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1])}
+  for(let y=Math.ceil(y0);y<=y1;y++){const xs=[];for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];if((a[1]<=y&&b[1]>y)||(b[1]<=y&&a[1]>y))xs.push(a[0]+(y-a[1])/(b[1]-a[1])*(b[0]-a[0]))}
+   xs.sort((m,n)=>m-n);for(let k=0;k+1<xs.length;k+=2)for(let x=Math.ceil(xs[k]);x<=xs[k+1];x++)P(x,y,M(c,1.12-(x-6)/28*.35+(hash(x,y)-.5)*.07))}};
+ Ln(16,40,15,60,4.5,pant);Ln(24,40,25,60,4.5,pant);E(14,62,4.5,2,[24,24,26]);E(26,62,4.5,2,[24,24,26]);
+ Po([[8,27],[12,21],[28,21],[32,27],[35,53],[5,53]],coat);E(20,24,12,4,coat);
+ Ln(20,27,20,53,1,[112,112,120]);Po([[18,26],[22,26],[21.5,38],[18.5,38]],[190,200,206]);Ln(20,29,20.6,41,1.4,[120,30,42]);
+ for(let i=0;i<9;i++){const x=8+hash(i,1)*22,y=28+hash(i,2)*22;Ln(x,y,x+4,y+2+hash(i,3)*3,1,[158,158,160])}
+ R(25,38,5,5,[178,178,176]);R(27,36,1,3,[200,40,40]);E(13,46,3,2,[178,146,100]);E(29,50,2,1.5,[150,120,110]);
+ Ln(10,25,6,38,5.5,coat);Ln(6,38,8,52,4.5,coat);E(8.5,55,2.6,3.2,skin);
+ Ln(30,25,34,38,5.5,coat);Ln(34,38,32,52,4.5,coat);E(31.5,55,2.6,3.2,skin);Ln(6.5,26,5.5,38,1,[140,140,142]);
+ Ln(19,19,19,23,6,skin);E(11.5,14,1.6,2.6,skin);E(27.5,14,1.6,2.6,skin);E(19.5,14,8,9.5,skin);
+ E(19.5,7,9.5,6,hair);E(11,10,3,5,hair);E(28,10,3,5,hair);
+ for(let i=0;i<22;i++){const a=Math.PI+hash(i,4)*Math.PI,r=8+hash(i,6)*3;Ln(19.5+Math.cos(a)*7,9+Math.sin(a)*5,19.5+Math.cos(a)*(r+4),9+Math.sin(a)*r*.7,1.2,hair)}
+ for(let i=0;i<14;i++)P(10+((hash(i,8)*20)|0),2+((hash(i,9)*8)|0),[128,128,134]);
+ E(15.5,14,3.4,2.5,ring);E(23.5,14,3.4,2.5,ring);E(15.5,13.4,2.3,1.7,[240,232,232]);E(23.5,13.4,2.3,1.7,[240,232,232]);
+ E(15.8,13.4,1.3,1.3,blood);E(23.2,13.4,1.3,1.3,blood);P(16,13,[0,0,0]);P(23,13,[0,0,0]);
+ Ln(13.5,13.2,14.5,12.2,.8,blood);Ln(25.5,13.2,24.5,12.2,.8,blood);
+ Ln(13,17,18,17.8,1,[78,50,76]);Ln(21,17.8,26,17,1,[78,50,76]);
+ Ln(11.5,10.2,18,11.8,1.5,hair);Ln(27.5,10.2,21,11.8,1.5,hair);
+ Ln(19.5,14,19,19,1,[166,140,126]);P(18,19,[130,100,92]);P(20,19,[130,100,92]);
+ R(17,20,5,1,[206,200,176]);Ln(15.5,21.5,23.5,21.5,1.4,[58,14,20]);
+ for(let i=0;i<26;i++){const x=13+((hash(i,11)*13)|0),y=19+((hash(i,12)*5)|0);if(Math.hypot(x-19.5,(y-14)*.85)<8.6)P(x,y,[110,100,98])}
+});
+const _oldProf=mkSpr(32,48,(P,R)=>{
+ const skin=[196,176,158],hair=[44,40,46],coat=[206,206,200],sh=[150,150,152],pant=[48,48,62],blood=[225,28,28],ring=[96,62,86];
+ R(11,36,4,10,pant);R(18,36,4,10,pant);R(10,45,6,3,[22,22,22]);R(18,45,6,3,[22,22,22]);
+ for(let y=17;y<40;y++){const l=y>30?8:9,r=y>30?25:24;R(l,y,r-l,1,coat)}
+ for(let y=20;y<40;y+=3)R(11+((y*7)%5),y,6,1,sh);
+ R(16,19,1,19,sh);R(20,30,3,2,[190,170,110]);R(11,26,2,2,[150,120,110]);
+ R(5,19,4,18,coat);R(24,19,4,18,coat);R(5,19,1,18,sh);R(27,19,1,18,sh);
+ R(5,37,4,4,skin);R(24,37,4,4,skin);
+ R(12,15,6,3,skin);R(8,7,13,10,skin);R(9,6,11,12,skin);
+ R(7,3,15,5,hair);R(6,5,3,6,hair);R(20,5,3,5,hair);
+ for(let i=0;i<14;i++)R(5+((hash(i,3)*18)|0),1+((hash(i,5)*4)|0),2,3,hair);
+ R(10,10,4,3,[235,225,225]);R(16,10,4,3,[235,225,225]);
+ R(11,10,2,3,blood);R(17,10,2,3,blood);R(11,11,1,1,[0,0,0]);R(17,11,1,1,[0,0,0]);
+ R(10,13,4,2,ring);R(16,13,4,2,ring);R(10,9,4,1,hair);R(16,9,4,1,hair);
+ R(12,15,6,1,[70,20,24]);R(13,16,1,1,[70,20,24]);
+ for(let i=0;i<10;i++)P(10+((hash(i,9)*10)|0),15+((hash(i,2)*2)|0),[120,110,104]);
+});
+const keyS=mkSpr(32,32,(P,R0)=>{const R=(x,y,w,h,c)=>R0(x*2,y*2,w*2,h*2,c),g=[232,192,60],d=[150,110,30];
+ R(2,3,6,1,g);R(1,4,2,4,g);R(7,4,2,4,g);R(2,8,6,1,g);R(8,5,7,2,g);R(8,6,7,1,d);R(12,7,2,3,g);R(14,7,1,2,g);R(2,4,1,1,d)});
+function outline(s,c){const{w,h,d}=s,m=[];for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;if(d[i+3])continue;let n=0;for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){const X=x+a,Y=y+b;if(X>=0&&Y>=0&&X<w&&Y<h&&d[(Y*w+X)*4+3])n=1}if(n)m.push(i)}for(const i of m){d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];d[i+3]=255}}
+const detS=mkSpr(32,32,(P,R0)=>{const R=(x,y,w,h,c)=>R0(x*2,y*2,w*2,h*2,c);
+ R(3,5,10,9,[112,120,124]);R(4,6,8,4,[40,150,86]);R(5,7,3,1,[150,240,170]);R(11,2,1,3,[150,154,158]);R(11,1,1,1,[220,50,40]);R(4,11,2,1,[210,50,44]);R(7,11,2,1,[224,184,50]);R(10,11,2,2,[70,74,78]);R(3,13,10,1,[70,74,78])});
+outline(profS,[12,10,14]);outline(keyS,[40,28,8]);outline(detS,[20,22,24]);
+
+/* ---------- 게임 상태 ---------- */
+let hsP=0,hsT=0,map,px,py,ang,hasKey,key,prof,state='ready',path,pathT,tension=0,t0=0,msgT=0,lastMsg='',hasDet=false,det,detT=0,lastDt='',hid=null,spotted=false,seenT=0,hideCd=0,hidT=0,wp=null,wT=0,hitT=0,lastHint='',stage=1,keys={},KL=[];
+const $=id=>document.getElementById(id);
+function say(t,s){$('ms').textContent=t;msgT=s||4}
+function gen(){
+ seed=(Date.now()&0xffffffff)>>>0;
+ map=[];for(let y=0;y<N;y++)map.push(new Array(N).fill(1));
+ const st=[[1,1]];map[1][1]=0;const D=[[0,-2],[2,0],[0,2],[-2,0]];
+ while(st.length){const si=rnd()<.5?st.length-1:(rnd()*st.length)|0,[x,y]=st[si];
+  const o=D.filter(([a,b])=>{const nx=x+a,ny=y+b;return nx>0&&ny>0&&nx<N-1&&ny<N-1&&map[ny][nx]==1});
+  if(!o.length){st.splice(si,1);continue}
+  const[a,b]=o[(rnd()*o.length)|0];map[y+b/2][x+a/2]=0;map[y+b][x+a]=0;st.push([x+a,y+b])}
+ for(let k=0;k<N*4;k++){const x=1+((rnd()*(N-2))|0),y=1+((rnd()*(N-2))|0);
+  if(map[y][x]==1&&((map[y][x-1]==0&&map[y][x+1]==0)||(map[y-1][x]==0&&map[y+1][x]==0)))map[y][x]=0}
+ /* 막다른 길 줄이기 : 막다른 길 끝의 벽을 뚫어 옆 통로와 연결 */
+ {const O=[[0,-1],[1,0],[0,1],[-1,0]],op=(x,y)=>x>0&&y>0&&x<N-1&&y<N-1&&map[y][x]==0,
+  dead=(x,y)=>map[y][x]==0&&O.filter(([a,b])=>map[y+b][x+a]==0).length==1,
+  box=(x,y)=>[[0,0],[-1,0],[0,-1],[-1,-1]].some(([a,b])=>op(x+a,y+b)&&op(x+a+1,y+b)&&op(x+a,y+b+1)&&op(x+a+1,y+b+1));
+  const ds=[];for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++)if(dead(x,y))ds.push([x,y]);
+  for(let i=ds.length-1;i>0;i--){const j=(rnd()*(i+1))|0;[ds[i],ds[j]]=[ds[j],ds[i]]}
+  for(const[x,y]of ds){if(!dead(x,y)||rnd()<.12)continue;
+   const c=O.filter(([a,b])=>map[y+b][x+a]==1&&op(x+2*a,y+2*b)&&x+a>0&&y+b>0&&x+a<N-1&&y+b<N-1).map(([a,b])=>[x+a,y+b,dead(x+2*a,y+2*b)?0:1]);
+   c.sort((p,q)=>p[2]-q[2]||rnd()-.5);
+   for(const[cx,cy]of c){map[cy][cx]=0;if(box(cx,cy)){map[cy][cx]=1;continue}break}}}
+ map[N-1][N-2]=2;
+ px=1.5;py=1.5;ang=map[1][2]==0?0:Math.PI/2;hasKey=false;
+ const M=(N-1)/2,oc=()=>1+2*((rnd()*M)|0);
+ KL=[];for(let n=0,tr=0;n<3&&tr<2000;tr++){const kx=oc(),ky=oc(),dS=Math.abs(kx-1)+Math.abs(ky-1);
+  if(dS<16||Math.abs(kx-(N-2))+Math.abs(ky-(N-2))<6||KL.some(k=>Math.abs((k.x|0)-kx)+Math.abs((k.y|0)-ky)<10))continue;
+  KL.push({x:kx+.5,y:ky+.5});n++}
+ for(let tr=0;KL.length<3&&tr<2000;tr++){const kx=oc(),ky=oc();if(Math.abs(kx-1)+Math.abs(ky-1)<12||KL.some(k=>(k.x|0)==kx&&(k.y|0)==ky))continue;KL.push({x:kx+.5,y:ky+.5})}
+ key=KL[0];const onK=(x,y)=>KL.some(k=>(k.x|0)==x&&(k.y|0)==y);
+ let ex,ey;do{ex=oc();ey=oc()}while(Math.abs(ex-1)+Math.abs(ey-1)<8||Math.abs(ex-1)+Math.abs(ey-1)>18||onK(ex,ey));
+ det={x:ex+.5,y:ey+.5};hasDet=false;detT=0;lastDt='';$('dt').textContent='[ 탐지기 : 없음 ]';$('dt').className='';
+ let qx,qy;do{qx=oc();qy=oc()}while(Math.abs(qx-1)+Math.abs(qy-1)<24||onK(qx,qy));
+ prof={x:qx+.5,y:qy+.5,yw:0,ph:0};
+ props=[];const used={};
+ for(let k=0;k<N*3;k++){
+  const cx=1+((rnd()*(N-2))|0),cy=1+((rnd()*(N-2))|0);
+  if(map[cy][cx]!=0||used[cx+','+cy]||(cx<4&&cy<4)||(cx>N-5&&cy>N-5)||onK(cx,cy)||(cx==(det.x|0)&&cy==(det.y|0)))continue;
+  used[cx+','+cy]=1;
+  const hx=map[cy][cx-1]==1&&map[cy][cx+1]==1,hy=map[cy-1][cx]==1&&map[cy+1][cx]==1;
+  if((hx||hy)&&rnd()<.35){props.push(hx?{k:3,x0:cx,x1:cx+1,y0:cy+.42,y1:cy+.58,z0:.86,z1:1}:{k:3,x0:cx+.42,x1:cx+.58,y0:cy,y1:cy+1,z0:.86,z1:1});continue}
+  const ss=[[0,-1],[1,0],[0,1],[-1,0]].filter(([a,b])=>map[cy+b][cx+a]==1);if(!ss.length)continue;
+  const[a,b]=ss[(rnd()*ss.length)|0],kk=(rnd()*3)|0,m=.5+(rnd()-.5)*.1,dep=[.24,.3,.38][kk],hw=[.28,.24,.17][kk];
+  let x0,x1,y0,y1;
+  if(a){x0=cx+(a>0?1-dep:0);x1=x0+dep;y0=cy+m-hw;y1=cy+m+hw}else{y0=cy+(b>0?1-dep:0);y1=y0+dep;x0=cx+m-hw;x1=cx+m+hw}
+  const o={k:kk,x0,x1,y0,y1,z0:0,z1:[.88,.42,.6][kk],c:true,fx:-a,fy:-b,dep};
+  if(kk==2){o.cyl=1;o.r=.17;o.cx=(x0+x1)/2;o.cy=(y0+y1)/2}
+  props.push(o)}
+ for(const o of props)o.fn=propFn(o);
+ path=null;pathT=0;tension=0}
+
+/* ---------- A* 길찾기 ---------- */
+function astar(s,g){
+ const hh=i=>Math.abs(i%N-g[0])+Math.abs((i/N|0)-g[1]);
+ const gS=new Array(N*N).fill(1e9),par=new Array(N*N).fill(-1),cl=new Array(N*N).fill(false),f=[];
+ const s0=s[1]*N+s[0];gS[s0]=0;f[s0]=hh(s0);const open=[s0];
+ while(open.length){
+  let bi=0;for(let i=1;i<open.length;i++)if(f[open[i]]<f[open[bi]])bi=i;
+  const c=open.splice(bi,1)[0];
+  if(c%N==g[0]&&(c/N|0)==g[1]){const p=[];for(let n=c;n!=-1;n=par[n])p.push([n%N,n/N|0]);return p.reverse()}
+  cl[c]=true;
+  for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){
+   const nx=c%N+a,ny=(c/N|0)+b;if(nx<0||ny<0||nx>=N||ny>=N||map[ny][nx]!=0)continue;
+   const n=ny*N+nx;if(cl[n])continue;const t=gS[c]+1;
+   if(t<gS[n]){gS[n]=t;par[n]=c;f[n]=t+hh(n);if(!open.includes(n))open.push(n)}}}
+ return null}
+function los(ax,ay,bx,by){const d=Math.hypot(bx-ax,by-ay),n=Math.ceil(d/.12);
+ for(let i=1;i<n;i++){const t=i/n;if(map[(ay+(by-ay)*t)|0][(ax+(bx-ax)*t)|0]!=0)return false}return true}
+
+/* ---------- 업데이트 ---------- */
+function free(x,y){const r=.22;return[[x-r,y-r],[x+r,y-r],[x-r,y+r],[x+r,y+r]].every(([a,b])=>map[b|0][a|0]==0&&!props.some(q=>q.c&&a>q.x0&&a<q.x1&&b>q.y0&&b<q.y1))}
+function update(dt){
+ if(msgT>0){msgT-=dt;if(msgT<=0)$('ms').textContent=state=='play'?(stage==2?'S4-1 건물 탐색':hasKey?'출구 문을 찾아라.':'열쇠를 찾아라.'):''}
+ if(state!='play')return;
+ seenT-=dt;hideCd-=dt;if(hid){hidT+=dt;if(hidT>16)unhide('숨이 차서 사물함 밖으로 튀어나왔다!')}
+  let mv=(keys.KeyW?1:0)-(keys.KeyS?1:0),st=(keys.KeyD?1:0)-(keys.KeyA?1:0);if(hid||q1.sit||q3.act)mv=st=0;
+ ang+=((keys.ArrowRight||keys.KeyE?1:0)-(keys.ArrowLeft||keys.KeyQ?1:0))*2.2*S.sens*dt;
+ if(hid){const da=Math.atan2(Math.sin(ang-hid.ba),Math.cos(ang-hid.ba));ang=hid.ba+Math.max(-.6,Math.min(.6,da))}
+  const cs=Math.cos(ang),sn=Math.sin(ang);let vx=cs*mv-sn*st,vy=sn*mv+cs*st;
+ const l=Math.hypot(vx,vy);if(l>0){vx=vx/l*2.8;vy=vy/l*2.8}
+ if(free(px+vx*dt,py))px+=vx*dt;if(free(px,py+vy*dt))py+=vy*dt;
+ if(!hasDet&&Math.hypot(det.x-px,det.y-py)<.6){hasDet=true;say('탐지기를 획득했다! 열쇠에 가까울수록 신호가 강해진다.',5)}
+ if(hasDet){const d=Math.min(...KL.map(k=>Math.hypot(k.x-px,k.y-py))),n=d<2.5?5:d<5?4:d<8?3:d<12?2:d<18?1:0,per=.25+d*.07;detT+=dt;
+  const s='[ 탐지기 '+'▮'.repeat(n)+'▯'.repeat(5-n)+(n&&detT%per<per*.3?' ●':'  ')+' ]';if(s!=lastDt){lastDt=s;$('dt').textContent=s}$('dt').className=n>=4?'hot':'on'}
+ if(!hasKey&&KL.some(k=>Math.hypot(k.x-px,k.y-py)<.6)){hasKey=true;return stageClear()}
+ {let h='';if(stage==2)h=s2hint();else if(hid)h='F : 사물함에서 나가기 ('+Math.max(0,16-hidT|0)+'초)';else if(nearLk())h=hideCd<=0?'F : 사물함에 숨기':'사물함 재사용까지 '+Math.ceil(hideCd)+'초';if(h!=lastHint){lastHint=h;const e=$('hint');e.textContent=h;e.style.display=h?'block':'none'}}
+  const dd=Math.hypot(N-2+.5-px,N-1+.5-py);
+ if(dd<1.25&&!hid){if(hasKey)return finish(true);if(msgT<=0||lastMsg!='door'){say('문이 잠겨 있다. 열쇠가 필요하다.',2.5);lastMsg='door'}}else if(lastMsg=='door')lastMsg='';
+ if(stage==2){tension=0;$('warn').style.display='none';s2tick(dt);return}
+ // 교수 AI
+ const qc=[prof.x|0,prof.y|0];
+ if(!hid)hsP=0;else if(hsP==0){hsP=1;hsT=0;pathT=0}
+ const dh=Math.hypot(px-prof.x,py-prof.y);
+ if(hsP==1&&dh<1.6){hsP=2;hsT=3+Math.random()*2.5}
+ else if(hsP==2){hsT-=dt;if(hsT<=0){hsP=3;wp=pickWp();wT=8;pathT=0}}
+ else if(hsP==3&&(!wp||(qc[0]==wp[0]&&qc[1]==wp[1])||wT<=0)){wp=pickWp();wT=8;pathT=0}
+ wT-=dt;const pc=hsP==3?wp:[px|0,py|0];
+ pathT-=dt;
+ let i=path?path.findIndex(c=>c[0]==qc[0]&&c[1]==qc[1]):-1;
+ if(pathT<=0||i<0){path=astar(qc,pc)||[qc];pathT=.3;i=0}
+ let tx=px,ty=py;
+ if(!(qc[0]==pc[0]&&qc[1]==pc[1])&&path[i+1]){tx=path[i+1][0]+.5;ty=path[i+1][1]+.5}
+ const dp=Math.hypot(px-prof.x,py-prof.y),seen=!hid&&dp<9&&los(prof.x,prof.y,px,py);if(seen)seenT=1.2;
+ const sp=(seen||(hid&&hsP==1&&spotted)?2.1:1.55)+(hasKey?.2:0),dx=tx-prof.x,dy=ty-prof.y,d=Math.hypot(dx,dy)||1,s=hsP==2?0:Math.min(d,sp*dt);
+ prof.x+=dx/d*s;prof.y+=dy/d*s;
+ {const ta=hsP==2?Math.atan2(py-prof.y,px-prof.x)+Math.sin(performance.now()/450)*.9:Math.atan2(dy,dx);let da=ta-prof.yw;da=Math.atan2(Math.sin(da),Math.cos(da));prof.yw+=da*Math.min(1,dt*7);prof.ph+=s*4.5}
+ const dn=Math.hypot(px-prof.x,py-prof.y);
+ tension=dn<6?(6-dn)/6:0;
+ const w=$('warn');
+ if(dn<5.5){w.style.display='block';w.textContent=hid?(hsP==3?'... 교수가 멀어지고 있다 ...':'... 숨을 죽여라 ...'):dn<2.5?'!! 도망쳐 !!':'!! 교수가 다가온다 !!'}else w.style.display='none';
+ if(!hid&&dn<.6)finish(false)}
+function finish(win){if(!win&&DEV&&god)return;$('hint').style.display='none';lastHint='';
+ state=win?'win':'dead';try{document.exitPointerLock()}catch(e){}$('warn').style.display='none';
+ const t=((performance.now()-t0)/1000)|0;
+ show(win?'탈출 성공':'붙잡혔다',win?'녹슨 문이 열리고 차가운 새벽 공기가 밀려든다.\n탈출 시간 '+t+'초':'충혈된 눈이 마지막으로 본 풍경이었다.\n교수는 아직 논문을 끝내지 못했다.',win?'다시 도전':'다시 시작')}
+function show(t,d,b){$('ot').textContent=t;$('od').textContent=d;$('ob').textContent=b;$('ov').style.display='flex';$('ob').focus()}
+function start(){setPst(0);stage=1;FR=165;FG=172;FB=178;EY=0;fade=0;gen();hid=null;hideCd=0;seenT=0;spotted=false;wp=null;lastHint='';state='play';pitch=0;lockPtr();t0=performance.now();$('ov').style.display='none';$('warn').style.display='none';say('열쇠를 찾아라.',4)}
+
+/* ---------- 렌더링 ---------- */
+let off=0,amp=14,lit0=1,EY=0,fade=0;
+const zd=new Float32Array(W*H),HR={t:0,r:0,g:0,b:0,l:0};let props=[];
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+function ry3(a){const c=Math.cos(a),s=Math.sin(a);return[c,0,-s,0,1,0,s,0,c]}
+function mm(A,B){const R=[];for(let i=0;i<3;i++)for(let j=0;j<3;j++)R.push(A[i*3]*B[j]+A[i*3+1]*B[3+j]+A[i*3+2]*B[6+j]);return R}
+function mv(A,v){return[A[0]*v[0]+A[1]*v[1]+A[2]*v[2],A[3]*v[0]+A[4]*v[1]+A[5]*v[2],A[6]*v[0]+A[7]*v[1]+A[8]*v[2]]}
+function projBox(x0,y0,z0,x1,y1,z1,hz,dx,dy,plx,ply){
+ const inv=1/(plx*dy-dx*ply);let a=1e9,b=-1e9,c=1e9,e=-1e9,zm=1e9,bh=0;
+ for(let i=0;i<8;i++){const rx=(i&1?x1:x0)-px,ry=(i&2?y1:y0)-py,z=i&4?z1:z0,tY=inv*(-ply*rx+plx*ry);
+  if(tY<.2){bh++;continue}
+  const tX=inv*(dy*rx-dx*ry),X=(W/2)*(1+tX/tY),Y=hz+(.5+EY-z)*H/tY;
+  a=Math.min(a,X);b=Math.max(b,X);c=Math.min(c,Y);e=Math.max(e,Y);zm=Math.min(zm,tY)}
+ if(bh==8)return null;if(bh)return[0,W-1,0,H-1,.05];
+ a=Math.max(0,Math.floor(a));b=Math.min(W-1,Math.ceil(b));c=Math.max(0,Math.floor(c));e=Math.min(H-1,Math.ceil(e));
+ return a>b||c>e?null:[a,b,c,e,zm]}
+function drawObj(bb,fn,hz,dx,dy,plx,ply){
+ for(let x=bb[0];x<=bb[1];x++){const cx=2*x/W-1,rx=dx+plx*cx,ry=dy+ply*cx;
+  for(let y=bb[2];y<=bb[3];y++){const i=y*W+x;if(zd[i]<bb[4])continue;
+   if(fn(rx,ry,(hz-y)/H)&&HR.t<zd[i]){zd[i]=HR.t;put(i*4,HR.r,HR.g,HR.b,fog(HR.t),HR.l)}}}}
+function boxHit(b,rx,ry,vz){
+ const o=[px,py,.5+EY],d=[rx,ry,vz],lo=[b.x0,b.y0,b.z0],hi=[b.x1,b.y1,b.z1];let t0=0,t1=1e9,ax=-1,sg=0;
+ for(let i=0;i<3;i++){const inv=1/d[i];let a=(lo[i]-o[i])*inv,c=(hi[i]-o[i])*inv,s=-1;if(a>c){const q=a;a=c;c=q;s=1}
+  if(a>t0){t0=a;ax=i;sg=s}if(c<t1)t1=c;if(t0>t1)return null}
+ return ax<0?null:{t:t0,ax,sg}}
+function cylHit(b,rx,ry,vz){
+ const ox=px-b.cx,oy=py-b.cy,A=rx*rx+ry*ry,B=ox*rx+oy*ry,C=ox*ox+oy*oy-b.r*b.r,D=B*B-A*C;if(D<0)return null;
+ let t=(-B-Math.sqrt(D))/A,z=.5+EY+t*vz;
+ if(t>0&&z>=b.z0&&z<=b.z1)return{t,n:[(ox+t*rx)/b.r,(oy+t*ry)/b.r,0]};
+ if(vz<0){t=(b.z1-.5-EY)/vz;const hx=ox+t*rx,hy=oy+t*ry;if(t>0&&hx*hx+hy*hy<=b.r*b.r)return{t,n:[0,0,1]}}
+ return null}
+function propFn(b){return(rx,ry,vz)=>{
+ let t,n;
+ if(b.cyl){const h=cylHit(b,rx,ry,vz);if(!h)return false;t=h.t;n=h.n}
+ else{const h=boxHit(b,rx,ry,vz);if(!h)return false;t=h.t;n=[0,0,0];n[h.ax]=h.sg}
+ const hx=px+t*rx,hy=py+t*ry,hz=.5+EY+t*vz,len=Math.hypot(rx,ry,vz),nd=Math.max(0,-(n[0]*rx+n[1]*ry+n[2]*vz)/len),q=(Math.floor(nd*4)+.5)/4,u=hx+hy,nz=(hash((hx*50)|0,((hz+hy)*50)|0)-.5)*22;
+ let c,em=0;
+ if(b.k==0){c=[104,116,122];const sm=(u*3.6)%1;if(sm<.06||hz<.05)c=[40,44,46];else if(hz>.6&&hz<.74&&((hz*70)|0)%2)c=[52,58,60];else if(Math.abs(hz-.42)<.03&&sm>.8)c=[200,190,150]}
+ else if(b.k==1){c=[122,88,54];if((hz*11)%1<.1)c=[70,48,30];if(n[2]>.5)c=[140,104,64];if((u*5)%1<.05)c=[84,58,36]}
+ else if(b.k==2){c=[38,90,150];if(n[2]>.5)c=[78,120,170];if(Math.abs(hz-.12)<.025||Math.abs(hz-.48)<.025)c=[190,190,196];if(hz>.2&&hz<.4&&Math.abs(Math.atan2(hy-b.cy,hx-b.cx))<.5)c=[225,190,40]}
+ else if(b.k==4){c=n[2]>.5?[212,170,114]:[150,108,66]}else if(b.k==5){c=n[2]>.5?(b.y1-hy<.07?[226,172,30]:[206,186,146]):[150,122,84]}else if(b.k==6){c=hz<.12?[60,60,64]:hz>.5?[40,80,160]:(hz>.4||hz<.17)?[200,204,206]:((hz*70)|0)%3==0?[90,90,104]:[238,238,230]}else if(b.k==7){c=b.kb?[196,198,200]:[56,58,62];if(b.scr&&n[1]>0&&hz>b.z0+.03&&hz<b.z1-.03&&hx>b.x0+.03&&hx<b.x1-.03){if(!b.on)c=[16,18,20];else if(!b.rdy){c=[24,56,96];em=1.1}else{const ty=(hz*70)|0,tx=(hx*38)|0;c=(ty%2==0&&hash(tx,ty)>.35)?[110,240,140]:[10,24,16];em=1.3}}}else c=[74,76,74];
+ HR.t=t;HR.r=c[0]+nz;HR.g=c[1]+nz;HR.b=c[2]+nz;HR.l=lit0*(.3+.95*q)*(.5+.9/(1+.06*t*t))*Math.min(1,.55+hz*1.5);if(em)HR.l=em;return true}}
+/* ---- 교수: 진짜 3D 모델 (타원체 파츠 레이캐스팅) ---- */
+const HP=[0,0,.3];
+const PARTS=[
+ {c:[0,.07,.17],r:[.065,.06,.18],pv:[0,.07,.34],k:.55,id:'p'},{c:[0,-.07,.17],r:[.065,.06,.18],pv:[0,-.07,.34],k:-.55,id:'p'},
+ {c:[.05,.07,.03],r:[.1,.055,.035],pv:[0,.07,.34],k:.55,id:'s'},{c:[.05,-.07,.03],r:[.1,.055,.035],pv:[0,-.07,.34],k:-.55,id:'s'},
+ {c:[0,0,.36],r:[.14,.2,.2],h:1,id:'c'},{c:[.02,0,.58],r:[.12,.19,.2],h:1,id:'T'},{c:[-.06,0,.7],r:[.1,.17,.12],h:1,id:'c'},
+ {c:[.1,0,.72],r:[.05,.05,.07],h:1,id:'k'},{c:[.17,0,.8],r:[.105,.09,.115],h:1,id:'k'},
+ {c:[.15,0,.87],r:[.12,.105,.075],h:1,id:'h'},{c:[.1,-.06,.95],r:[.025,.02,.05],h:1,id:'h'},{c:[.17,.07,.955],r:[.025,.02,.05],h:1,id:'h'},
+ {c:[.256,.04,.81],r:[.024,.024,.021],h:1,id:'e'},{c:[.256,-.04,.81],r:[.024,.024,.021],h:1,id:'e'},
+ {c:[.246,.042,.785],r:[.03,.032,.02],h:1,id:'d'},{c:[.246,-.042,.785],r:[.03,.032,.02],h:1,id:'d'},
+ {c:[.272,0,.78],r:[.028,.02,.035],h:1,id:'k'},{c:[.258,0,.735],r:[.022,.04,.01],h:1,id:'m'},
+ {c:[.07,.215,.5],r:[.05,.05,.17],h:1,pv:[.04,.2,.66],k:-.3,id:'c'},{c:[.1,.22,.3],r:[.045,.045,.15],h:1,pv:[.04,.2,.66],k:-.3,id:'c'},{c:[.12,.22,.14],r:[.04,.035,.05],h:1,pv:[.04,.2,.66],k:-.3,id:'k'},
+ {c:[.07,-.215,.5],r:[.05,.05,.17],h:1,pv:[.04,-.2,.66],k:.3,id:'c'},{c:[.1,-.22,.3],r:[.045,.045,.15],h:1,pv:[.04,-.2,.66],k:.3,id:'c'},{c:[.12,-.22,.14],r:[.04,.035,.05],h:1,pv:[.04,-.2,.66],k:.3,id:'k'}];
+const STY=[
+ {coat:[214,214,208],pants:[46,46,62],hair:[38,34,40],skin:[200,178,160],tie:[120,30,42],shirt:[190,200,206],eye:[255,70,60,1],ring:[92,58,82],mess:1,k:[1,1,1]},
+ {coat:[58,62,74],pants:[34,36,44],hair:[176,176,180],skin:[206,180,160],tie:[170,30,36],shirt:[226,228,230],eye:[255,190,70,1],ring:[110,86,70],mess:0,xtra:'beard',k:[.97,1.22,.93],bel:1.28},
+ {coat:[96,112,72],pants:[56,70,110],hair:[22,22,26],skin:[222,194,170],tie:[234,226,196],shirt:[234,226,196],eye:[110,230,255,1],ring:[50,52,62],mess:0,xtra:'glasses',k:[.88,.8,1.08],bel:1},
+ {coat:[112,38,66],pants:[26,26,34],hair:[72,44,34],skin:[228,198,178],tie:[236,236,240],shirt:[236,236,240],eye:[200,130,255,1],ring:[96,70,86],mess:0,xtra:'long',k:[.94,.9,.88],bel:1}];
+let pst=0,PL=PARTS;
+function setPst(n){pst=n;const x=STY[n].xtra;
+ PL=PARTS.map(p=>x=='glasses'&&p.id=='e'?{...p,c:[.259,p.c[1],.81],r:[.018,.038,.036]}:x=='glasses'&&p.id=='d'?{...p,c:[.248,p.c[1],.81],r:[.028,.05,.048]}:p);
+ if(x=='beard')PL=PL.concat([{c:[.2,0,.69],r:[.06,.075,.05],h:1,id:'h'}]);
+ if(x=='long')PL=PL.concat([{c:[.08,0,.74],r:[.09,.13,.2],h:1,id:'h'},{c:[.13,.105,.72],r:[.05,.035,.12],h:1,id:'h'},{c:[.13,-.105,.72],r:[.05,.035,.12],h:1,id:'h'}]);
+ const K=STY[n].k,B=STY[n].bel||1,sc=(v,m)=>[v[0]*m[0],v[1]*m[1],v[2]*m[2]];
+ PL=PL.map(p=>{const q={...p},belly=(p.id=='c'||p.id=='T')&&p.r[1]>=.17&&p.c[2]<.7;q.c=sc(p.c,K);q.r=sc(p.r,belly?[K[0]*B,K[1],K[2]]:K);if(belly)q.c=[q.c[0]+(B-1)*.05,q.c[1],q.c[2]];if(p.pv)q.pv=sc(p.pv,K);return q})}
+function pcol(id,u){const Y=STY[pst];switch(id){
+ case'c':case'T':{if(id=='T'&&u[0]>.45){if(Math.abs(u[1])<.07)return Y.tie;if(Math.abs(u[1])<.3)return Y.shirt}
+  if(Y.mess){if(hash((u[1]*18+u[2]*7+30)|0,(u[2]*16+30)|0)>.8)return[160,160,158];if(u[0]>.5&&u[1]>.3&&u[2]<0)return[176,146,100]}
+  const n=(hash((u[1]*14+30)|0,(u[2]*14+30)|0)-.5)*(Y.mess?0:10);return[Y.coat[0]+n,Y.coat[1]+n,Y.coat[2]+n]}
+ case'k':{const S=Y.skin;if(Y.mess&&u[2]<-.2&&u[0]>0&&hash((u[1]*20+20)|0,(u[2]*20+20)|0)>.55)return[112,102,100];
+  if(u[2]>.45&&u[0]>.3&&((u[2]*30)|0)%3==0)return[S[0]-35,S[1]-38,S[2]-35];return S}
+ case'h':{const H=Y.hair,f=hash((u[0]*20+30)|0,(u[1]*20+u[2]*20+30)|0)>.86;return f?(Y.mess?[128,128,134]:[H[0]*.72,H[1]*.72,H[2]*.72]):H}
+ case'e':return Y.eye;case'd':return Y.ring;case'm':return[60,16,20];case's':return[24,24,28];
+ default:return Y.pants}}
+function profFn(t){
+ const yw=prof.yw,cY=Math.cos(yw),sY=Math.sin(yw),sw=Math.sin(prof.ph),ex=px-prof.x,ey=py-prof.y;
+ const O=[ex*cY+ey*sY,-ex*sY+ey*cY,.5],Rh=ry3(.3+Math.sin(t*2)*.03),hOff=sub(HP,mv(Rh,HP));
+ const ps=PL.map(p=>{let A=[1,0,0,0,1,0,0,0,1],off=[0,0,0];
+  if(p.h){A=Rh;off=hOff}
+  if(p.k){const Rs=ry3(sw*p.k);off=add(mv(Rs,off),sub(p.pv,mv(Rs,p.pv)));A=mm(Rs,A)}
+  const q=add(mv(A,O),off),r=p.r,ob=[(q[0]-p.c[0])/r[0],(q[1]-p.c[1])/r[1],(q[2]-p.c[2])/r[2]];
+  return{p,A,ob,U:[A[0]/r[0],A[1]/r[0],A[2]/r[0],A[3]/r[1],A[4]/r[1],A[5]/r[1],A[6]/r[2],A[7]/r[2],A[8]/r[2]],C:ob[0]*ob[0]+ob[1]*ob[1]+ob[2]*ob[2]-1,x:0,y:0,z:0}});
+ return(rx,ry,vz)=>{
+  const lx=rx*cY+ry*sY,ly=-rx*sY+ry*cY,lz=vz,sx=O[0]-.05,sz=O[2]-.5,a0=lx*lx+ly*ly+lz*lz,b0=sx*lx+O[1]*ly+sz*lz;
+  if(b0*b0-a0*(sx*sx+O[1]*O[1]+sz*sz-.3844)<0)return false;
+  let bt=1e9,bp=null;
+  for(const s of ps){const U=s.U,x=U[0]*lx+U[1]*ly+U[2]*lz,y=U[3]*lx+U[4]*ly+U[5]*lz,z=U[6]*lx+U[7]*ly+U[8]*lz,ob=s.ob,A=x*x+y*y+z*z,B=ob[0]*x+ob[1]*y+ob[2]*z,D=B*B-A*s.C;
+   if(D<0)continue;const tt=(-B-Math.sqrt(D))/A;if(tt>.001&&tt<bt){bt=tt;bp=s;s.x=x;s.y=y;s.z=z}}
+  if(!bp)return false;
+  const ob=bp.ob,u=[ob[0]+bt*bp.x,ob[1]+bt*bp.y,ob[2]+bt*bp.z],r=bp.p.r,A=bp.A,a=u[0]/r[0],b=u[1]/r[1],c=u[2]/r[2];
+  const nx=A[0]*a+A[3]*b+A[6]*c,ny=A[1]*a+A[4]*b+A[7]*c,nz=A[2]*a+A[5]*b+A[8]*c,wx=nx*cY-ny*sY,wy=nx*sY+ny*cY,ln=Math.hypot(wx,wy,nz)||1;
+  const nd=Math.max(0,-(wx*rx+wy*ry+nz*vz)/(ln*Math.hypot(rx,ry,vz))),q=(Math.floor(nd*4)+.5)/4,col=pcol(bp.p.id,u);
+  HR.t=bt;HR.r=col[0];HR.g=col[1];HR.b=col[2];
+  HR.l=col[3]?1.6:lit0*(.3+.95*q)*(.5+.9/(1+.06*bt*bt));return true}}
+function put(o,r,g,b,f,lit){
+ const n=(NT[(off+o*7)&65535]-.5)*amp;r*=lit;g*=lit;b*=lit;
+ buf[o]=r+(FR-r)*f+n;buf[o+1]=g+(FG-g)*f+n;buf[o+2]=b+(FB-b)*f+n*1.1;buf[o+3]=255}
+function sprite(sx,sy,s,sc,vo,hz,dx,dy,plx,ply){
+ const rx=sx-px,ry=sy-py,inv=1/(plx*dy-dx*ply),tX=inv*(dy*rx-dx*ry),tY=inv*(-ply*rx+plx*ry);
+ if(tY<.2)return;
+ const scx=(W/2)*(1+tX/tY),sh=Math.abs(H/tY)*sc,sw=sh*s.w/s.h,bot=hz+(H*(.5+EY))/tY-vo*H/tY,top=bot-sh,x0=scx-sw/2;
+ const f=fog(tY);
+ for(let x=Math.max(0,Math.floor(x0));x<=Math.min(W-1,Math.floor(x0+sw));x++){
+  if(tY>=zb[x])continue;
+  const tx=Math.min(s.w-1,((x-x0)*s.w/sw)|0);
+  for(let y=Math.max(0,top|0);y<=Math.min(H-1,bot|0);y++){
+   const ty=Math.min(s.h-1,((y-top)*s.h/sh)|0),ti=(ty*s.w+tx)*4;
+   if(s.d[ti+3]==0||tY>=zd[y*W+x])continue;zd[y*W+x]=tY;
+   put((y*W+x)*4,s.d[ti],s.d[ti+1],s.d[ti+2],f,lit0)}}}
+function render(t){if(stage==3)return renderEnd(t);genB=1;
+ const sh=tension>.12?tension*2:0,jit=sh?(Math.random()-.5)*.014*sh:0;
+ const a=ang+jit,dx=Math.cos(a),dy=Math.sin(a),plx=-dy*.66,ply=dx*.66;
+ const hz=(H/2+pitch+(sh?(Math.random()-.5)*6*sh:0))|0;
+ lit0=1+Math.sin(t*37)*.03+(Math.random()<.025?-.3:0)-tension*.15;
+ amp=18+tension*70;off=(Math.random()*65536)|0;
+ // 바닥 & 천장
+ if(stage==2)s2floor(hz,dx,dy,plx,ply);else for(let y=0;y<H;y++){
+  const p=y-hz,q=Math.abs(p)||.5,rd=H*.5/q,f=fog(rd),tex=p>0?floorT:ceilT;
+  const stx=rd*2*plx/W,sty=rd*2*ply/W;let fx=px+rd*(dx-plx),fy=py+rd*(dy-ply);
+  for(let x=0;x<W;x++){
+   const tx=((fx-Math.floor(fx))*TS)|0,ty=((fy-Math.floor(fy))*TS)|0,ti=(ty*TS+tx)*3;
+   fx+=stx;fy+=sty;
+   const dl=tx-64,dm=ty-64,pool=1.2-(dl*dl+dm*dm)/10400;
+   put((y*W+x)*4,tex[ti],tex[ti+1],tex[ti+2],f,lit0*(p>0?.9:.75)*pool*(.5+.9/(1+.06*rd*rd)))}}
+ // 벽 (DDA)
+ for(let x=0;x<W;x++){
+  const cx=2*x/W-1,rx=dx+plx*cx,ry=dy+ply*cx;let mx=px|0,my=py|0;
+  const ddx=Math.abs(1/rx),ddy=Math.abs(1/ry);let sx,sy,sdx,sdy;
+  if(rx<0){sx=-1;sdx=(px-mx)*ddx}else{sx=1;sdx=(mx+1-px)*ddx}
+  if(ry<0){sy=-1;sdy=(py-my)*ddy}else{sy=1;sdy=(my+1-py)*ddy}
+  let side=0,hit=0;
+  while(!hit){if(sdx<sdy){sdx+=ddx;mx+=sx;side=0}else{sdy+=ddy;my+=sy;side=1}hit=map[my][mx]}
+  const pd=Math.max(.05,side?sdy-ddy:sdx-ddx);zb[x]=pd;
+  let wx=side?px+pd*rx:py+pd*ry;wx-=Math.floor(wx);let tx=(wx*TS)|0;
+  if((side==0&&rx>0)||(side==1&&ry<0))tx=TS-1-tx;
+  const lh=((H/pd)*(1+.07*Math.sin(wx*Math.PI)))|0,step=TS/lh;const eyo=EY*lh|0;let ds=hz+eyo-(lh>>1),de=hz+eyo+(lh>>1),tp=0;
+  if(ds<0){tp=-ds*step;ds=0}if(de>H)de=H;
+  const r=hash(mx*7+1,my*13+3),tex=hit==2?doorT:getWall(mx,my,side*2+(side?(ry>0?1:0):(rx>0?1:0)));
+  const f=fog(pd),lit=(.68+.32*Math.min(1,Math.min(wx,1-wx)*8))*lit0*(side?.75:1)*(.5+.9/(1+.06*pd*pd));
+  for(let y=ds;y<de;y++){const ty=(tp|0)&(TS-1),ti=(ty*TS+tx)*3;tp+=step;put((y*W+x)*4,tex[ti],tex[ti+1],tex[ti+2],f,lit*AOT[ty])}}
+ // 스프라이트 (거리순)
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++)zd[y*W+x]=zb[x];
+ const sp=[];
+ if(!hasKey)KL.forEach((k,i)=>sp.push({x:k.x,y:k.y,s:keyS,sc:.28,vo:.12+Math.sin(t*3+i*2)*.04}));
+ if(!hasDet)sp.push({x:det.x,y:det.y,s:detS,sc:.24,vo:.1+Math.sin(t*3+1)*.04});
+ 
+ sp.sort((a,b)=>Math.hypot(b.x-px,b.y-py)-Math.hypot(a.x-px,a.y-py));
+ for(const o of sp)sprite(o.x,o.y,o.s,o.sc,o.vo,hz,dx,dy,plx,ply);
+ for(const b of props){if(Math.hypot((b.x0+b.x1)/2-px,(b.y0+b.y1)/2-py)>11)continue;if(b.k==5&&(b.z1<=EY+.001||((b.x0+b.x1)/2-px)*dx+((b.y0+b.y1)/2-py)*dy<0))continue;const bb=projBox(b.x0,b.y0,b.z0,b.x1,b.y1,b.z1,hz,dx,dy,plx,ply);if(bb)drawObj(bb,b.fn,hz,dx,dy,plx,ply)}
+ if(Math.hypot(prof.x-px,prof.y-py)<11){const bb=projBox(prof.x-.5,prof.y-.5,0,prof.x+.5,prof.y+.5,1.15,hz,dx,dy,plx,ply);if(bb)drawObj(bb,profFn(t),hz,dx,dy,plx,ply)}
+ if(hid)hideView();soften();if(q3.act)q3View();
+ for(const d of dust){d.x+=(d.vx+Math.sin(t+d.a*9)*3)*dtG;d.y+=d.vy*dtG;if(d.y>=H){d.y=0;d.x=Math.random()*W}if(d.x<0)d.x+=W;if(d.x>=W)d.x-=W;
+  const o=((d.y|0)*W+(d.x|0))*4,k=30+d.a*50;buf[o]+=k;buf[o+1]+=k;buf[o+2]+=k}
+ if(fade>0){fade=Math.max(0,fade-dtG*2.2);const k=1-fade;for(let i=0;i<buf.length;i+=4){buf[i]*=k;buf[i+1]*=k;buf[i+2]*=k}}ctx.putImageData(img,0,0);
+ hudUpd();
+ const ks=$('ks');ks.textContent=stage==2?'[ S4-1 '+(fl+1)+'F ]':hasKey?'[ 열쇠 : 획득 ]':'[ 열쇠 : 없음 ]';ks.className=hasKey?'on':''}
+
+/* ---------- 입력 & 루프 ---------- */
+addEventListener('keydown',e=>{if(e.code=='Escape'&&!e.repeat){if(state=='quest'){closeQ();return}if(state=='term'){closeTerm();return}if(state=='pause')resume();else pause();return}keys[e.code]=true;if(e.code.startsWith('Arrow'))e.preventDefault()});
+addEventListener('keyup',e=>{keys[e.code]=false});
+let skip=0;addEventListener('blur',()=>{keys={};drag=false;skip=3});document.addEventListener('visibilitychange',()=>{keys={};drag=false;skip=3});
+function lockPtr(){try{const r=cv.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}
+cv.addEventListener('click',()=>{if(state=='play'&&!locked)lockPtr()});
+document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement==cv;drag=false;skip=3;if(!locked&&state=='play')pause()});
+cv.addEventListener('mousedown',()=>{drag=true});
+addEventListener('mouseup',()=>{drag=false});
+addEventListener('mousemove',e=>{if(state!='play'||q3.act||!(locked||drag))return;if(!locked&&!(e.buttons&1)){drag=false;return}if(skip>0){skip--;return}const dx=e.movementX,dy=e.movementY;if(Math.abs(dx)>120||Math.abs(dy)>120)return;ang+=dx*.0028*S.sens;pitch=Math.max(-42,Math.min(42,pitch-dy*.27))});
+let pAt=0;
+function applyS(){}
+function pause(){if(state!='play')return;state='pause';pAt=performance.now();keys={};try{document.exitPointerLock()}catch(e){}$('pm').style.display='flex';$('pr').focus()}
+function resume(){if(state!='pause')return;state='play';t0+=performance.now()-pAt;$('pm').style.display='none';lockPtr()}
+const SDEF=[['sens','마우스 감도',.3,2.5,.05],['bri','화면 밝기',.6,1.8,.05],['fog','안개 농도',.3,1.6,.05],['soft','뿌연 정도',0,1,.05]];
+function buildSl(){$('sl').innerHTML='';for(const[k,n,a,b,s]of SDEF){const r=document.createElement('div');r.className='r';r.innerHTML='<span>'+n+'</span><input type="range" min="'+a+'" max="'+b+'" step="'+s+'"><b></b>';const i=r.children[1],v=r.children[2];i.value=S[k];v.textContent=(+S[k]).toFixed(2);
+  i.oninput=()=>{S[k]=+i.value;v.textContent=S[k].toFixed(2);applyS();try{localStorage.setItem('b3s',JSON.stringify(S))}catch(e){}};$('sl').appendChild(r)}}
+buildSl();applyS();
+$('pr').onclick=resume;$('pd').onclick=()=>{Object.assign(S,SD);buildSl();applyS();try{localStorage.setItem('b3s',JSON.stringify(S))}catch(e){}};
+$('pq').onclick=()=>{$('pm').style.display='none';stage==2?startStage2():start()};
+$('ob').addEventListener('click',()=>state=='clear'?startStage2():start());
+function stageClear(){state='clear';try{document.exitPointerLock()}catch(e){}$('warn').style.display='none';$('hint').style.display='none';lastHint='';
+ show('1단계 클리어','S4-1 지하실에서 열쇠를 손에 넣었다.\n굳게 닫혀 있던 문이 열리고, 1층으로 올라가는 계단이 보인다.\n\n다음 단계 : 소프트웨어학부 S4-1 건물 (퀘스트 진행)','다음 단계로')}
+/* 2단계 : S4-1 건물 — 아래 배치는 임시(도면 반영 전). 실제 도면이 생기면 genS2만 교체 */
+/* 2단계 : S4-1 건물 (3층, 층마다 동일 구조) — 방 이름은 RM 표에서 수정 */
+let FR=165,FG=172,FB=178,fl=0,ZN=[],DR={},DRL=[];
+const NW=64,KD={cls:'glass',club:'wood',off:'glass',lab:'lab',wcw:'wcw'},BK={cls:'wbd',club:'board',off:'shelf',lab:'shelf'};
+const X=(n,k,c)=>Array(c).fill([n,k]),
+RM=[{w:[['오피스룸','off'],['G Dev FC','club'],['Emsis','club'],['학생회실','off'],['Tux','club'],['정독실','off']],e:[['여자화장실','wcw'],['Samaru','club'],['Cuvic','club'],['Nestnet','club'],['Pda','club'],['Nova 동아리방','club']],s:X('수업실','cls',6)},
+ {w:[['과사무실','off'],...X('수업실','cls',5)],e:[['여자화장실','wcw'],...X('수업실','cls',5)],s:X('수업실','cls',6)},
+ {w:X('대학원실','lab',6),e:[['여자화장실','wcw'],...X('대학원실','lab',5)],s:X('대학원실','lab',6)}];
+function genS2(f){map=[];ZN=[];DR={};DRL=[];props=[];
+ for(let y=0;y<N;y++){map.push(new Array(NW).fill(1));ZN.push(new Array(NW).fill(''))}
+ const C=(x0,y0,x1,y1,z)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){map[y][x]=0;ZN[y][x]=z}},
+ D=(x,y,t,n)=>{map[y][x]=3;DR[y*NW+x]={t:'door',k:t,n};DRL.push({x,y,n})},
+ box=(x0,x1,y0,y1,z0,z1)=>props.push({k:4,x0,x1,y0,y1,z0,z1,c:true}),R=RM[f];
+ C(1,14,53,15,'c');C(25,9,29,13,'l');C(25,16,29,20,'l');
+ const rooms=[];
+ R.w.forEach((r,j)=>rooms.push([21-4*j,23-4*j,0,r]));R.e.forEach((r,i)=>rooms.push([31+4*i,33+4*i,0,r]));
+ [[17,23],[9,15],[1,7],[31,37],[39,45],[47,53]].forEach((r,i)=>rooms.push([r[0],r[1],1,R.s[i]]));
+ rooms.filter(r=>r[3][1]=='cls').sort((p,q)=>p[0]-q[0]||p[2]-q[2]).forEach((r,i)=>{r[3]=[(f+1)*100+i+1+' 수업실','cls']});
+ RZ=rooms.map(([a,b,s,[n]])=>({n,a,b,y0:s?17:9,y1:s?20:12}));
+ rooms.forEach(([a,b,s,[n,ty]])=>{const cx=(a+b)>>1,by=s?21:8,rows=s?[18.2,19.4]:[9.5,10.9],wd=b-a+1,wc=ty=='wcw';
+  C(a,s?17:9,b,s?20:12,wc?'w':'r');D(cx,s?16:13,KD[ty],n);
+  if(!wc){for(let x=cx-1;x<=cx+1;x++)DR[by*NW+x]={t:BK[ty]};
+   if(ty=='club')box(a+.7,b+.3,rows[0]+.3,rows[1]+.3,0,.3);
+   else for(let k=0;k<(ty=='off'?1:2);k++)for(const x of(wd>5?[a+.6,a+2.9,a+5.2]:[a+.9]))box(x,x+1.2,rows[k],rows[k]+.6,0,.3)}});
+ if(!f){C(47,21,53,28,'r');for(let x=49;x<=51;x++){delete DR[21*NW+x];DR[29*NW+x]={t:'wbd'}}
+  props=props.filter(o=>!(o.k==4&&o.x0>=47&&o.x1<=54&&o.y0>=17&&o.y1<=21));
+  for(const y of[18.4,20.6,22.8,25,27])for(const x of[47.6,49.9,52.2])box(x,x+1.2,y,y+.6,0,.3);
+  for(const r of RZ)if(r.n=='106 수업실')r.y1=28;
+  DR[13*NW+19]={t:'gjam'}}
+ if(f<2)for(let x=27;x<=29;x++)DR[8*NW+x]={t:'up'};
+ if(f>0)for(let x=26;x<=28;x++)DR[21*NW+x]={t:'dn'};
+ if(!f)for(const[x,y]of[[25,9],[26,9],[25,10],[26,10]]){map[y][x]=1;DR[y*NW+x]={t:'dn'}}
+ DR[11*NW+30]={t:'fire'};
+ for(const y of[14,15]){DR[y*NW]={t:'end'};DR[y*NW+54]={t:'end'}}
+ if(!f){for(let x=26;x<=28;x++)DR[21*NW+x]={t:'entr'};map[18][27]=1;DR[18*NW+27]={t:'pillar'};DR[17*NW+30]={t:'sw1'};DR[18*NW+30]={t:'sw2'};DR[17*NW+24]={t:'board'};DR[18*NW+24]={t:'board'}}
+ const tx=[7,38,46][f],ty=15.25;box(tx,tx+2.2,ty,ty+.7,.26,.3);props.push({k:4,x0:tx+1,x1:tx+1.2,y0:ty+.3,y1:ty+.4,z0:0,z1:.26,c:false});
+ if(f<2)for(let k=1;k<=9;k++)props.push({k:5,x0:27,x1:30,y0:13-(k+1)*.35,y1:13-k*.35,z0:0,z1:.03*k,c:false});
+ q2.mon=null;{const r=RZ.find(r=>r.n=='211 수업실');if(r&&r.y0==9){const a=r.a,on=q2.on?1:0,rdy=q2.on&&q2.boot<=0?1:0;
+  q2.mon={k:7,scr:1,x0:a+1.2,x1:a+1.8,y0:11.12,y1:11.24,z0:.37,z1:.6,c:false,on,rdy};props.push(q2.mon);
+  props.push({k:7,x0:a+1.42,x1:a+1.58,y0:11.14,y1:11.22,z0:.3,z1:.37,c:false},{k:7,kb:1,x0:a+1.15,x1:a+1.85,y0:11.28,y1:11.45,z0:.3,z1:.32,c:false})}}
+ for(const o of props)o.fn=propFn(o);
+ hasKey=false;hasDet=false;KL=[];key={x:-99,y:-99};det={x:-99,y:-99};prof={x:-99,y:-99,yw:0,ph:0};path=null;pathT=0;tension=0;q1.act=0;lastRoom='';mapC=null;$('dt').textContent='';$('warn').style.display='none'}
+const S2T={},G8={G:'.###.|#...#|#....|#.###|#...#|#...#|.###.',M:'#...#|##.##|#.#.#|#.#.#|#...#|#...#|#...#',J:'..###|...#.|...#.|...#.|...#.|#..#.|.##..',S:'.####|#....|#....|.###.|....#|....#|####.',O:'.###.|#...#|#...#|#...#|#...#|#...#|.###.',F:'#####|#....|#....|####.|#....|#....|#....',T:'#####|..#..|..#..|..#..|..#..|..#..|..#..',W:'#...#|#...#|#...#|#.#.#|#.#.#|##.##|#...#',A:'.###.|#...#|#...#|#####|#...#|#...#|#...#',R:'####.|#...#|#...#|####.|#.#..|#..#.|#...#',E:'#####|#....|#....|####.|#....|#....|#####'};
+function s2P(t,x,y){
+ const n=hash(x>>1,y>>1)*8,inb=(a,b,c,d)=>x>=a&&x<b&&y>=c&&y<d;let c;
+ if(y>=58)c=[128+n,78+n/2,40];else if(y>=34)c=[198+n,190+n,156+n];else if(y==33)c=[150,146,126];else c=[238+n/2,232+n/2,198+n/2];
+ if(t=='rail'||t=='rail2'){if(y>=38&&y<=40)c=[[226,230,232],[184,188,190],[104,108,110]][y-38];else if(y>40&&y<44&&x%24==5)c=[110,112,114]}
+ if(t=='rail2'){if(x>=18&&x<32&&y>=40&&y<58&&Math.abs(x-22-(y-40)*.15)<2+(y-40)*.45)c=(x+y)%5?[34,34,40]:[60,60,68];
+  if(x>=19&&x<22&&y>=34&&y<40)c=[34,34,40];
+  if(x>=42&&x<52&&y>=40&&y<58&&Math.abs(x-47)<2+(y-40)*.3)c=(x+y)%4?[228,228,232]:[190,190,196]}
+ if(t=='poster')for(let i=0;i<3;i++){const a=6+i*19,o=(i&1)*4;if(inb(a,a+15,6+o,28+o)){c=y<12+o?[[60,100,170],[200,70,50],[40,40,44]][i]:[236,236,230];if(hash(x>>1,y>>1)>.8)c=[150,150,160]}}
+ if(t=='glass'||t=='lab'||t=='wcw'||t=='wcm'){const wc=t[0]=='w';
+  if(inb(10,50,4,58)){const fr=x<13||x>=47||y<7;c=fr?[148,152,150]:wc?[236,242,242]:[168+y*.4,198+y*.3,204]}
+  if(inb(20,22,26,40))c=[88,56,40];if(inb(52,58,26,32))c=[56,106,170];
+  if(t=='lab'&&inb(6,9,28,33))c=y<30?[60,230,110]:[30,32,36];
+  if(wc&&inb(26,38,14,40)){const d=Math.hypot(x-32,y-18);if(d<3||(y>=22&&Math.abs(x-32)<(t=='wcw'?(y-20)*.45:3)))c=[30,30,36]}}
+ if(t=='wood'){if(inb(10,54,2,58)){const fr=x<13||x>=51||y<5;c=fr?[196,176,120]:y<14?[130,150,160]:[228,222,190]}if(inb(44,47,32,38))c=[150,152,150];if(inb(56,62,22,28))c=[56,106,170]}
+ if(t=='entr'){const q=x%32,fr=q<3||y<7;c=fr?[170,174,172]:q<5?[60,70,78]:[22+y*.3,30+y*.3,38+y*.3];if(y>=58)c=[170,174,172]}
+ if(t=='end'){if(inb(8,56,4,58))c=x<11||x>=53||y<7||x==31?[150,152,150]:[12,16,22];if(inb(24,40,0,4))c=[60,220,110]}
+ if(t=='up'){c=[28+y*.15,28+y*.15,36+y*.15];if(y>=6&&y<30&&x%16>2&&x%16<14&&y%12>1)c=[70,86,100]}
+ if(t=='dn'){c=[34+y*.2,34+y*.2,38];if(y>20&&(y-20)%6<1)c=[60,58,56];if(inb(26,38,6,18)){c=[240,196,30];if(x>=31&&x<33&&y>=9&&y<14)c=[30,28,20]}}
+ if(t=='fire'&&inb(12,52,8,56)){c=[196,198,198];if(x<16||x>=48||y<12||y>=52)c=[150,152,152];if(inb(38,44,14,18))c=[225,40,40];if(x>=28&&x<34&&y>=22&&y<46&&hash(x,y>>1)>.4)c=[90,60,60]}
+ if(t=='sw1'||t=='sw2'){c=y>=58?[40,40,44]:y%9==0?[120,78,40]:hash(x>>2,0)>.5?[150,102,58]:[138,92,50];const L=t=='sw1'?'SOFT':'WARE';
+  for(let i=0;i<4;i++){const gx=x-(9+i*12),gy=y-20;if(gx>=0&&gx<10&&gy>=0&&gy<14&&G8[L[i]].split('|')[gy>>1][gx>>1]=='#')c=[34,84,170]}}
+ if(t=='board'){c=y>=58?[128,78,40]:[236,238,234];if(y<12)c=[40,120,70];else if(inb(4,60,14,52)&&(x-4)%9<7&&(y-14)%13<11){const h=hash(((x-4)/9)|0,(((y-14)/13)|0)+4);c=h<.3?[60,100,170]:h<.6?[230,200,90]:[222,226,236]}}
+ if(t=='wbd'){if(inb(2,62,10,38)){const fr=x<4||x>=60||y<12||y>=36;c=fr?[170,174,174]:[240,242,240];if(!fr&&y>20&&y<22&&x<30)c=[60,90,160]}if(inb(2,62,38,41))c=[130,132,134]}
+ if(t=='shelf'&&inb(4,60,6,58)){c=[110,76,50];for(const l of[24,42,58]){if(y>=l-3&&y<l)c=[150,108,70];else if(y<l-3&&y>l-16&&(x-6)%7<6&&hash(((x-6)/7)|0,l)>.15){const u=hash(((x-6)/7)|0,l+1);c=u<.33?[70,130,90]:u<.66?[190,140,50]:[150,160,180]}}}
+ if(t=='gjam'&&inb(3,61,3,57)){c=[30,58,44];const gg=(L,ox,oy,a,b)=>{for(let i=0;i<L.length;i++){const gx=a-(ox+i*11),gy=b-oy;if(gx>=0&&gx<10&&gy>=0&&gy<14&&G8[L[i]].split('|')[gy>>1][gx>>1]=='#')return true}return false};
+  if(y>=7&&y<9&&x>=7&&x<45&&(x>>1)%3!=2)c=[246,224,74];
+  for(const[L,oy]of[['GAME',16],['JAM',33]]){if(gg(L,8,oy,x,y))c=[201,169,236];else if(gg(L,8,oy,x-1,y-1))c=[246,224,74]}
+  const sl=(x-5)*.07;if(x>=5&&x<59&&y>=51-sl&&y<57-sl){c=[246,224,74];if(x>14&&x<50&&y>=53-sl&&y<55-sl&&(x>>2)%3!=2)c=[30,58,44]}}
+ if(t=='pillar'){if(inb(20,44,6,22)){c=[40,70,160];if(Math.hypot(x-32,y-14)<6)c=[240,240,240];if(Math.abs(x-32+y-14)<1.2&&Math.hypot(x-32,y-14)<6)c=[220,40,40]}
+  if(inb(14,50,26,44))c=(x%7==0||y%6==0)?[240,240,240]:[96,170,210];if(inb(16,48,47,56))c=[246,246,244]}
+ return c}
+function s2Tex(mx,my,fc){const nx=mx+(fc==0)-(fc==1),ny=my+(fc==2)-(fc==3),z=(ZN[ny]&&ZN[ny][nx])||'',d=DR[my*NW+mx];let t=d?d.t:'';if(t=='gjam'&&fc!=2)t='wall';
+ if(t=='door')t=d.k;else if(!t){t='wall';if(z=='c'||z=='l'){const h=hash(mx,my*3+1);t=h<.3?'rail':h<.5?'rail2':h<.62?'poster':'wall'}}
+ return S2T[t]||(S2T[t]=mk((x,y)=>s2P(t,63-x,y),0))}
+function s2floor(hz,dx,dy,plx,ply){let r,g,b;const K=(a,e,c)=>{r=a;g=e;b=c};
+ for(let y=0;y<H;y++){const p=y-hz,q=Math.abs(p)||.5,fo=p>0,rd=H*(fo?.5+EY:.5-EY)/q,f=fog(rd),stx=rd*2*plx/W,sty=rd*2*ply/W,bl=lit0*(fo?.9:.8)*(.55+.8/(1+.05*rd*rd));
+  let fx=px+rd*(dx-plx),fy=py+rd*(dy-ply);
+  for(let x=0;x<W;x++){const cx=Math.floor(fx),cy=Math.floor(fy),v=fy-cy,z=ZN[cy]?ZN[cy][cx]||'':'',gx=Math.round((fx-1.5)/2)*2+1.5,gy=Math.round((fy-11)/4)*4+11,dl=Math.hypot(fx-gx,fy-gy),ch=(fl<2&&cx>=27&&cx<=29&&cy>=9&&cy<=12)||(!fl&&cx>=25&&cx<=26&&cy>=9&&cy<=12)||(fl>0&&cx>=26&&cx<=28&&cy>=17&&cy<=20);let pf=f,l=bl*(.8+.6/(1+dl*dl*2));
+   if(fo){const tq=hash((fx*2)|0,(fy*2)|0)*14,ln=(fx*2)%1<.05||(fy*2)%1<.05;
+    if(ch&&cy>=17){let hit=0,rk=rd;const cxk=2*x/W-1;for(let k=0;k<=10;k++){rk=H*(.5+EY+.03*k)/q;const gx2=px+rk*(dx+plx*cxk),gy2=py+rk*(dy+ply*cxk),y0=k<10?17+.35*k:20.5;if(gy2>=y0&&gy2<(k<10?y0+.35:21)&&gx2>=26&&gx2<29){gy2-y0>.27&&k<10?K(104,84,56):K(204+tq,184+tq,146+tq);hit=1;break}}if(!hit)K(30,28,26);pf=fog(rk);l=lit0*.8*(.55+.8/(1+.05*rk*rk))}else if(ch)((fy*4)%1<.14?K(112,92,60):K(200+tq,180+tq,142+tq));else if(z=='c'){if((cy==14&&v<.2)||(cy==15&&v>.8))K(78+tq,92+tq,124+tq);else ln?K(104,84,64):K(178+tq,142+tq,112+tq)}
+    else if(z=='l'){if(cy==12&&v>.5&&v<.7)K(226,172,30);else ln?K(112,112,110):K(156+tq,156+tq,152+tq)}
+    else if(z=='w')ln?K(150,154,156):K(200+tq,204+tq,206+tq);
+    else if(z=='r')ln&&(fx%1<.05||fy%1<.05)?K(120,112,96):K(172+tq,162+tq,138+tq);
+    else K(90,84,76)}
+   else{if(dl<.22&&z){K(255,255,236);l=1.9}else if(fx%1<.03||fy%1<.03)K(170,170,166);else hash((fx*14)|0,(fy*14)|0)>.86?K(168,168,164):K(228,228,222)}
+   put((y*W+x)*4,r,g,b,pf,l);fx+=stx;fy+=sty}}}
+function s2eye(){let e=0;if(py>=9&&py<13.01&&px>=25&&px<30){const pr=Math.max(0,Math.min(1,(13-py)/3.5));if(px>=27){if(fl<2)e=Math.floor(pr*10)/10*.3}else if(!fl)e=-Math.floor(pr*10)/10*.3}else if(fl&&px>=26&&px<29&&py>=17&&py<21)e=-Math.floor(Math.min(1,(py-17)/3.5)*10)/10*.3;return e}
+function s2tick(dt){qtick(dt);if(stage==2&&!fl&&qDone.every(Boolean)&&!q1.act&&!q3.act&&px>=26&&px<29&&py>=20.5)return startEnding();EY=s2eye()-(q1.sit||q3.act?.12:0);if(fl<2&&px>=27&&px<30&&py>=9&&py<9.5)return goFl(fl+1);if(fl&&px>=26&&px<29&&py>=20.5&&py<21)return goFl(fl-1);if(!fl&&px<27&&px>=25&&py<11.4&&py>=9){if(lastMsg!='bs'){say('지하실로 통하는 철문은 잠겨 있다.',3);lastMsg='bs'}}else if(lastMsg=='bs')lastMsg='';
+ for(const d of DRL){const dx=px-d.x-.5,dy=py-d.y-.5,dd=Math.hypot(dx,dy),inC=(px|0)==d.x&&(py|0)==d.y;
+ if(map[d.y][d.x]==3){if(dd<1.5&&(-Math.cos(ang)*dx-Math.sin(ang)*dy)>.5*dd)map[d.y][d.x]=0}else if(dd>2.2&&!inC)map[d.y][d.x]=3}}
+function s2near(){return null}
+function s2hint(){if(q3.act)return 'SPACE 연타 : 눈 뜨기 / ↑ (또는 W) 누르고 있기 : 고개 들기';if(q1.act==2){const b=q1.a>=.8||q1.pat=='turn1';return q1.sit?(b?'교수가 보고 있다 - 가만히 앉아 있어라':'F : 일어나기'):(q1desk()?'F : 책상에 앉기':'책상 근처로 가서 F로 앉아야 한다')}if(q2near())return q2hint();if(nearBd())return 'F : 퀘스트 공지 확인';if(nearGj())return 'F : GAME JAM 포스터 확인';if(q1near())return 'F : 맨 앞자리에 앉아 출석하기';if(q1far())return '맨 앞자리(교탁 앞)에 앉아야 출석이 인정된다';let b=null,bd=2.6;for(const o of DRL){const e=Math.hypot(px-o.x-.5,py-o.y-.5);if(e<bd){bd=e;b=o}}return b?'[ '+b.n+' ]':''}
+const QUEST={t:'공지사항',b:'제목 : S4-1 건물 퀘스트 안내 (수업실 입장 시 바로 시작)\n\n[106호] 조오현 교수 - 응용컴퓨터프로그래밍 (2시간 풀강)\n출석만 하고 교수의 눈에 띄지 않게 도망쳐라.\n제한시간 60초 / 교수가 칠판을 볼 때만 F로 일어나 이동하고,\n뒤돌아보면 책상에 F로 앉아라. 서 있으면 실패!\n\n[211호] 노서영 교수 - 리눅스 실습\n컴퓨터를 켜고 터미널(사용자 opensw)에서\n지정된 디렉터리를 만들고 touch로 지정된 파일을 생성하라.\n\n[106호] 문현주 교수 - 컴퓨터시스템개론 (3시간 풀강)\n※ 위 두 퀘스트를 모두 클리어해야 진행 가능\n20초 동안 졸음을 버텨라. 감기는 눈과 떨어지는 고개를\n막아야 한다.\n\n소프트웨어학부'};
+let lastObj='',qSeen=false,qDone=[false,false,false],q1={act:0,a:1,pat:'',pt:0,g:0,t:0,lx:0,ly:0,w:'',sit:false},RZ=[],lastRoom='';
+function objText(){if(stage==3)return '[ 엔딩 ]\n스페이스 : 담배를 한 모금 피운다 ('+puffs+'/'+PUF+')';
+if(stage==1)return hasKey?'[ 1단계 ]\n출구 문을 찾아 탈출하라':'[ 1단계 ]\n열쇠를 찾아라\n교수를 피해 사물함(F)에 숨을 수 있다';
+ if(!qSeen)return '[ 2단계 : S4-1 건물 ]\n로비 입구쪽 벽면의 공지사항을 확인하라 (F)';
+if(q1.act)return q1.act==1?'[ 퀘스트 1 ]\n교실 맨 앞자리에 앉아 출석하라 (F)':'[ 퀘스트 1 ]\n교수가 칠판을 볼 때만 F로 일어나 이동하라\n돌아보면 책상에 F로 앉아라! 서 있으면 실패';
+ if(q3.act)return '[ 퀘스트 3 ]\n문현주 교수의 컴퓨터시스템개론 - 졸음을 20초간 버텨라\nSPACE 연타 : 눈 뜨기 / ↑ 누르고 있기 : 고개 들기\n(고개를 들면 눈이 더 빨리 감긴다)';
+ if(q2.act)return q2obj();
+ const Q=['106호 : 응용컴퓨터프로그래밍 - 출석 후 몰래 도망 (60초)','211호 : 리눅스 실습 - 터미널에서 디렉터리·파일 만들기','106호 : 컴퓨터시스템개론 - 졸음 버티기 (20초)'],k=qDone.indexOf(false);
+ return k<0?'[ 2단계 : S4-1 건물 ]\n모든 퀘스트 클리어!\n'+(fl?'1층으로 내려가 로비 출입문으로 나가라':'로비 출입문으로 나가라 (M : 지도)'):'[ 2단계 : 퀘스트 '+(k+1)+' ]\n'+Q[k]}
+function nearGj(){return fl==0&&Math.hypot(px-19.5,py-14.7)<1.7}
+function openGj(){state='quest';keys={};try{document.exitPointerLock()}catch(e){}$('gp').style.display='flex'}
+function nearBd(){return fl==0&&Math.hypot(px-25.3,py-18)<1.8}
+function openQ(){qSeen=true;state='quest';keys={};try{document.exitPointerLock()}catch(e){}$('qt').textContent=QUEST.t;$('qb').textContent=QUEST.b;$('qp').style.display='flex'}
+function closeQ(){if(state!='quest')return;state='play';$('qp').style.display='none';$('gp').style.display='none';lockPtr()}
+function s2use(){if(q3.act)return;if(q1.act==2)return q1sit();if(q2near())return q2use();if(nearBd())openQ();else if(nearGj())openGj();else if(q1near())q1attend()}
+function goFl(n){const up=n>fl;fl=n;genS2(n);fade=1;if(up){px=27.5;py=20.2;ang=-Math.PI/2}else{px=28.5;py=9.6;ang=Math.PI/2}EY=s2eye();say((n+1)+'층',3)}
+function startStage2(){stage=2;q1.act=0;q2.act=0;q3.act=0;q2.on=false;q2.boot=0;q2.done=false;q2.mon=null;qSeen=false;qDone=[false,false,false];fl=0;genS2(0);px=26;py=11.2;ang=Math.PI/2;EY=s2eye();FR=14;FG=16;FB=22;hid=null;hideCd=0;spotted=false;seenT=0;wp=null;lastHint='';state='play';pitch=0;lockPtr();t0=performance.now();
+ $('ov').style.display='none';$('warn').style.display='none';$('dt').textContent='';say('충북대 S4-1 건물 1층 — 계단을 걸어 올라가면 층이 바뀐다 (퀘스트는 추후 제작 예정)',5)}
+function nearLk(){let b=null,bd=1.2;for(const o of props){if(o.k!=0||o.cyl||!o.c)continue;const cx=(o.x0+o.x1)/2,cy=(o.y0+o.y1)/2,d=Math.hypot(px-cx,py-cy);if(d<bd&&(px-cx)*o.fx+(py-cy)*o.fy>0){bd=d;b=o}}return b}
+function pickWp(){let c;for(let i=0;i<20;i++){c=[1+2*((Math.random()*15)|0),1+2*((Math.random()*15)|0)];if(Math.hypot(c[0]-px,c[1]-py)>6)break}return c}
+function toggleHide(){if(stage==2)return s2use();if(hid)return unhide();if(hideCd>0)return;const o=nearLk();if(!o)return;
+ const cx=(o.x0+o.x1)/2,cy=(o.y0+o.y1)/2;hid=o;o.ba=Math.atan2(o.fy,o.fx);spotted=seenT>0;hidT=0;hitT=0;wp=null;pathT=0;
+ px=cx+o.fx*(o.dep/2+.04);py=cy+o.fy*(o.dep/2+.04);ang=o.ba;keys={};say(spotted?'교수가 이쪽을 봤다... 숨을 죽여라.':'사물함 안에 숨었다. 숨을 죽여라.',3)}
+function unhide(m){if(!hid)return;const o=hid,cx=(o.x0+o.x1)/2,cy=(o.y0+o.y1)/2;hid=null;hideCd=5;wp=null;pathT=0;
+ for(const d of[.5,.65,.8,.35]){const nx=cx+o.fx*(o.dep/2+d),ny=cy+o.fy*(o.dep/2+d);if(free(nx,ny)){px=nx;py=ny;break}}if(m)say(m,3)}
+function hideView(){const y0=(H*.36)|0,x0=(W*.2)|0,x1=(W*.8)|0;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const o=(y*W+x)*4,s=y>=y0&&y<y0+40&&(y-y0)%10<4&&x>=x0&&x<x1;
+  if(s){const k=.55+.45*Math.min(1,Math.min(x-x0,x1-x)/40);buf[o]*=k;buf[o+1]*=k;buf[o+2]*=k}else{const n=((y*7+x*13)&7)*.7+(y%10<5?0:3);buf[o]=14+n;buf[o+1]=16+n;buf[o+2]=19+n}}}
+addEventListener('keydown',e=>{if(e.code!='KeyF'||e.repeat)return;if(state=='quest')closeQ();else if(state=='play')toggleHide()});
+const DEV=location.hash=='#dev';let god=false;addEventListener('hashchange',()=>location.reload());
+if(DEV){$('dvbd').style.display='block';$('dv').style.display='flex';
+ const takeKey=()=>{if(state=='pause')resume();if(state!='play'||hasKey||stage==2)return;hasKey=true;stageClear()},
+ takeDet=()=>{hasDet=true;say('[DEV] 탐지기 획득',3)},
+ togGod=()=>{god=!god;$('d3').textContent='무적 : '+(god?'ON':'OFF');$('dvbd').textContent=bd+(god?'  [무적]':'')},
+ clr2=()=>{if(state=='pause')resume();if(stage!=2||state!='play')return;for(let i=0;i<3;i++)questDone(i)},
+ newMaze=()=>{$('pm').style.display='none';start()},bd='[DEV 테스트 모드]  K 열쇠 / I 탐지기 / G 무적 / N 새 미로 / C 2단계 클리어';
+ $('dvbd').textContent=bd;$('d1').onclick=takeKey;$('d2').onclick=takeDet;$('d3').onclick=togGod;$('d4').onclick=newMaze;$('d5').onclick=clr2;
+ addEventListener('keydown',e=>{if(e.repeat||state=='term')return;if(e.code=='KeyK')takeKey();else if(e.code=='KeyI')takeDet();else if(e.code=='KeyG')togGod();else if(e.code=='KeyN'&&state!='ready')newMaze();else if(e.code=='KeyC')clr2()})}
+/* ---------- 엔딩 : S4-1 건물 뒤편 (담배) ---------- */
+let endT=0,puffs=0,pAnim=0,smk=[],endAt=0,sAcc=0,pHalf=false;
+const PUF=5,ES=(()=>{const a=[];for(let i=0;i<70;i++)a.push([hash(i,1)*480|0,hash(i,2)*34|0,hash(i,3)]);return a})();
+function hudUpd(){const o=(state=='play'||state=='pause'||state=='quest'||state=='end')?objText():'';if(o!=lastObj){lastObj=o;const e=$('obj');e.textContent=o;e.style.display=o?'block':'none'}}
+function startEnding(){stage=3;state='end';endT=0;puffs=0;pAnim=0;smk=[];endAt=0;pHalf=false;keys={};hid=null;pitch=0;
+ $('warn').style.display='none';$('hint').style.display='none';lastHint='';say('S4-1 건물 뒤편. 차가운 밤공기가 불어온다.',5)}
+function questDone(i){qDone[i]=true;if(qDone.every(Boolean))say('모든 퀘스트 클리어! 이제 1층 출입문으로 나가자.',6)}
+function puff(){if(state=='end'&&pAnim<=0&&puffs<PUF)pAnim=1}
+addEventListener('keydown',e=>{if(e.code=='Space'&&state=='end'){e.preventDefault();if(!e.repeat)puff()}});
+function drawBack(t,C){
+ for(let y=0;y<40;y+=4){const k=y/40;C(0,y,W,4,[6+k*10,8+k*12,20+k*20])}
+ for(const s of ES)C(s[0],s[1],1,1,[200,205,230],.4+.5*Math.abs(Math.sin(t*1.3+s[2]*9)));
+ for(let dy=-9;dy<=9;dy++)for(let dx=-9;dx<=9;dx++)if(dx*dx+dy*dy<=81)C(398+dx,16+dy,1,1,dx*dx+dy*dy>64?[170,176,196]:[226,230,238]);
+ C(0,34,W,120,[58,60,62]);
+ for(let y=34;y<154;y+=6){C(0,y,W,1,[48,50,52]);for(let x=((y/6|0)&1)*8;x<W;x+=16)C(x,y+1,1,5,[51,53,55])}
+ C(0,30,W,5,[84,86,88]);C(0,35,W,2,[40,42,44]);C(0,70,W,3,[44,46,48]);C(0,112,W,3,[44,46,48]);
+ for(let j=0;j<2;j++)for(let i=0;i<8;i++){const x=20+i*56,y=42+j*42,lit=hash(i,j+5)>.78,fl=lit?(Math.sin(t*9+i*3)>-.9?1:.6):0;
+  if(i==4&&j==1)continue;
+  C(x-2,y-2,38,26,[30,32,34]);C(x,y,34,22,lit?[235*fl,205*fl,120*fl]:[16,22,32]);
+  if(!lit){C(x+4,y+2,3,18,[28,38,54]);C(x+9,y+2,2,18,[24,32,46])}C(x+16,y,2,22,[30,32,34]);C(x,y+10,34,2,[30,32,34])}
+ C(70,40,5,114,[74,76,78]);C(70,40,2,114,[96,98,100]);
+ C(210,94,36,60,[84,86,88]);C(213,97,30,57,[26,28,30]);C(227,97,2,57,[70,72,74]);C(236,122,5,2,[160,160,164]);
+ C(216,84,24,8,[30,140,84]);C(218,86,20,4,[120,240,170],.8);
+ C(224,88,8,3,[255,244,190]);
+ C(0,150,W,5,[34,36,38]);
+ C(0,155,W,115,[44,46,48]);
+ for(let y=155;y<270;y+=3)C(0,y,W,3,[44-(y-155)*.05,46-(y-155)*.05,48-(y-155)*.05]);
+ for(const y of[168,190,224])C(0,y,W,1,[30,32,34]);
+ ctx.globalAlpha=.5;ctx.strokeStyle='#26282a';ctx.lineWidth=1;
+ for(let i=-6;i<=6;i++){ctx.beginPath();ctx.moveTo(240+i*10,155);ctx.lineTo(240+i*85,270);ctx.stroke()}
+ ctx.globalAlpha=1;
+ let g=ctx.createRadialGradient(228,92,2,228,100,70);g.addColorStop(0,'rgba(255,240,180,.55)');g.addColorStop(1,'rgba(255,240,180,0)');ctx.fillStyle=g;ctx.fillRect(150,30,160,140);
+ g=ctx.createRadialGradient(228,172,2,228,172,90);g.addColorStop(0,'rgba(255,240,180,.22)');g.addColorStop(1,'rgba(255,240,180,0)');ctx.fillStyle=g;ctx.fillRect(100,150,260,120);
+ C(116,176,3,30,[90,92,96]);C(106,166,24,10,[108,110,116]);C(106,166,24,2,[150,152,158]);C(110,168,16,3,[24,24,26]);C(108,204,18,3,[70,72,76]);
+ for(let i=0;i<9;i++)C(96+hash(i,3)*44,196+hash(i,4)*10,2,1,[200,196,180]);
+}
+function renderEnd(t){
+ const dt=dtG;endT+=dt;ctx.globalAlpha=1;
+ const C=(x,y,w,h,c,a)=>{ctx.globalAlpha=a==null?1:a;ctx.fillStyle='rgb('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+')';ctx.fillRect(x|0,y|0,Math.max(1,w|0),Math.max(1,h|0))};
+ drawBack(t,C);
+ // 흡입 / 내쉬기 진행
+ let ph=0,inh=false;
+ if(pAnim>0){pAnim-=dt/1.8;if(pAnim<=0){pAnim=0;puffs++;pHalf=false;if(puffs>=PUF)endAt=endT+2.4}}
+ if(pAnim>0){ph=1-pAnim;inh=ph<.55;
+  if(!inh&&!pHalf){pHalf=true;for(let i=0;i<28;i++)smk.push({x:232+Math.random()*24,y:176+Math.random()*10,vx:(Math.random()-.3)*30,vy:-(14+Math.random()*32),r:3+Math.random()*3,g:3.5,a:.45,l:0,L:2.8+Math.random()*1.5})}}
+ const r=pAnim>0?Math.sin(Math.PI*ph):0,hx=340-92*r,hy=226-78*r,ca=.62+.35*r,cx=Math.cos(ca),sy=Math.sin(ca);
+ const burn=Math.min(PUF,puffs+(pAnim>0?Math.min(1,ph/.55):0)),Lp=60*(1-burn/PUF*.88);
+ const skin=[198,162,138],sk2=[168,132,110];
+ // 소매 / 손
+ C(hx+14,hy+8,120,90,[34,38,48]);C(hx+14,hy+8,120,4,[50,56,68]);
+ C(hx-8,hy-2,44,38,skin);C(hx-8,hy+30,44,6,sk2);
+ for(let i=0;i<4;i++){C(hx-12+i*10,hy-8+(i&1),9,13,skin);C(hx-12+i*10,hy+3,9,1,sk2)}
+ C(hx-4,hy+10,16,8,skin);C(hx-4,hy+17,16,1,sk2);
+ // 담배
+ const seg=(a,b,c)=>{for(let i=a;i<b;i++)C(hx-6-i*cx,hy-4-i*sy,3,3,c)};
+ seg(0,14,[206,132,56]);seg(0,2,[150,90,36]);seg(14,14+Lp,[238,235,224]);seg(14+Lp,17+Lp,[116,112,106]);
+ const ex=hx-6-(17+Lp)*cx,ey=hy-4-(17+Lp)*sy,e=inh?1:.35+.15*Math.sin(t*7);
+ C(hx-10,hy-9,12,5,skin);C(hx-12,hy-14,10,5,skin);
+ C(ex-1,ey-1,4,4,inh?[255,150,60]:[226,70,34]);
+ const g=ctx.createRadialGradient(ex+1,ey+1,1,ex+1,ey+1,8+16*e);g.addColorStop(0,'rgba(255,130,40,'+.55*e+')');g.addColorStop(1,'rgba(255,130,40,0)');
+ ctx.globalAlpha=1;ctx.fillStyle=g;ctx.fillRect(ex-30,ey-30,62,62);
+ // 연기
+ sAcc+=dt;while(sAcc>.07){sAcc-=.07;smk.push({x:ex+1,y:ey,vx:(Math.random()-.4)*6,vy:-(12+Math.random()*8),r:1.4,g:.6,a:.5,l:0,L:2.6})}
+ for(let i=smk.length-1;i>=0;i--){const p=smk[i];p.l+=dt;if(p.l>=p.L){smk.splice(i,1);continue}
+  p.vx+=Math.sin(t*2+p.y*.06)*8*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=p.g*dt;
+  C(p.x-p.r,p.y-p.r,p.r*2,p.r*2,[212,216,224],p.a*(1-p.l/p.L))}
+ if(endT<1.6)C(0,0,W,H,[0,0,0],1-endT/1.6);
+ ctx.globalAlpha=1;hudUpd();$('ks').textContent='[ S4-1 뒤편 ]';$('ks').className='';
+ if(endAt&&endT>=endAt&&state=='end'){state='fin';$('hint').style.display='none';
+  show('엔딩 : 담배 한 대의 여유','교수의 눈을 피했고, 리눅스 실습도 끝냈고, 졸음마저 버텨냈다.\n연기가 밤하늘로 흩어진다.\n오늘 하루도 무사히 끝났다.','처음부터 다시')}}
+/* ---------- 퀘스트 공통 : 방 입장 감지 + 공지 확인 게이트 ---------- */
+const GM='아직 퀘스트를 받지 않았다. 1층 로비 게시판의 공지부터 확인하자.';
+function qtick(dt){
+ let m=null;for(const r of RZ)if(px>=r.a&&px<r.b+1&&py>=r.y0&&py<r.y1+1){m=r;break}
+ const n=m?m.n:'';if(n!=lastRoom){lastRoom=n;if(m)roomEnter(m)}
+ if(q1.act==2)q1run(dt);
+ if(q3.act)q3run(dt);
+ if(q2.act&&fl==1&&!q1.act&&!q3.act){if(prof.x<0)q2placeProf();else{let da=Math.atan2(py-prof.y,px-prof.x)-prof.yw;da=Math.atan2(Math.sin(da),Math.cos(da));prof.yw+=da*Math.min(1,dt*2.5)}}
+ if(q2.act&&q2.boot>0){q2.boot-=dt;if(q2.boot<=0){q2.boot=0;if(q2.mon)q2.mon.rdy=1;if(fl==1&&q2near())say('부팅 완료! F : 터미널 열기',3)}}}
+function roomEnter(m){
+ if(fl==0&&m.n=='106 수업실'){
+  if(!qSeen)return say(GM,4);
+  if(!qDone[0])return q1start();
+  if(!qDone[1])return say('지금은 이 수업을 들을 수 없다. 다른 퀘스트부터 하자.',3);
+  if(!qDone[2]&&typeof q3start=='function')q3start();return}
+ if(fl==1&&m.n=='211 수업실'){
+  if(!qSeen)return say(GM,4);
+  if(!qDone[1]&&typeof q2start=='function')q2start()}}
+/* ---------- 퀘스트 1 : 106호 응용컴퓨터프로그래밍 (조오현 교수) ---------- */
+function q1start(){setPst(1);q1.act=1;q1.sit=false;q1.a=1;q1.pat='';q1.w='';prof.x=50.5;prof.y=28.3;prof.yw=-Math.PI/2;prof.ph=0;
+ say('조오현 교수의 응용컴퓨터프로그래밍 시간. 맨 앞자리에 앉아 출석하자.',5)}
+function q1near(){return q1.act==1&&fl==0&&px>=47&&px<54&&py>=26.2&&py<29}
+function q1far(){return q1.act==1&&fl==0&&px>=47&&px<54&&py>=17.2&&py<26.2}
+function q1attend(){q1.act=2;q1.sit=true;q1.t=60;q1.pat='turn2';q1.pt=.5;q1.g=.4;q1.lx=px;q1.ly=py;
+ say('출석 완료! 교수가 칠판을 볼 때 F로 일어나 이동하고, 돌아보면 책상에 앉아라!',5)}
+function q1desk(){return props.some(o=>o.k==4&&o.c&&o.x0>=47&&o.x1<=54&&o.y0>=18&&o.y1<=28&&Math.hypot(px-(o.x0+o.x1)/2,py-(o.y0+o.y1)/2)<1.5)}
+function q1sit(){
+ if(q1.sit){if(q1.a>=.8||q1.pat=='turn1'||q1.pat=='face')return say('교수가 보고 있다! 지금 일어나면 들킨다.',2);q1.sit=false;return say('일어났다. 교수가 돌아보기 전에 다음 책상으로!',2)}
+ if(!q1desk())return say('책상 근처에서만 앉을 수 있다.',2);q1.sit=true;say('책상에 앉았다. 교수가 돌아선 틈을 노려라.',2)}
+function q1end(ok,msg){q1.act=0;q1.sit=false;q1.w='';prof.x=-99;prof.y=-99;$('dt').textContent='';$('dt').className='';$('warn').style.display='none';
+ if(ok){questDone(0);say(msg,5)}else{fade=1;px=26;py=11.6;ang=-Math.PI/2;EY=s2eye();say(msg,4)}}
+function q1run(dt){
+ q1.t-=dt;$('dt').textContent='[ 제한시간 '+Math.max(0,Math.ceil(q1.t))+'초 ]';$('dt').className=q1.t<=15?'hot':'on';
+ if(q1.t<=0)return q1end(false,'시간 초과! 수업이 끝나기 전에 도망치지 못했다. 다시 도전하자.');
+ q1.pt-=dt;const P=q1.pat;
+ if(P=='back'&&q1.pt<=0){q1.pat='turn1';q1.pt=.55}
+ else if(P=='turn1'&&q1.pt<=0){q1.pat='face';q1.pt=1.2+Math.random()*1.6;q1.g=.3}
+ else if(P=='face'&&q1.pt<=0){q1.pat='turn2';q1.pt=.5}
+ else if(P=='turn2'&&q1.pt<=0){q1.pat='back';q1.pt=2.2+Math.random()*2.6}
+ const tg=(q1.pat=='turn1'||q1.pat=='face')?1:0;q1.a+=(tg>q1.a?1:-1)*dt/.5;
+ q1.a=Math.max(0,Math.min(1,q1.a));prof.yw=Math.PI/2-q1.a*Math.PI;
+ const mvd=Math.hypot(px-q1.lx,py-q1.ly)>.004;q1.lx=px;q1.ly=py;
+ if(py<15.9)return q1end(true,'교수 몰래 106호를 빠져나왔다! 퀘스트 1 클리어');
+ const sv=q1.a>=.8,tn=q1.pat=='turn1',sit=q1.sit;
+ const w=sv?(sit?'!! 교수가 보고 있다 - 앉아서 버텨라 !!':'!! 앉아라! 교수가 보고 있다 !!'):tn?(sit?'!! 교수가 뒤돌아본다 !!':'!! 교수가 뒤돌아본다 - 책상에 앉아라 (F) !!'):(sit?'교수가 칠판을 보고 있다 - F로 일어나 이동하라':'교수가 칠판을 보고 있다 - 지금이다!');
+ if(w!=q1.w){q1.w=w;const e=$('warn');e.textContent=w;e.style.color=sv||tn?'':'#7fd69a'}
+ $('warn').style.display='block';
+ if(sv){if(!sit){q1.g-=dt;if(q1.g<=0)q1end(false,'교수가 뒤돌아봤을 때 책상에 앉아 있지 않았다! 퀘스트 실패.')}}else q1.g=.5}
+/* ---------- 퀘스트 3 : 106호 컴퓨터시스템개론 (문현주 교수) — 졸음 버티기 20초 ---------- */
+const Q3L=['"...그래서 캐시 미스가 나면 메모리까지 내려가야 하고..."','"...파이프라인 해저드는 지난주에 말했듯이..."','"...가상 메모리의 페이지 테이블을 보면..."','"...여기까지 이해 안 되는 사람? 없죠? 넘어갑니다."','"...인터럽트가 걸리면 문맥 교환이 일어나는데..."','"...이건 중간고사에 나옵니다. 아마도."'];
+let q3={act:0,t:0,eye:0,head:0,nod:2,dang:0,line:0,lt:0,w:'',tt:0};
+function q3start(){setPst(3);q3.act=1;q3.t=20;q3.eye=.1;q3.head=0;q3.nod=2.2;q3.dang=0;q3.line=0;q3.lt=0;q3.w='';q3.tt=0;
+ px=50.5;py=26.2;ang=Math.PI/2;pitch=0;keys={};fade=1;EY=s2eye()-.12;
+ prof.x=50.5;prof.y=28.4;prof.yw=-Math.PI/2;prof.ph=0;
+ say('문현주 교수의 컴퓨터시스템개론, 3시간 풀강... 졸음을 20초만 버텨라!',5)}
+function q3end(ok,msg){q3.act=0;pitch=0;q3.w='';prof.x=-99;prof.y=-99;$('dt').textContent='';$('dt').className='';$('warn').style.display='none';$('warn').style.color='';
+ if(ok){say(msg,5);questDone(2)}else{fade=1;px=26;py=11.6;ang=-Math.PI/2;EY=s2eye();say(msg,4)}}
+function q3run(dt){
+ q3.t-=dt;q3.tt+=dt;const prog=1-q3.t/20;
+ $('dt').textContent='[ 버티는 중 '+Math.max(0,Math.ceil(q3.t))+'초 ]';$('dt').className=q3.t<=6?'hot':'on';
+ if(q3.t<=0)return q3end(true,'졸음을 끝까지 버텨냈다! 퀘스트 3 클리어');
+ const up=keys.ArrowUp||keys.KeyW;
+ q3.eye+=(.2+.14*prog+(up?.14:0))*dt;
+ q3.head+=(.1+.08*prog)*dt;
+ q3.nod-=dt;if(q3.nod<=0){q3.head+=.2+.08*prog;q3.nod=1.5+Math.random()*1.7}
+ if(up)q3.head-=.9*dt;
+ q3.eye=Math.max(0,Math.min(1,q3.eye));q3.head=Math.max(0,Math.min(1,q3.head));
+ pitch=-q3.head*40;
+ q3.lt-=dt;if(q3.lt<=0){q3.lt=3;say(Q3L[q3.line++%Q3L.length],3)}
+ prof.yw=-Math.PI/2+Math.sin(q3.tt*.7)*.45;
+ if(q3.eye>=.97||q3.head>=.97)q3.dang+=dt;else q3.dang=Math.max(0,q3.dang-dt*2);
+ if(q3.dang>.7)return q3end(false,'그만 잠들어 버렸다... 눈을 떠보니 수업이 끝나 있었다. 다시 도전하자.');
+ const w=q3.eye>.97||q3.head>.97?'!! 곧 잠든다 !!':q3.eye>.6?'!! 눈이 감긴다 - SPACE 연타 !!':q3.head>.6?'!! 고개가 떨어진다 - ↑ 누르기 !!':'';
+ if(w!=q3.w){q3.w=w;const e=$('warn');e.textContent=w;e.style.color='';e.style.display=w?'block':'none'}}
+function q3View(){
+ const e=q3.eye,h=q3.head,sh=Math.round(e*7+h*3);
+ if(sh>0){soft.set(buf);for(let y=0;y<H;y++)for(let x=0;x<W;x++){const o=(y*W+x)*4,p=(y*W+Math.min(W-1,x+sh))*4;buf[o]=(soft[o]+soft[p])>>1;buf[o+1]=(soft[o+1]+soft[p+1])>>1;buf[o+2]=(soft[o+2]+soft[p+2])>>1}}
+ const c=e*H*.5*1.04+Math.sin(performance.now()/130)*e*3,dk=1-e*.35-h*.2,E=16;
+ for(let y=0;y<H;y++){const d=Math.min(y,H-1-y),k=Math.max(0,Math.min(1,(c-d)/E)),m=dk*(1-k);
+  for(let x=0;x<W;x++){const o=(y*W+x)*4;buf[o]=buf[o]*m+10*k;buf[o+1]=buf[o+1]*m+4*k;buf[o+2]=buf[o+2]*m+4*k}}}
+addEventListener('keydown',e=>{if(e.code!='Space'||e.repeat||!q3.act||state!='play')return;e.preventDefault();q3.eye=Math.max(0,q3.eye-.17)});
+/* ---------- 퀘스트 2 : 211호 리눅스 실습 (노서영 교수) ---------- */
+const Q2T=[{dir:'lab',files:['hello.c']},{dir:'project/src',files:['main.c']},{dir:'linux/week05',files:['result.txt']},{dir:'os_hw',files:['report.txt','memo.txt']},{dir:'cbnu/opensw',files:['test.sh']},{dir:'week03/practice',files:['a.out','log.txt']}];
+let q2={act:0,on:false,boot:0,done:false,mon:null,task:null,fs:null,cwd:null,hist:[],hi:0};
+const HOME=['home','opensw'],mkd=()=>({d:1,c:{}}),mkf=(t,by)=>({d:0,s:t||'',by:by||''});
+function q2fs(){const h=mkd();h.c.Desktop=mkd();h.c.Documents=mkd();h.c.Downloads=mkd();
+ h.c.Documents.c['memo.txt']=mkf('11/15 리눅스 실습 - 노서영 교수\n','seed');
+ h.c['notes.txt']=mkf('mkdir -p : 상위 디렉터리까지 한 번에 만든다\ntouch : 빈 파일을 만든다 (이미 있으면 시간만 갱신)\n','seed');
+ const r=mkd();r.c.home=mkd();r.c.home.c.opensw=h;for(const n of['etc','tmp','usr','var','bin'])r.c[n]=mkd();return r}
+function q2res(p){let b;p=p||'';if(p=='~'||p.startsWith('~/')){b=HOME.slice();p=p.slice(1)}else if(p[0]=='/')b=[];else b=q2.cwd.slice();
+ for(const t of p.split('/')){if(!t||t=='.')continue;if(t=='..')b.pop();else b.push(t)}return b}
+function q2get(a){let n=q2.fs;for(const t of a){if(!n.d||!n.c[t])return null;n=n.c[t]}return n}
+const q2str=a=>a.length?'/'+a.join('/'):'/';
+function q2disp(){const c=q2.cwd;if(c.length>=2&&c[0]=='home'&&c[1]=='opensw')return '~'+(c.length>2?'/'+c.slice(2).join('/'):'');return q2str(c)}
+function q2prompt(){$('tp').textContent='opensw@cbnu-linux:'+q2disp()+'$ '}
+function tout(t,c){const d=document.createElement('div');if(c)d.className=c;d.textContent=t;$('to').appendChild(d);$('to').scrollTop=1e9;return d}
+function q2task(){const t=q2.task;return '~/'+t.dir+' 디렉터리를 만들고, 그 안에 touch 명령으로 '+t.files.join(', ')+' 파일을 생성하라.'}
+function q2banner(){$('to').innerHTML='';tout('Ubuntu 22.04.4 LTS  cbnu-linux  tty1','m');tout('opensw 계정으로 자동 로그인되었습니다.','m');tout('');
+ tout('[ 실습 과제 ] 노서영 교수','y');tout(q2task(),'y');tout('(홈 디렉터리 ~ = /home/opensw)','m');tout('');tout('help : 명령어 안내 / exit 또는 ESC : 터미널 닫기','m');tout('')}
+function q2placeProf(){const r=RZ.find(r=>r.n=='211 수업실'&&r.y0==9);if(!r)return;setPst(2);prof.x=r.a+.45;prof.y=9.7;prof.yw=Math.PI/2;prof.ph=0}
+function q2start(){if(q2.act){say('리눅스 실습이 진행 중이다. 책상 위 컴퓨터를 사용하자.',3);return}
+ q2.act=1;q2placeProf();q2.on=false;q2.boot=0;q2.done=false;q2.task=Q2T[(Math.random()*Q2T.length)|0];q2.fs=q2fs();q2.cwd=HOME.slice();q2.hist=[];q2.hi=0;
+ if(q2.mon){q2.mon.on=0;q2.mon.rdy=0}q2banner();
+ say('노서영 교수의 리눅스 실습 시간. 책상 위 컴퓨터를 켜고 터미널에서 과제를 해결하자.',5)}
+function q2near(){const m=q2.mon;return !!(q2.act&&fl==1&&m&&Math.hypot(px-(m.x0+m.x1)/2,py-(m.y0+m.y1)/2)<1.8)}
+function q2hint(){return q2.done?'':!q2.on?'F : 컴퓨터 켜기':q2.boot>0?'부팅 중...':'F : 터미널 열기'}
+function q2use(){if(q2.done)return;if(!q2.on){q2.on=true;q2.boot=2.2;q2.mon.on=1;q2.mon.rdy=0;return say('컴퓨터를 켰다. 부팅 중...',2.5)}
+ if(q2.boot>0)return say('아직 부팅 중이다...',2);openTerm()}
+function q2obj(){const st=!q2.on?'책상 위 컴퓨터를 켜라 (F)':q2.boot>0?'컴퓨터 부팅 중...':'컴퓨터에서 터미널을 열어 과제를 해결하라 (F)';
+ return '[ 퀘스트 2 ]\n'+st+'\n과제 : '+q2task()}
+function openTerm(){state='term';keys={};try{document.exitPointerLock()}catch(e){}$('tm').style.display='flex';$('ti').value='';$('ti').disabled=q2.done;q2prompt();$('to').scrollTop=1e9;setTimeout(()=>$('ti').focus(),0)}
+function closeTerm(){if(state!='term')return;state='play';$('tm').style.display='none';$('ti').blur();keys={};lastHint='';lockPtr()}
+$('tm').addEventListener('mousedown',()=>setTimeout(()=>{if(state=='term'&&!$('ti').disabled)$('ti').focus()},0));
+$('ti').addEventListener('keydown',e=>{e.stopPropagation();if(e.isComposing)return;
+ if(e.key=='Escape'){e.preventDefault();closeTerm();return}
+ if(e.key=='Enter'){e.preventDefault();const v=$('ti').value;$('ti').value='';q2run(v);return}
+ if(e.key=='ArrowUp'||e.key=='ArrowDown'){e.preventDefault();const h=q2.hist;if(!h.length)return;q2.hi=Math.max(0,Math.min(h.length,q2.hi+(e.key=='ArrowUp'?-1:1)));$('ti').value=h[q2.hi]||''}});
+$('ti').addEventListener('keyup',e=>e.stopPropagation());
+function q2run(line){tout(($('tp').textContent)+line);const L=line.trim();if(!L){return}
+ q2.hist.push(L);q2.hi=q2.hist.length;
+ const a=(L.match(/"[^"]*"|'[^']*'|\S+/g)||[]).map(t=>/^["'].*["']$/.test(t)?t.slice(1,-1):t),c=a[0],r=a.slice(1),fl_=r.filter(t=>t[0]=='-'&&t.length>1),ar=r.filter(t=>!(t[0]=='-'&&t.length>1)),has=ch=>fl_.some(t=>t.includes(ch));
+ const nf=(cmd,p,m)=>tout(cmd+': '+p+': '+m,'e');
+ if(c=='pwd')tout(q2str(q2.cwd));
+ else if(c=='cd'){const p=ar[0]===undefined?'~':ar[0],ps=q2res(p),n=q2get(ps);if(!n)nf('bash: cd',p,'그런 파일이나 디렉터리가 없습니다');else if(!n.d)nf('bash: cd',p,'디렉터리가 아닙니다');else q2.cwd=ps}
+ else if(c=='ls'){const T=ar.length?ar:['.'];T.forEach((p,i)=>{const ps=q2res(p),n=q2get(ps);if(!n)return tout("ls: '"+p+"'에 접근할 수 없습니다: 그런 파일이나 디렉터리가 없습니다",'e');
+   if(T.length>1&&n.d)tout((i?'\n':'')+p+':');
+   const ents=n.d?Object.keys(n.c).filter(k=>has('a')||k[0]!='.').sort():[ps[ps.length-1]];if(n.d&&has('a'))ents.unshift('.','..');
+   const nd=k=>n.d?(k=='.'||k=='..'||n.c[k].d):false,ct=k=>n.d?(k=='.'||k=='..'?n:n.c[k]):n;
+   if(has('l')){for(const k of ents){const o=ct(k);tout((o.d?'drwxr-xr-x 2':'-rw-r--r-- 1')+' opensw opensw '+String(o.d?4096:o.s.length).padStart(5)+' 11월 15 14:00 '+k,o.d?'d':'')}}
+   else if(ents.length){const d=document.createElement('div');ents.forEach((k,j)=>{const sp=document.createElement('span');sp.textContent=k+'  ';if(n.d?nd(k):false)sp.className='d';d.appendChild(sp)});$('to').appendChild(d)}})}
+ else if(c=='mkdir'){if(!ar.length)tout('mkdir: 피연산자가 없습니다','e');for(const p of ar){const ps=q2res(p);if(!ps.length){tout("mkdir: '/' 디렉터리를 만들 수 없습니다: 파일이 있습니다",'e');continue}
+   let n=q2.fs,ok=true;for(let i=0;i<ps.length;i++){const t=ps[i],last=i==ps.length-1;if(!n.d){ok=false;tout("mkdir: '"+p+"' 디렉터리를 만들 수 없습니다: 디렉터리가 아닙니다",'e');break}
+    if(n.c[t]){if(last&&!has('p')){ok=false;tout("mkdir: '"+p+"' 디렉터리를 만들 수 없습니다: 파일이 있습니다",'e');break}n=n.c[t];continue}
+    if(!last&&!has('p')){ok=false;tout("mkdir: '"+p+"' 디렉터리를 만들 수 없습니다: 그런 파일이나 디렉터리가 없습니다",'e');break}
+    n.c[t]=mkd();n=n.c[t]}}}
+ else if(c=='touch'){if(!ar.length)tout('touch: 파일 피연산자가 없습니다','e');for(const p of ar){const ps=q2res(p);if(!ps.length)continue;const nm=ps.pop(),par=q2get(ps);
+   if(!par||!par.d){tout("touch: '"+p+"'에 touch 할 수 없습니다: 그런 파일이나 디렉터리가 없습니다",'e');continue}if(!par.c[nm])par.c[nm]=mkf('','touch')}}
+ else if(c=='cat'){if(!ar.length)tout('cat: 파일 이름이 필요합니다','e');for(const p of ar){const n=q2get(q2res(p));if(!n)nf('cat',p,'그런 파일이나 디렉터리가 없습니다');else if(n.d)nf('cat',p,'디렉터리입니다');else if(n.s)tout(n.s.replace(/\n$/,''))}}
+ else if(c=='rm'){if(!ar.length)tout('rm: 피연산자가 없습니다','e');for(const p of ar){const ps=q2res(p);if(ps.length<2){tout("rm: '"+p+"'를 지울 수 없습니다",'e');continue}const nm=ps.pop(),par=q2get(ps),n=par&&par.c&&par.c[nm];
+   if(!n){if(!has('f'))tout("rm: '"+p+"'를 지울 수 없습니다: 그런 파일이나 디렉터리가 없습니다",'e')}else if(n.d&&!has('r')&&!has('R'))tout("rm: '"+p+"'를 지울 수 없습니다: 디렉터리입니다",'e');else delete par.c[nm]}}
+ else if(c=='rmdir'){for(const p of ar){const ps=q2res(p);if(ps.length<2){continue}const nm=ps.pop(),par=q2get(ps),n=par&&par.c&&par.c[nm];
+   if(!n)tout("rmdir: '"+p+"' 디렉터리를 지울 수 없습니다: 그런 파일이나 디렉터리가 없습니다",'e');else if(!n.d)tout("rmdir: '"+p+"' 디렉터리를 지울 수 없습니다: 디렉터리가 아닙니다",'e');else if(Object.keys(n.c).length)tout("rmdir: '"+p+"' 디렉터리를 지울 수 없습니다: 디렉터리가 비어있지 않습니다",'e');else delete par.c[nm]}}
+ else if(c=='echo'){if(L.includes('>'))tout('이 터미널에서는 리다이렉션(>)을 지원하지 않는다. 파일은 touch로 만들자.','e');else tout(r.join(' '))}
+ else if(c=='clear')$('to').innerHTML='';
+ else if(c=='whoami')tout('opensw');
+ else if(c=='uname')tout('Linux');
+ else if(c=='date')tout('2026년 11월 15일 일요일 14:00:00 KST');
+ else if(c=='history')q2.hist.forEach((h,i)=>tout(String(i+1).padStart(4)+'  '+h));
+ else if(c=='help'){tout('사용 가능한 명령어','y');tout('  pwd            현재 위치 출력');tout('  ls [-al] [경로]   목록 보기');tout('  cd <경로>       디렉터리 이동 (~ : 홈, .. : 상위)');tout('  mkdir [-p] <경로>  디렉터리 만들기 (-p : 상위까지 한 번에)');tout('  touch <파일>    빈 파일 만들기');tout('  cat <파일> / rm [-r] <경로> / rmdir <경로>');tout('  clear / history / exit');tout('');tout('[ 실습 과제 ]','y');tout(q2task(),'y')}
+ else if(c=='exit'||c=='logout'){closeTerm();return}
+ else if(c=='sudo')tout('opensw는 sudoers 파일에 없습니다. 이 사고는 보고될 것입니다.','e');
+ else if(c=='vim'||c=='vi'||c=='nano')tout('에디터는 필요 없다. 파일은 touch로 만들자.','e');
+ else if(c=='man')tout('수업 중이라 매뉴얼은 없다. help를 쳐보자.','m');
+ else tout('bash: '+c+': 명령을 찾을 수 없습니다','e');
+ q2prompt();q2check()}
+function q2check(){if(q2.done)return;const t=q2.task,d=t.dir.split('/');
+ if(!t.files.every(fn=>{const n=q2get([...HOME,...d,fn]);return n&&!n.d&&n.by=='touch'}))return;
+ q2.done=true;$('ti').disabled=true;tout('');tout('[ 확인 ] 과제 제출 완료 - 노서영 교수 : "잘했어요. 다음 시간에 봅시다."','g');
+ setTimeout(()=>{closeTerm();q2.act=0;prof.x=-99;prof.y=-99;if(q2.mon)q2.mon.rdy=1;say('리눅스 실습 클리어! 퀘스트 2 완료',5);questDone(1)},1800)}
+/* ---------- 층 지도 (M 키) : 2단계 건물에서만 ---------- */
+let mapOn=false,mapC=null,mapVis=-1,mapHint=-1;
+const MT=16,MY0=7,MF='"DotGothic16","Malgun Gothic",sans-serif';
+function mapBuild(){const c=document.createElement('canvas');c.width=880;c.height=368;const g=c.getContext('2d');
+ g.fillStyle='#0b0d0f';g.fillRect(0,0,880,368);
+ const col={c:'#3b464d',l:'#4d5d63',r:'#5a4d3b',w:'#2f4b5e'},sp=(x,y)=>{const d=DR[y*NW+x];return d?d.t:''},
+  SP={up:'#6fa8ff',dn:'#6fa8ff',entr:'#7fd69a',end:'#7fd69a'},special=(x,y)=>map[y][x]==1&&!!SP[sp(x,y)],
+  wall=(x,y)=>x<0||y<0||x>=NW||y>=N||(map[y][x]==1&&!special(x,y));
+ const txt=(t,x,y,fs,cl)=>{g.font='bold '+fs+'px '+MF;g.fillStyle=cl;g.textAlign='center';g.textBaseline='middle';g.fillText(t,x,y)};
+ for(let y=MY0;y<=29;y++)for(let x=0;x<=54;x++){const X=x*MT,Y=(y-MY0)*MT,t=sp(x,y);
+  if(map[y][x]!=1){g.fillStyle=col[ZN[y][x]]||col.c;g.fillRect(X,Y,MT,MT)}
+  else if(SP[t]){g.fillStyle=(t=='dn'&&!fl&&y<12)?'#7a2a25':SP[t];if(t=='dn'&&!fl&&y<12)g.fillStyle='#7a2a25';g.fillRect(X,Y,MT,MT)}
+  else if(t=='dn'){g.fillStyle='#7a2a25';g.fillRect(X,Y,MT,MT)}}
+ g.fillStyle='#b4bec2';
+ for(let y=MY0;y<=29;y++)for(let x=0;x<=54;x++){if(wall(x,y))continue;const X=x*MT,Y=(y-MY0)*MT;
+  if(wall(x,y-1))g.fillRect(X,Y-1,MT,2);if(wall(x,y+1))g.fillRect(X,Y+MT-1,MT,2);if(wall(x-1,y))g.fillRect(X-1,Y,2,MT);if(wall(x+1,y))g.fillRect(X+MT-1,Y,2,MT)}
+ g.fillStyle='#e0b84a';
+ for(let y=MY0;y<=29;y++)for(let x=0;x<=54;x++){const d=DR[y*NW+x];if(d&&d.t=='door')g.fillRect(x*MT,(y-MY0)*MT+MT/2-2,MT,4)}
+ for(let x=0;x<=54;x++)for(let y=MY0;y<=29;y++){const t=sp(x,y);if(map[y][x]!=1)continue;
+  if(t=='up')txt('▲',x*MT+MT/2,(y-MY0)*MT+MT/2,11,'#10151a');else if(t=='dn')txt(!fl&&y<12?'':'▼',x*MT+MT/2,(y-MY0)*MT+MT/2,11,'#10151a');else if(t=='entr'&&x==27)txt('입구',x*MT+MT/2,(y-MY0)*MT+MT/2,9,'#10151a')}
+ for(const r of RZ){const w=(r.b-r.a+1)*MT,L=r.n.split(' ');let fs=11;g.font='bold '+fs+'px '+MF;
+  while(fs>7&&Math.max(...L.map(l=>g.measureText(l).width))>w-4){fs--;g.font='bold '+fs+'px '+MF}
+  const cx=(r.a+r.b+1)/2*MT,cy=((r.y0+r.y1+1)/2-MY0)*MT;L.forEach((l,i)=>txt(l,cx,cy+(i-(L.length-1)/2)*(fs+2),fs,'#ece4d0'))}
+ if(fl<2)txt('계단',27.5*MT,(11.5-MY0)*MT,10,'#dfe9ec');txt('계단',27.5*MT,(19.6-MY0)*MT,10,'#dfe9ec');
+ txt('복도',10*MT,(15-MY0)*MT,10,'#9fb0b8');txt('복도',44*MT,(15-MY0)*MT,10,'#9fb0b8');
+ if(!fl)txt('지하실',25.5*MT+0,(10-MY0)*MT,7,'#f2c9c5');
+ mapC=c}
+function mapTick(t){if(mapOn&&(stage!=2||state!='play'))mapOn=false;
+ const vis=mapOn?1:0,hn=stage==2&&state=='play'&&!mapOn?1:0;
+ if(vis!=mapVis){mapVis=vis;$('mp').style.display=vis?'flex':'none'}if(hn!=mapHint){mapHint=hn;$('mh').style.display=hn?'block':'none'}
+ if(!mapOn)return;if(!mapC)mapBuild();
+ const g=$('mc').getContext('2d');g.clearRect(0,0,880,368);g.drawImage(mapC,0,0);$('mtt').textContent='S4-1 건물 '+(fl+1)+'F 평면도';
+ if(qSeen)for(const r of RZ){const q=r.n=='106 수업실'?(!qDone[0]||!qDone[2]):r.n=='211 수업실'?!qDone[1]:false;
+  if(q){g.font='bold 15px '+MF;g.fillStyle='#e0b84a';g.textAlign='center';g.textBaseline='middle';g.fillText('★',(r.b+1)*MT-9,(r.y0-MY0)*MT+10)}}
+ const X=px*MT,Y=(py-MY0)*MT,pr=9+2.5*Math.sin(t*5);
+ g.strokeStyle='rgba(216,53,47,.55)';g.lineWidth=2;g.beginPath();g.arc(X,Y,pr,0,7);g.stroke();
+ g.save();g.translate(X,Y);g.rotate(ang);g.fillStyle='#d8352f';g.strokeStyle='#fff';g.lineWidth=1.6;g.beginPath();g.moveTo(8,0);g.lineTo(-5,5.5);g.lineTo(-2.5,0);g.lineTo(-5,-5.5);g.closePath();g.fill();g.stroke();g.restore()}
+addEventListener('keydown',e=>{if(e.code!='KeyM'||e.repeat||stage!=2)return;if(mapOn)mapOn=false;else if(state=='play')mapOn=true});
+let last=0;
+function loop(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;dtG=dt;update(dt);render(ts/1000);mapTick(ts/1000);requestAnimationFrame(loop)}
+gen();
+show('충북대 S4-1 건물 지하실','소프트웨어학부 S4-1 건물의 폐쇄된 지하실. 곳곳에 열쇠 3개가 떨어져 있다.\n그중 하나만 손에 넣으면 1층으로 올라갈 수 있다. 미로 어딘가의 탐지기를 얻으면 열쇠가 가까운지 알 수 있다. 밤샘에 미쳐버린 교수가 당신을 쫓는다.\n\nW A S D 이동 / 마우스로 시점 회전 (← →, Q E도 가능)\nF : 사물함에 숨기 / 나가기 (파란 철제 사물함 앞에서)\n화면을 클릭하면 마우스가 고정됩니다 (ESC로 해제). 고정이 안 되면 드래그로 돌리세요.','게임 시작');
+$('ks').textContent='[ 열쇠 : 없음 ]';
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

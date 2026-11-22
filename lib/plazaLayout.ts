@@ -88,6 +88,8 @@ export const PLAZA_SPOTS: Record<string, PlazaSpot> = {
   // 투구 쓴 우왕이 — 시계탑 왼쪽 골목 앞에서 힘을 모았다 뛰었다 한다 (뛰어라 우왕이).
   // 왼쪽 좌판 차양(y 134~)보다 뒤, 먼 길 행인들(y ≤ 127)보다는 앞이다
   jump: { x: 197, y: 128, scale: 0.8, place: '시계탑 옆', idle: 'hop' },
+  // 길드 접수원 — 동상 오른쪽, 의뢰 게시판 앞 (주간줴줴)
+  'weekly-gg': { x: 296, y: 204, scale: 0.98, flip: true, place: '길드 의뢰 게시판', idle: 'rest' },
   // 바드 — 광장 앞을 오가며 노래
   gallery: {
     x: 240,

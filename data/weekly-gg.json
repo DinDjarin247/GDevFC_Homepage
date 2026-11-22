@@ -1,0 +1,350 @@
+{
+  "badge": "주간줴줴",
+  "heading": "WEEKLY GG",
+  "season": "주간줴줴 시즌 0",
+  "intro": "길드 게시판에 붙은 이번 시즌의 의뢰서입니다. 동아리원이 만든 게임을 골라 바로 플레이해 보세요. 계정은 필요 없습니다.",
+  "stages": {
+    "proto": {
+      "label": "프로토",
+      "en": "PROTO"
+    },
+    "alpha": {
+      "label": "알파",
+      "en": "ALPHA"
+    },
+    "beta": {
+      "label": "베타",
+      "en": "BETA"
+    }
+  },
+  "labels": {
+    "web": "웹 플레이",
+    "download": "PC 다운로드",
+    "soon": "준비 중",
+    "play": "PLAY",
+    "loading": "LOADING",
+    "fullscreen": "전체화면",
+    "restart": "다시 불러오기",
+    "newTab": "새 탭에서 열기",
+    "pcOnly": "이 게임은 키보드·마우스 전용입니다. PC에서 플레이해 주세요.",
+    "controls": "조작법",
+    "about": "게임 소개",
+    "creator": "제작",
+    "download_": "DOWNLOAD",
+    "howToRun": "실행 방법",
+    "windowsOnly": "Windows PC 전용 빌드입니다.",
+    "back": "의뢰 게시판으로"
+  },
+  "submit": {
+    "cardTitle": "의뢰 등록",
+    "cardText": "내 게임도 게시판에 붙이고 싶다면",
+    "heading": "SUBMIT YOUR GAME",
+    "intro": "빌드를 구글 드라이브에 올리고 공유 링크를 보내 주세요. 운영진이 확인한 뒤 게시판에 직접 올립니다. 웹 빌드(HTML5 · WebGL)는 바로 플레이할 수 있게, PC 빌드는 다운로드로 올라갑니다.",
+    "subjectPrefix": "[주간줴줴 게임 제출]",
+    "consent": "제출한 이름과 이메일은 게임 등록 안내를 위해서만 쓰고, 등록이 끝나면 지웁니다. 이에 동의합니다.",
+    "submitLabel": "SEND QUEST",
+    "sendingLabel": "SENDING...",
+    "successLabel": "QUEST RECEIVED",
+    "successMessage": "제출이 접수되었습니다. 확인 후 게시판에 올리고 메일로 알려 드릴게요.",
+    "errorMessage": "전송에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    "againLabel": "하나 더 제출하기"
+  },
+  "games": [
+    {
+      "id": "golem",
+      "title": "Golem",
+      "creator": "정건영",
+      "stage": "proto",
+      "engine": "Unity",
+      "genre": "2D 탑다운 오토배틀",
+      "tagline": "내가 재료·부위·규칙으로 짜 둔 골렘이 알아서 싸우고, 나는 소녀로 피하며 미끼가 된다.",
+      "description": "서낭당에서 골렘의 부위마다 재료를 끼우고 '언제 · 누구를 · 어떻게' 규칙을 짭니다. 들판에 나가면 골렘은 그 규칙대로 스스로 여진족과 싸우고, 플레이어는 소녀를 움직여 공격을 피하고 적을 끌어들입니다. 돌아와 재료를 챙기고 다시 정비하는 것이 한 바퀴입니다.",
+      "controls": [
+        {
+          "key": "W A S D",
+          "action": "소녀 이동"
+        },
+        {
+          "key": "Space",
+          "action": "구르기(회피)"
+        },
+        {
+          "key": "R",
+          "action": "결과 화면에서 다시 하기"
+        }
+      ],
+      "thumbnail": null,
+      "play": {
+        "type": "web",
+        "src": "/wgg-builds/golem/",
+        "aspect": "16 / 10",
+        "mobile": false
+      }
+    },
+    {
+      "id": "basement",
+      "title": "충북대 S4-1 건물 지하실",
+      "creator": "김강륜",
+      "stage": "proto",
+      "engine": "HTML5",
+      "genre": "도트 3D 미로 공포",
+      "tagline": "교수가 쫓아오는 S4-1 지하실에서 열쇠를 찾아 빠져나가는 도트 3D 미로 공포.",
+      "description": "폐쇄된 지하실 곳곳에 열쇠 3개가 떨어져 있습니다. 쫓아오는 교수를 피해 사물함에 숨으며 하나만 손에 넣으면 1층으로 올라갈 수 있고, 탐지기를 얻으면 열쇠가 가까운지 알 수 있습니다. 2단계에서는 층 지도를 보며 퀘스트를 풀고 로비 출입문으로 나가야 합니다.",
+      "controls": [
+        {
+          "key": "W A S D",
+          "action": "이동"
+        },
+        {
+          "key": "마우스 / ← → / Q E",
+          "action": "시점 회전 (화면을 클릭하면 마우스 고정)"
+        },
+        {
+          "key": "F",
+          "action": "사물함에 숨기 · 상호작용"
+        },
+        {
+          "key": "M",
+          "action": "층 지도 (2단계)"
+        },
+        {
+          "key": "Esc",
+          "action": "일시정지"
+        }
+      ],
+      "thumbnail": null,
+      "play": {
+        "type": "web",
+        "src": "/wgg-builds/basement/",
+        "aspect": "16 / 9",
+        "mobile": false
+      }
+    },
+    {
+      "id": "silent-line",
+      "title": "Silent Line",
+      "creator": "신정민",
+      "stage": "proto",
+      "engine": "HTML5",
+      "genre": "전술 스텔스 액션",
+      "tagline": "3개의 전술 통로를 잠입하며 엄폐·은닉·정밀 사격으로 보스전까지 가는 하드코어 스텔스 액션.",
+      "description": "세 갈래 라인을 오가며 엄폐물 뒤에 숨고, 적의 시야를 피해 전진합니다. 방패·수류탄·특수능력과 네 가지 무기를 상황에 맞게 바꿔 쓰며 마지막 보스전을 돌파하세요.",
+      "controls": [
+        {
+          "key": "↑ ↓",
+          "action": "전진 · 후진 (두 번 눌러 엄폐물 뛰어넘기)"
+        },
+        {
+          "key": "← →",
+          "action": "라인 변경"
+        },
+        {
+          "key": "마우스 좌클릭 / 우클릭",
+          "action": "조준 / 사격"
+        },
+        {
+          "key": "Shift",
+          "action": "방패 전개"
+        },
+        {
+          "key": "Q / E",
+          "action": "수류탄 / 특수능력"
+        },
+        {
+          "key": "Space",
+          "action": "근접공격"
+        },
+        {
+          "key": "R",
+          "action": "재장전"
+        },
+        {
+          "key": "1 2 3 4",
+          "action": "무기 교체"
+        }
+      ],
+      "thumbnail": "/wgg-builds/silent-line/thumb.png",
+      "play": {
+        "type": "web",
+        "src": "/wgg-builds/silent-line/",
+        "aspect": "16 / 9",
+        "mobile": false,
+        "scroll": true
+      }
+    },
+    {
+      "id": "airband",
+      "title": "에어밴드",
+      "creator": "국재환",
+      "stage": "proto",
+      "engine": "HTML5",
+      "genre": "픽셀 액션 플랫포머",
+      "tagline": "흙을 딛고 바람을 쏘아 나아가는 픽셀 플랫포머. 스테이지를 직접 만들 수도 있다.",
+      "description": "흙 블록을 딛고 올라서고, 에어밴드로 바람을 모아 터뜨리거나 분출해 길을 엽니다. 테스트 스테이지와 튜토리얼 스테이지를 플레이할 수 있고, 에디터로 블록과 몬스터를 놓아 나만의 스테이지를 만들 수 있습니다 (이 브라우저에 자동 저장).",
+      "controls": [
+        {
+          "key": "A D",
+          "action": "이동"
+        },
+        {
+          "key": "Space",
+          "action": "점프"
+        },
+        {
+          "key": "마우스 우클릭",
+          "action": "에어밴드 (꾹 눌러 모으기)"
+        },
+        {
+          "key": "마우스 좌클릭",
+          "action": "폭발"
+        },
+        {
+          "key": "Shift",
+          "action": "분출"
+        }
+      ],
+      "thumbnail": null,
+      "play": {
+        "type": "web",
+        "src": "/wgg-builds/airband/",
+        "aspect": "16 / 10",
+        "mobile": false,
+        "scroll": true
+      }
+    },
+    {
+      "id": "castee",
+      "title": "castee",
+      "creator": "이현승",
+      "stage": "proto",
+      "engine": "Unity",
+      "genre": "손그림 마법 디펜스",
+      "tagline": "몰려오는 적의 머리 위에 뜬 획을 그대로 그어, 마법사의 주문으로 쓰러뜨리는 손그림 디펜스.",
+      "description": "오른쪽에서 걸어오는 적마다 머리 위에 획 모양이 떠 있습니다. 적이 마법사에게 닿기 전에 그 모양을 마우스로 그려 주문을 쏘세요. 하트 세 개를 모두 잃으면 끝나고, 쓰러뜨린 만큼 점수가 오릅니다.",
+      "controls": [
+        {
+          "key": "마우스 드래그",
+          "action": "적 머리 위의 획 모양 따라 그리기"
+        }
+      ],
+      "thumbnail": null,
+      "play": {
+        "type": "web",
+        "src": "/wgg-builds/castee/",
+        "aspect": "16 / 9",
+        "mobile": false
+      }
+    },
+    {
+      "id": "dawn-typewriter",
+      "title": "새벽의 타자기",
+      "creator": "김동현",
+      "stage": "proto",
+      "engine": "Unity",
+      "genre": "원버튼 리듬 타자",
+      "tagline": "마감은 내일 아침. Space 키 하나로 새벽의 원고를 써 내려가는 원버튼 타자 게임.",
+      "description": "커서 칸이 꽉 차는 순간에 맞춰 Space를 누르면 글이 한 글자씩 써집니다. 박자를 놓치지 않고 정확도를 높여 마감 전에 원고를 끝내세요.",
+      "controls": [
+        {
+          "key": "Space",
+          "action": "커서 칸이 꽉 차는 순간에 누르기"
+        }
+      ],
+      "thumbnail": null,
+      "play": {
+        "type": "download",
+        "file": "/wgg-builds/downloads/DawnTypewriter.zip",
+        "size": "43MB",
+        "run": "압축을 폴더째 풀고 DawnTypewriter.exe 를 실행합니다."
+      }
+    },
+    {
+      "id": "lock-jaw",
+      "title": "LOCK-JAW",
+      "creator": "박세인",
+      "stage": "proto",
+      "engine": "Unity",
+      "genre": "3D 스텔스 저격 액션",
+      "tagline": "양쪽 눈으로 서로 다른 시야를 보며 적을 사냥하는 카멜레온 3D 스텔스 저격 액션.",
+      "description": "왼쪽 화면은 카멜레온의 3인칭, 오른쪽 화면은 1인칭 시야입니다. 이동은 왼쪽 시야가 편하지만 공격은 오른쪽 시야로 해야 합니다. 파리를 15마리 잡을 때마다 중앙에 보스가 나타나고, 약점을 찾아 5번 쓰러뜨리면 클리어입니다. 적에게 들키면 패배하니 위장으로 시야에서 벗어나세요.",
+      "controls": [
+        {
+          "key": "W A S D",
+          "action": "이동"
+        },
+        {
+          "key": "Space",
+          "action": "점프"
+        },
+        {
+          "key": "마우스 이동",
+          "action": "오른쪽 시야 회전"
+        },
+        {
+          "key": "마우스 우클릭",
+          "action": "조준(줌)"
+        },
+        {
+          "key": "마우스 좌클릭",
+          "action": "사격"
+        },
+        {
+          "key": "R",
+          "action": "장전"
+        },
+        {
+          "key": "Shift",
+          "action": "위장"
+        }
+      ],
+      "thumbnail": null,
+      "play": {
+        "type": "download",
+        "file": "/wgg-builds/downloads/LOCK-JAW.zip",
+        "size": "62MB",
+        "run": "압축을 폴더째 풀고 Chameleon.exe 를 실행합니다."
+      }
+    },
+    {
+      "id": "meejung",
+      "title": "Meejung (미정)",
+      "creator": "하송수",
+      "stage": "beta",
+      "engine": "Godot",
+      "genre": "3인칭 CQB 전술 로그라이트",
+      "tagline": "탄창 삽입·배출·노리쇠까지 손으로 하는 수동 장전과 3세션 분기 캠페인의 CQB 전술 로그라이트.",
+      "description": "단연발 전환, 발차기 브리칭, 어깨 좌우 반전 같은 CQB 조작으로 인질 구출 · 암실 나이트비전 · 왕복 탈출전 세 가지 세션을 돌파합니다. 영구 강화와 영수증 정산이 판마다 이어집니다.",
+      "controls": [
+        {
+          "key": "W A S D + 마우스",
+          "action": "이동 · 시점"
+        },
+        {
+          "key": "우클릭(홀드) + 좌클릭",
+          "action": "조준 사격 (비조준 시 발차기 브리칭)"
+        },
+        {
+          "key": "Q",
+          "action": "좌·우 어깨 전환"
+        },
+        {
+          "key": "B / N / Z",
+          "action": "단발↔연발 / 나이트비전 / 슬로우"
+        },
+        {
+          "key": "R 짧게 / R 길게 / F",
+          "action": "탄창 배출 / 삽입 / 노리쇠"
+        },
+        {
+          "key": "E / C / Tab / Esc",
+          "action": "상호작용 / 앉기 / 지도 / 일시정지"
+        }
+      ],
+      "thumbnail": null,
+      "play": {
+        "type": "soon",
+        "note": "빌드 파일을 받는 대로 다운로드로 올라갑니다."
+      }
+    }
+  ]
+}

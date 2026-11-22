@@ -348,6 +348,32 @@ const ROGUE = [
   buildRow(W, {}),
 ];
 
+/** 주간줴줴 모드용 — 깃 꽂은 초록 모자의 길드 접수원. 한 손에 의뢰서 두루마리를 들었다 */
+const GUILD = [
+  '................',
+  '.....nnnnnn.....',
+  '....nnnnnnnng...',
+  '...nnnnnnnnnng..',
+  '...NNNNNNNNNN...',
+  '....rssssssr....',
+  '....rsesessr....',
+  '....rssssssr....',
+  '.....ssSSss.....',
+  '....nnnggnnn....',
+  '...nnnnggnnnn...',
+  '..snnnnnnnnnnww.',
+  '..snnnNNNNnnnww.',
+  '...nnnnnnnnnnww.',
+  '...ooooggoooo...',
+  '...nnnnnnnnnn...',
+  '...nnnNnnNnnn...',
+  '....rrr..rrr....',
+  '....rrr..rrr....',
+  '....kkk..kkk....',
+  '................',
+  '................',
+];
+
 /** 캘린더 모드용 — 별 박힌 챙 넓은 모자를 쓰고 수정구슬을 들여다보는 점성술사 */
 const ASTROLOGER = [
   buildRow(W, {}),
@@ -594,6 +620,7 @@ const SPRITES: Record<string, string[]> = {
   bard: BARD,
   rogue: ROGUE,
   astrologer: ASTROLOGER,
+  guild: GUILD,
   // 광장 idle 용 2프레임 (기본 프레임과 번갈아 렌더링한다)
   'archer-draw': ARCHER_DRAW,
   'woowang-stir': WOOWANG_STIR,
