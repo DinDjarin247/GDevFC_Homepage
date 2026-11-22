@@ -52,7 +52,7 @@
   "games": [
     {
       "id": "golem",
-      "title": "Golem",
+      "title": "고려골렘술사",
       "creator": "정건영",
       "stage": "proto",
       "engine": "Unity",
@@ -69,6 +69,14 @@
           "action": "구르기(회피)"
         },
         {
+          "key": "E",
+          "action": "상호작용 (서낭당에서 빌기 등)"
+        },
+        {
+          "key": "마우스",
+          "action": "메뉴 · 정비 화면 조작"
+        },
+        {
           "key": "R",
           "action": "결과 화면에서 다시 하기"
         }
@@ -76,7 +84,7 @@
       "thumbnail": null,
       "play": {
         "type": "web",
-        "src": "/wgg-builds/golem/",
+        "src": "/wgg-builds/golem/index.html",
         "aspect": "16 / 10",
         "mobile": false
       }
@@ -115,7 +123,7 @@
       "thumbnail": null,
       "play": {
         "type": "web",
-        "src": "/wgg-builds/basement/",
+        "src": "/wgg-builds/basement/index.html",
         "aspect": "16 / 9",
         "mobile": false
       }
@@ -166,7 +174,7 @@
       "thumbnail": "/wgg-builds/silent-line/thumb.png",
       "play": {
         "type": "web",
-        "src": "/wgg-builds/silent-line/",
+        "src": "/wgg-builds/silent-line/index.html",
         "aspect": "16 / 9",
         "mobile": false,
         "scroll": true
@@ -206,7 +214,7 @@
       "thumbnail": null,
       "play": {
         "type": "web",
-        "src": "/wgg-builds/airband/",
+        "src": "/wgg-builds/airband/index.html",
         "aspect": "16 / 10",
         "mobile": false,
         "scroll": true
@@ -218,19 +226,27 @@
       "creator": "이현승",
       "stage": "proto",
       "engine": "Unity",
-      "genre": "손그림 마법 디펜스",
-      "tagline": "몰려오는 적의 머리 위에 뜬 획을 그대로 그어, 마법사의 주문으로 쓰러뜨리는 손그림 디펜스.",
-      "description": "오른쪽에서 걸어오는 적마다 머리 위에 획 모양이 떠 있습니다. 적이 마법사에게 닿기 전에 그 모양을 마우스로 그려 주문을 쏘세요. 하트 세 개를 모두 잃으면 끝나고, 쓰러뜨린 만큼 점수가 오릅니다.",
+      "genre": "키패드 문양 마법 디펜스",
+      "tagline": "숫자 키패드 3×3으로 적 머리 위의 문양을 순서대로 눌러 그리고, 주문을 쏘아 쓰러뜨리는 손그림 마법 디펜스.",
+      "description": "오른쪽에서 걸어오는 적마다 머리 위에 문양이 떠 있습니다. 숫자 키패드의 3×3 칸을 패턴 잠금 풀듯 문양이 지나가는 순서대로 누르면 문양이 완성되고, Space로 주문을 발사합니다. 순서가 틀리면 입력이 처음으로 돌아갑니다. 문양 대신 단어를 입력해야 하는 적도 있고, 마지막에는 여러 단계로 버티는 보스가 나옵니다. 적이 방어선에 닿으면 하트를 잃고, 보스가 닿으면 바로 게임 오버입니다.",
       "controls": [
         {
-          "key": "마우스 드래그",
-          "action": "적 머리 위의 획 모양 따라 그리기"
+          "key": "숫자 키패드 1~9",
+          "action": "3×3 칸을 문양 순서대로 눌러 그리기"
+        },
+        {
+          "key": "Space",
+          "action": "완성한 주문 발사"
+        },
+        {
+          "key": "글자 키",
+          "action": "단어가 뜬 적은 단어 입력"
         }
       ],
       "thumbnail": null,
       "play": {
         "type": "web",
-        "src": "/wgg-builds/castee/",
+        "src": "/wgg-builds/castee/index.html",
         "aspect": "16 / 9",
         "mobile": false
       }
@@ -342,8 +358,10 @@
       ],
       "thumbnail": null,
       "play": {
-        "type": "soon",
-        "note": "빌드 파일을 받는 대로 다운로드로 올라갑니다."
+        "type": "download",
+        "file": "/wgg-builds/downloads/Meejung_v1.0.7_Windows.zip",
+        "size": "40MB",
+        "run": "압축을 폴더째 풀고 Meejung_Beta.exe 를 실행합니다 (Meejung_Beta.pck 가 같은 폴더에 있어야 합니다)."
       }
     }
   ]
