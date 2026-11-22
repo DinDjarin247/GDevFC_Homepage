@@ -570,6 +570,66 @@
   word-break: keep-all;
 }
 
+/* 단계별 플레이 방법 — 번호는 픽셀 폰트로 찍어 의뢰서의 조항처럼 보이게 한다 */
+.steps {
+  list-style: none;
+  counter-reset: step;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.steps > li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 34px;
+  font-size: clamp(13px, 0.9vw, 16px);
+  line-height: 1.75;
+  color: var(--text);
+  word-break: keep-all;
+}
+
+.steps > li::before {
+  content: counter(step, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 0.35em;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--magenta);
+}
+
+.steps strong {
+  color: var(--lime);
+  font-weight: 600;
+}
+
+.steps p {
+  margin: 2px 0 0;
+}
+
+.steps ul {
+  margin: 8px 0 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.guideNote {
+  margin: 0;
+  padding: 10px 13px;
+  border-left: 2px solid var(--magenta);
+  background: rgba(255, 47, 143, 0.06);
+  font-size: clamp(12.5px, 0.85vw, 15px);
+  color: var(--muted);
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
 .facts {
   display: flex;
   flex-wrap: wrap;

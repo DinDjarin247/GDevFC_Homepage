@@ -59,6 +59,12 @@ export type WeeklyGame = {
   tagline: string;
   description: string;
   controls: { key: string; action: string }[];
+  /** 한 문단으로 모자란 게임을 위한 단계별 "플레이 방법" (없어도 된다) */
+  guide?: {
+    steps: { title: string; text: string; points?: string[] }[];
+    /** 단계 아래에 덧붙이는 한 줄 (패배 조건 등) */
+    note?: string;
+  };
   thumbnail: string | null;
   play: WeeklyPlay;
 };

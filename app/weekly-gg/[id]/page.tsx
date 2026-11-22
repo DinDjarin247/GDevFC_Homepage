@@ -68,6 +68,32 @@ export default async function WeeklyGamePage({ params }: Params) {
               {labels.about}
             </h3>
             {game.description && <p className={styles.description}>{game.description}</p>}
+            {game.guide && (
+              <>
+                <h3 className={styles.sectionTitle}>
+                  <span className={styles.glyph} aria-hidden="true">
+                    ▸
+                  </span>
+                  {labels.howToPlay}
+                </h3>
+                <ol className={styles.steps}>
+                  {game.guide.steps.map((step) => (
+                    <li key={step.title}>
+                      <strong>{step.title}</strong>
+                      <p>{step.text}</p>
+                      {step.points && (
+                        <ul>
+                          {step.points.map((point) => (
+                            <li key={point}>{point}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+                {game.guide.note && <p className={styles.guideNote}>{game.guide.note}</p>}
+              </>
+            )}
             <dl className={styles.facts}>
               <div>
                 <dt>{labels.creator}</dt>
