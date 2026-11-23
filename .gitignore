@@ -14,3 +14,8 @@ scripts/output/
 
 # 머신별 로컬 설정 (launch.json 은 공유)
 .claude/settings.local.json
+
+# 아트 레퍼런스 원본 — 남의 그림이 섞일 수 있어 안내문만 올린다
+art/refs/**
+!art/refs/README.md
+!art/refs/*/
