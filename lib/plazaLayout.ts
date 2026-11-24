@@ -2,43 +2,35 @@
  * 마을 광장 메뉴의 좌표계.
  *
  * 배경(PlazaScene 캔버스)과 그 위에 얹히는 캐릭터 버튼(ModePlaza DOM)이 같은 값을
- * 봐야 어긋나지 않으므로, 두 곳에서 쓰는 좌표를 여기에 모아둔다.
- * 캔버스는 PLAZA_W x PLAZA_H 가상 픽셀로 그리고, DOM 은 같은 비율(fx/fy)을 % 로 쓴다.
- */
-
-export const PLAZA_W = 480;
-export const PLAZA_H = 270;
-
-/**
- * 하늘을 넉넉히 보여주기 위해, 지면(마을·광장·인물)은 캔버스 위에서 이만큼 내려 그린다.
- * 그래서 소품 좌표는 "장면 좌표"(지면 기준)로 적고, 화면에 얹을 때만 이 값을 더한다.
- */
-export const GROUND_SHIFT = 20;
-
-/** 장면 좌표 → 캔버스 전체 대비 비율 (DOM 에서 % 로 쓰기 위한 변환) */
-export const sceneFx = (x: number) => x / PLAZA_W;
-export const sceneFy = (y: number) => (y + GROUND_SHIFT) / PLAZA_H;
-
-/**
- * 광장 바닥(타원 포석) — 장면 좌표.
+ * 봐야 어긋나지 않는다. 광장 그림은 art/plaza 의 스크립트가 굽고, 그때 소품과 주인공의
+ * 자리도 함께 lib/plazaArt.ts 로 내보낸다 — 자리를 옮기려면 art/plaza/placement.js 를
+ * 고치고 `npm run art` 를 다시 돌린다.
  *
- * rx:ry 비율이 곧 카메라 각도다. 4.3:1 은 지면에서 약 13°(거의 눕혀 본 각도)라
- * 정면으로 그린 건물과 충돌해 "바닥에 세워둔 스티커"처럼 보였다. 2.8:1(약 21°)로
- * 열어서 건물의 3/4 볼륨과 같은 각도를 보게 맞춘다.
+ * 캔버스는 PLAZA_W x PLAZA_H 픽셀로 그리고, DOM 은 같은 비율(fx/fy)을 % 로 쓴다.
  */
-export const PLAZA_FLOOR = { cx: 240, cy: 182, rx: 206, ry: 66 };
+import { PLAZA_ART } from './plazaArt';
 
-/** 건물이 발을 딛는 선 = 광장 타원의 안쪽 먼 가장자리 */
-export const HORIZON_Y = PLAZA_FLOOR.cy - PLAZA_FLOOR.ry;
+export const PLAZA_W = PLAZA_ART.w;
+export const PLAZA_H = PLAZA_ART.h;
+
+/** 화면 좌표 → 캔버스 전체 대비 비율 (DOM 에서 % 로 쓰기 위한 변환) */
+export const sceneFx = (x: number) => x / PLAZA_W;
+export const sceneFy = (y: number) => y / PLAZA_H;
 
 /**
- * 중앙 동상 자리 — 아직 동상이 없어 받침대와 자리 표시만 그린다. 모두 장면 좌표.
- * topY 는 점선 실루엣의 꼭대기, labelY 는 그 위에 붙는 "동상 자리" 표식의 기준선.
+ * 동상 자리 — 분수 한가운데 받침대 위. 아직 동상이 없어 점선 실루엣만 그린다.
+ * baseY 는 받침대 윗면, topY 는 실루엣의 꼭대기, labelY 는 그 위에 붙는 "동상 자리" 표식의 기준선.
  */
-export const STATUE = { x: 240, topY: 128, baseY: 194, labelY: 124 };
+const STATUE_BASE = PLAZA_ART.statue.baseY;
+export const STATUE = {
+  x: PLAZA_ART.statue.x,
+  baseY: STATUE_BASE,
+  topY: STATUE_BASE - 58,
+  labelY: STATUE_BASE - 66,
+};
 
 export type PlazaSpot = {
-  /** 캐릭터 발이 닿는 지점 — 장면 좌표(캔버스 픽셀, 지면 기준) */
+  /** 캐릭터 발이 닿는 지점 — 캔버스 픽셀 */
   x: number;
   y: number;
   /** 원근감용 크기 배율 — 뒤쪽일수록 작게 */
@@ -56,52 +48,23 @@ export type PlazaSpot = {
 /**
  * modes.json 의 id 로 자리를 찾는다. 새 모드가 자리 없이 추가돼도
  * ModePlaza 가 기본 자리에 배치하므로 화면이 깨지지 않는다.
+ *
+ *   board      도적 — 큰 계단 난간 위에 걸터앉아 있다
+ *   weekly-gg  우왕이 — 분수 옆에 소파와 TV 를 내놓고 게임기를 붙잡고 있다 (주간줴줴)
+ *   events     점성술사 — 별무늬 천막 앞
+ *   join       엘프 아처 — 성벽 아래 과녁장
+ *   showcase   마법사 — 앞쪽 마법 두루마리 좌판
+ *   about      기사 — 화톳불 옆 벤치
+ *   gallery    바드 — 분수 앞을 오가며 노래
  */
-export const PLAZA_SPOTS: Record<string, PlazaSpot> = {
-  // 도적 — 광장 왼쪽 큰 나무의 왼쪽 가지 위 (단풍 앞이라 실루엣이 잘 보인다)
-  board: { x: 44, y: 102, scale: 0.72, place: '광장 어귀 큰 나무', idle: 'perch' },
-  // 우왕이 — 선술집 앞에 소파와 TV 를 내놓고 게임기를 붙잡고 있다 (주간줴줴).
-  // 달려라·뛰어라 우왕이가 주간줴줴로 합쳐지면서 미니게임 자리를 물려받았다
-  'weekly-gg': {
-    x: 135,
-    y: 153,
-    scale: 0.84,
-    place: '선술집 앞 게임 소파',
-    altSprite: 'woowang-couch-press',
-    idle: 'rest',
-  },
-  // 점성술사 — 천막 입구 바로 앞 (입구 삼각형이 x=356 에 있다)
-  events: { x: 356, y: 167, scale: 0.88, place: '점성술 천막', idle: 'read' },
-  // 엘프 아처 — 오른쪽 담벼락 과녁장
-  join: {
-    x: 408,
-    y: 173,
-    scale: 0.9,
-    place: '담벼락 과녁장',
-    altSprite: 'archer-draw',
-    idle: 'shoot',
-  },
-  // 마법사 — 앞쪽 마법 두루마리 좌판
-  showcase: { x: 366, y: 218, scale: 1.06, flip: true, place: '마법 두루마리 좌판', idle: 'browse' },
-  // 기사 — 광장 벤치와 화톳불
-  about: { x: 112, y: 215, scale: 1.06, place: '광장 벤치', idle: 'rest' },
-  // 바드 — 광장 앞을 오가며 노래
-  gallery: {
-    x: 240,
-    y: 228,
-    scale: 1.1,
-    place: '광장 한가운데',
-    altSprite: 'bard-strum',
-    idle: 'stroll',
-  },
-};
+export const PLAZA_SPOTS: Record<string, PlazaSpot> = PLAZA_ART.spots;
 
-/** 자리가 지정되지 않은 모드를 위한 예비 배치 (광장 뒤편에 일렬로) */
+/** 자리가 지정되지 않은 모드를 위한 예비 배치 (큰 계단 아래에 일렬로) */
 export function fallbackSpot(order: number): PlazaSpot {
   return {
-    x: 164 + order * 44,
-    y: 130,
-    scale: 0.75,
+    x: 300 + order * 52,
+    y: 424,
+    scale: 0.8,
     place: '광장',
     idle: 'rest',
   };

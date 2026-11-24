@@ -40,7 +40,7 @@
   outline-offset: -2px;
 }
 
-/* 광장이 프레임 안쪽을 그대로 채운다. 캔버스(480x270)는 이 상자에 맞춰 늘어나고,
+/* 광장이 프레임 안쪽을 그대로 채운다. 캔버스(960x540)는 이 상자에 맞춰 늘어나고,
    DOM 캐릭터 좌표는 % 라 배경과 함께 따라 늘어나므로 서로 어긋나지 않는다.
    size 컨테이너로 만들어, 캐릭터 크기를 광장 높이(cqh) 기준으로 잡는다 */
 .stage {
@@ -50,8 +50,9 @@
   min-width: 860px;
   margin-inline: auto;
   container-type: size;
-  /* 캐릭터 키 = 광장 높이의 12% x 자리별 배율 */
-  --char-h: 12cqh;
+  /* 캐릭터 한 칸의 키 = 광장 높이의 14.26% x 자리별 배율.
+     주인공 그림 한 칸이 77px 이고 광장이 540px 이라, 배율 1 일 때 그림 1픽셀 = 배경 1픽셀이다 */
+  --char-h: 14.26cqh;
 }
 
 /* 지금이 어느 시간대인지 — 접속 기기의 현지 시각 기준 */
@@ -87,7 +88,9 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  image-rendering: pixelated;
+  /* 캔버스 안에서 이미 정수 배율로 키워 그린다 (PlazaScene). 여기서 pixelated 로 한 번 더
+     늘리면 픽셀 굵기가 들쭉날쭉해지므로, 남는 차이는 부드럽게 맞춘다 */
+  image-rendering: auto;
 }
 
 /* ---------- 중앙 동상 자리 ---------- */
@@ -158,8 +161,75 @@
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
 }
 
+/* 구워 둔 주인공 그림(HeroSprite) — 3배로 저장된 시트를 줄여 쓰므로 부드럽게 맞춘다.
+   svg 와 달리 스스로 폭을 갖지 못하므로 키에서 폭을 계산해 준다 */
+.sprite[data-hero] {
+  width: calc(var(--char-h) * var(--scale, 1) * 56 / 77);
+  aspect-ratio: 56 / 77;
+  image-rendering: auto;
+}
+
+/* 주인공은 배경과 따로 얹히므로, 어두운 시간대에는 살짝 가라앉혀 장면에 섞이게 한다
+   (완전히 어둡게 하지는 않는다 — 메뉴라서 늘 눈에 띄어야 한다) */
+.stage[data-phase='night'] .sprite[data-hero] {
+  filter: brightness(0.8) saturate(0.88) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+}
+
+.stage[data-phase='dawn'] .sprite[data-hero],
+.stage[data-phase='evening'] .sprite[data-hero] {
+  filter: brightness(0.92) saturate(0.94) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+}
+
+.stage[data-phase] .char.active .sprite[data-hero],
+.stage[data-phase] .char:hover .sprite[data-hero] {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+}
+
+.sprite[data-silhouette] {
+  filter: brightness(0) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+  opacity: 0.82;
+}
+
 .flip {
   transform: scaleX(-1);
+}
+
+/* 머리 위 표식 — 마을 사람이 많아, 어느 쪽이 메뉴 캐릭터인지 한눈에 보이게 한다.
+   고르거나 올려 두면 이름표가 뜨므로 그때는 숨긴다 */
+.marker {
+  position: absolute;
+  left: 50%;
+  /* 그림 한 칸의 위쪽 1/10 은 비어 있으므로(모자 · 깃털 자리) 머리 바로 위에 온다 */
+  bottom: calc(var(--char-h) * var(--scale, 1) * 0.9);
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: clamp(4px, 0.9cqh, 7px) solid transparent;
+  border-right: clamp(4px, 0.9cqh, 7px) solid transparent;
+  border-top: clamp(5px, 1.1cqh, 9px) solid var(--lime);
+  filter: drop-shadow(0 0 3px rgba(201, 247, 61, 0.7)) drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8));
+  animation: markerBob 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.char.locked .marker {
+  border-top-color: #bb74e6;
+  filter: drop-shadow(0 0 3px rgba(187, 116, 230, 0.7)) drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8));
+}
+
+.char.active .marker,
+.char:hover .marker {
+  visibility: hidden;
+}
+
+@keyframes markerBob {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+  50% {
+    transform: translate(-50%, -3px);
+  }
 }
 
 /* 발밑 빛 — 선택/호버 시에만 */
@@ -423,6 +493,7 @@
   .shoot,
   .stroll,
   .hop,
+  .marker,
   .char.walking {
     animation: none;
   }
@@ -440,7 +511,7 @@
   .stage {
     height: auto;
     aspect-ratio: 480 / 270;
-    --char-h: 13.5cqh;
+    --char-h: 16cqh;
   }
 }
 

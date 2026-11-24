@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
-import Sprite from './Sprite';
+import HeroSprite from './HeroSprite';
 import PlazaScene from './PlazaScene';
 import { useArcadeKeys } from '@/lib/useArcadeKeys';
 import {
@@ -108,7 +108,7 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
   return (
     <div className={styles.wrap}>
       <div className={styles.stageScroll}>
-        <div className={styles.stage}>
+        <div className={styles.stage} data-phase={phase ?? undefined}>
           {phase && <PlazaScene key={phase} className={styles.scene} phase={phase} />}
 
           {/* 제목·안내문은 광장 위에 얹는다 — 위아래 띠를 없애 화면을 꽉 채우기 위해 */}
@@ -166,6 +166,8 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
                   router.push(mode.href);
                 }}
               >
+                <span className={styles.marker} aria-hidden="true" />
+
                 <span className={styles.plate} aria-hidden="true">
                   <span className={styles.plateNo}>{mode.no}</span>
                   <span className={styles.plateLabel}>
@@ -175,7 +177,7 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
                 </span>
 
                 <span className={`${styles.body} ${styles[spot.idle]}`}>
-                  <Sprite
+                  <HeroSprite
                     name={sprite}
                     silhouette={mode.locked}
                     className={`${styles.sprite} ${spot.flip ? styles.flip : ''}`}

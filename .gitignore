@@ -19,3 +19,6 @@ scripts/output/
 art/refs/**
 !art/refs/README.md
 !art/refs/*/
+
+# 아트 미리보기 — npm run art 가 매번 다시 만든다
+art/preview/
