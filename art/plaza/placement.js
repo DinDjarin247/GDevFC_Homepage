@@ -77,10 +77,10 @@ const NPCS = [
 const SPOTS = {
   board: { x: 376, y: 306, scale: 0.94, place: '큰 계단 난간 위', idle: 'perch' },
   'weekly-gg': { x: 288, y: 478, scale: 1.06, place: '분수 옆 게임 소파', altSprite: 'woowang-couch-press', idle: 'rest' },
-  events: { x: 112, y: 458, scale: 1.1, place: '점성술 천막', idle: 'read' },
+  events: { x: 86, y: 450, scale: 1.06, place: '점성술 천막', idle: 'read' },
   join: { x: 792, y: 442, scale: 1.08, place: '성벽 아래 과녁장', altSprite: 'archer-draw', idle: 'shoot' },
   showcase: { x: 690, y: 518, scale: 1.2, flip: true, place: '마법 두루마리 좌판', idle: 'browse' },
-  about: { x: 132, y: 530, scale: 1.2, place: '화톳불 옆 벤치', idle: 'rest' },
+  about: { x: 142, y: 530, scale: 1.12, place: '화톳불 옆 벤치', idle: 'rest' },
   gallery: { x: 480, y: 534, scale: 1.16, place: '분수 앞', altSprite: 'bard-strum', idle: 'stroll' },
 };
 

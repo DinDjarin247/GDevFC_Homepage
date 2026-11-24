@@ -2329,9 +2329,9 @@ export const PLAZA_ART = {
    "idle": "rest"
   },
   "events": {
-   "x": 112,
-   "y": 458,
-   "scale": 1.1,
+   "x": 86,
+   "y": 450,
+   "scale": 1.06,
    "place": "점성술 천막",
    "idle": "read"
   },
@@ -2352,9 +2352,9 @@ export const PLAZA_ART = {
    "idle": "browse"
   },
   "about": {
-   "x": 132,
+   "x": 142,
    "y": 530,
-   "scale": 1.2,
+   "scale": 1.12,
    "place": "화톳불 옆 벤치",
    "idle": "rest"
   },
