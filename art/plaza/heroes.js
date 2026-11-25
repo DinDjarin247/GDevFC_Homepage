@@ -10,6 +10,7 @@ const path = require('path');
 const { P, M, hash } = require('./kit');
 const N = require('./npcs');
 const { add, sub, mul, norm, mv, lerp3, frameAlong } = require('./rig');
+const { winterize, HERO_WINTER } = require('./season');
 
 /** 주인공은 같은 자리의 마을 사람보다 이만큼 크다 */
 const HS = 1.36;
@@ -390,7 +391,7 @@ const HEROES = {
 /* ---------- 우왕이 (소파에서 게임 중) ---------- */
 
 /** 레퍼런스에서 옮긴 64px 우왕이의 머리에, 앉아서 패드를 쥔 몸을 붙인다 */
-function woowangCouch(press) {
+function woowangCouch(press, season) {
   const CELL = { w: 56, h: 77 };
   const src = P.load(path.join(__dirname, '..', 'refs-pixel', 'woowang-64.png'));
   const b = new P.Buf(CELL.w, CELL.h);
@@ -430,22 +431,47 @@ function woowangCouch(press) {
     b.pset(bx + 22, by + 2, C.y);
     b.pset(bx + 6, by + 3, C.r);
   }
+  if (season === 'christmas') santaPixel(b, ox, oy, C.L);
   return { buf: b, ax: Math.round(CELL.w / 2), ay: CELL.h - 2, anchors: {} };
+}
+
+/** 우왕이 머리 위의 산타 모자 — 두 뿔 사이에 얹고 끝이 오른쪽으로 처진다 (그림 좌표는 64px 원본 기준) */
+function santaPixel(b, ox, oy, line) {
+  const red = [214, 44, 56], redD = [158, 28, 44], white = [252, 250, 248], whiteD = [214, 216, 226];
+  const set = (x, y, c) => b.pset(ox + x, oy + y, c);
+  for (let j = 0; j <= 10; j++) {
+    const y = 4 - j, hw = 9.5 * (1 - j / 11), cx = 27 + j * 0.9;
+    for (let x = Math.round(cx - hw); x <= Math.round(cx + hw); x++) set(x, y, x > cx + hw * 0.35 ? redD : red);
+    set(Math.round(cx - hw) - 1, y, line);
+    set(Math.round(cx + hw) + 1, y, line);
+  }
+  for (let x = 16; x <= 38; x++) {
+    set(x, 4, line);
+    set(x, 5, x > 32 ? whiteD : white);
+    set(x, 6, x > 32 ? whiteD : white);
+    set(x, 7, line);
+  }
+  set(15, 5, line);
+  set(15, 6, line);
+  set(39, 5, line);
+  set(39, 6, line);
+  for (let y = -9; y <= -5; y++) for (let x = 35; x <= 40; x++) if (Math.hypot(x - 37.5, y + 7) < 2.6) set(x, y, Math.hypot(x - 37.5, y + 7) > 1.8 ? whiteD : white);
 }
 
 /**
  * 주인공 전부 — spots 는 placement.js 의 SPOTS (모드 id → 자리 · 배율).
  * 반환: frames(이름 → { buf, ax, ay, anchors }), defs(모드 id → 대본 · 크기)
  */
-function buildHeroes(spots) {
+function buildHeroes(spots, season = 'autumn') {
   const frames = {}, defs = {};
   for (const [name, H] of Object.entries(HEROES)) {
     const spot = spots[H.mode];
     const s = HS * spot.scale;
-    const D = N.dims(H.d);
+    const d = season === 'christmas' ? winterize(H.d, HERO_WINTER[name]) : H.d;
+    const D = N.dims(d);
     for (const [key, [dir, fn]] of Object.entries(H.frames)) {
       const yaw = typeof dir === 'number' ? dir : YAW[dir];
-      const r = N.render(H.d, s, yaw, (D2) => fn(D2, H.d, s));
+      const r = N.render(d, s, yaw, (D2) => fn(D2, d, s));
       frames[`h_${name}_${key}`] = { buf: r.buf, ax: r.ax, ay: r.ay, anchors: r.anchors };
     }
     const pref = (list) => list.map(([k, t]) => [`h_${name}_${k}`, t]);
@@ -461,8 +487,8 @@ function buildHeroes(spots) {
     };
   }
   // 우왕이는 레퍼런스에서 옮긴 그림 그대로 (입체 생성기를 쓰지 않는다)
-  frames.h_woowang_idle = woowangCouch(false);
-  frames.h_woowang_press = woowangCouch(true);
+  frames.h_woowang_idle = woowangCouch(false, season);
+  frames.h_woowang_press = woowangCouch(true, season);
   defs['weekly-gg'] = {
     hero: 'woowang',
     script: [['h_woowang_idle', 0.5], ['h_woowang_press', 0.18], ['h_woowang_idle', 0.34], ['h_woowang_press', 0.14], ['h_woowang_idle', 0.22], ['h_woowang_press', 0.14], ['h_woowang_idle', 0.9], ['h_woowang_press', 0.2]],
@@ -482,7 +508,7 @@ if (require.main === module) {
   const { SPOTS } = require('./placement');
   const { bounds } = require('./rig');
   const only = process.argv[2];
-  const { frames } = buildHeroes(SPOTS);
+  const { frames } = buildHeroes(SPOTS, process.argv[3] ?? 'autumn');
   const items = Object.entries(frames)
     .filter(([n]) => !only || n.includes(only))
     .map(([label, f]) => {

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type RefObject } from 'react';
 import { PLAZA_ART } from '@/lib/plazaArt';
-import { STATUE, phaseForHour, type DayPhase } from '@/lib/plazaLayout';
+import { STATUE, phaseAt, seasonAt, type DayPhase, type Season } from '@/lib/plazaLayout';
 
 /** 메뉴(ModePlaza)와 주고받는 것 — 지금 고른 주인공, 잠긴 모드, 움직이는 주인공의 자리 알림 */
 export type HeroControl = {
@@ -15,6 +15,8 @@ type PlazaSceneProps = {
   className?: string;
   /** 접속 기기의 현지 시각 기준 시간대. 생략하면 마운트 시점에 계산한다 */
   phase?: DayPhase;
+  /** 계절 옷 — 생략하면 오늘 날짜로 정한다 */
+  season?: Season;
   control?: RefObject<HeroControl | null>;
 };
 
@@ -29,6 +31,9 @@ type PlazaSceneProps = {
  *   back     먼 성 · 윗마을 · 윗마당 건물
  *   front    난간 · 옹벽 · 큰 계단 · 아래 광장 바닥
  *   sprites  소품 · 불꽃 같은 움직이는 것들의 시트
+ *
+ * 계절(가을 · 크리스마스)마다 그림 묶음이 따로 있다 (public/art/plaza/<계절>/). 크리스마스에는 눈이 내리고
+ * 장식줄 · 트리 · 나무의 꼬마전구가 반짝인다 (전구 자리는 굽기가 내보내고, 여기서 시간대에 맞춰 켠다).
  *
  * 사람(마을 사람 · 주인공)은 people.png 한 장에 다섯 방향(왼쪽 셋은 뒤집어 쓴다) · 걷기 8프레임 ·
  * 서기 · 손짓으로 구워져 있고, 시간대 색은 받은 뒤 대응표대로 한 번 칠한다.
@@ -111,6 +116,30 @@ type Agent = {
 };
 
 type Drawable = { y: number; draw: (t: number) => void };
+type Bulb = readonly [number, number, number];
+type SeasonArt = {
+  snow: boolean;
+  props: readonly { id: string; sprite: string; x: number; y: number; frames?: number; fps?: number }[];
+  fires: readonly (readonly number[])[];
+  bulbs: { back: readonly Bulb[]; front: readonly Bulb[]; sprites: Record<string, readonly Bulb[]> };
+  peopleColors: readonly number[];
+  phases: Record<
+    DayPhase,
+    {
+      lamps: number;
+      leaves: readonly string[];
+      hand: string;
+      smoke: string;
+      shadow: number;
+      stars: readonly (readonly [number, number])[];
+      people: readonly number[];
+    }
+  >;
+};
+
+/** 꼬마전구 색 — 0 따뜻한 흰색, 1 빨강, 2 초록, 3 금색, 4 파랑 (art/plaza/season.js 와 같은 순서) */
+const BULB_ON = ['255, 240, 184', '255, 72, 72', '88, 255, 124', '255, 210, 74', '106, 184, 255'];
+const BULB_OFF = ['#9a8f72', '#8a3434', '#2f7a46', '#8a7232', '#3a5f88'];
 
 function load(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -298,7 +327,7 @@ function makePathfinder(grid: Uint8Array) {
   };
 }
 
-export default function PlazaScene({ className, phase, control }: PlazaSceneProps) {
+export default function PlazaScene({ className, phase, season, control }: PlazaSceneProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -310,8 +339,10 @@ export default function PlazaScene({ className, phase, control }: PlazaSceneProp
     const canvas: HTMLCanvasElement = canvasEl;
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const active: DayPhase = phase ?? phaseForHour(new Date().getHours());
-    const info = A.phases[active];
+    const active: DayPhase = phase ?? phaseAt(new Date());
+    const seasonName: Season = season ?? seasonAt(new Date());
+    const SEA = A.seasons[seasonName] as unknown as SeasonArt;
+    const info = SEA.phases[active];
     const lampsOn = info.lamps > 0.3;
 
     let alive = true;
@@ -395,6 +426,32 @@ export default function PlazaScene({ className, phase, control }: PlazaSceneProp
       const X = Math.round(x);
       ctx.fillRect(X - half, y - 1, half * 2, 2);
       ctx.fillRect(X - half + 2, y - 2, half * 2 - 4, 4);
+    }
+
+    /**
+     * 꼬마전구 — 밤 · 저녁에는 켜서 반짝이고(색 전구는 깜빡, 흰 전구는 은은하게), 낮에는 꺼진 색만.
+     * (ox, oy) 는 전구 좌표에 더할 자리 (소품에 달린 전구는 그 소품 그림의 왼쪽 위)
+     */
+    function bulbs(list: readonly Bulb[], ox: number, oy: number, t: number, seed: number) {
+      if (!list.length) return;
+      if (!lampsOn) {
+        for (const [x, y, c] of list) {
+          ctx.fillStyle = BULB_OFF[c];
+          ctx.fillRect(x + ox, y + oy, 1, 1);
+        }
+        return;
+      }
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      list.forEach(([x, y, c], i) => {
+        const k = i + seed;
+        const on = reduced ? 1 : c === 0 ? 0.75 + 0.25 * Math.sin(t * 1.3 + k * 0.9) : Math.sin(t * 2.2 + k * 1.7) > -0.35 ? 1 : 0.25;
+        ctx.fillStyle = `rgba(${BULB_ON[c]}, ${0.2 * on})`;
+        ctx.fillRect(x + ox - 1, y + oy - 1, 3, 3);
+        ctx.fillStyle = `rgba(${BULB_ON[c]}, ${on})`;
+        ctx.fillRect(x + ox, y + oy, 1, 1);
+      });
+      ctx.restore();
     }
 
     /** 불빛이 번지는 자리 — 등불 켜진 시간대에만 은은하게 일렁인다 */
@@ -871,7 +928,7 @@ export default function PlazaScene({ className, phase, control }: PlazaSceneProp
       },
     };
 
-    const [fireA, fireB, fireBench] = A.fires;
+    const fireBench = A.benchFire;
 
     function flame(x: number, y: number, t: number, offset: number) {
       const f = reduced ? 2 : (Math.floor(t * 11) + offset) % 8;
@@ -882,15 +939,18 @@ export default function PlazaScene({ className, phase, control }: PlazaSceneProp
     /** 아래 광장의 것들 — 화면 아래(= 앞)에 있을수록 나중에 그려 앞사람이 뒷사람을 가린다 */
     let frameDt = 0;
     const statics: Drawable[] = [
-      ...A.props.map((p) => ({
+      ...SEA.props.map((p, pi) => ({
         y: p.y,
         draw(t: number) {
-          const name = 'frames' in p ? `${p.sprite}_${reduced ? 0 : Math.floor(t * p.fps) % p.frames}` : p.sprite;
+          const name = p.frames && p.fps ? `${p.sprite}_${reduced ? 0 : Math.floor(t * p.fps) % p.frames}` : p.sprite;
           spr(name, p.x, p.y);
+          const list = SEA.bulbs.sprites[p.sprite];
+          const r = RECTS[p.frames ? `${p.sprite}_0` : p.sprite];
+          if (list && r) bulbs(list, Math.round(p.x) - r[4], Math.round(p.y) - r[5], t, pi * 13);
           overlays[p.id]?.(t);
         },
       })),
-      { y: A.props.find((p) => p.id === 'brazier')!.y + 0.5, draw: (t: number) => flame(fireBench[0], fireBench[1], t, 5) },
+      { y: SEA.props.find((p) => p.id === 'brazier')!.y + 0.5, draw: (t: number) => flame(fireBench[0], fireBench[1], t, 5) },
       ...heroes.map((h) => ({
         get y() {
           return h.def.sortY ?? h.y;
@@ -921,7 +981,43 @@ export default function PlazaScene({ className, phase, control }: PlazaSceneProp
       big: Math.random() < 0.4,
     }));
 
+    /** 크리스마스 — 세 겹으로 내리는 눈 (멀수록 작고 느리다) */
+    const flakes = SEA.snow
+      ? Array.from({ length: 150 }, (_, i) => {
+          const layer = i % 3;
+          return {
+            x: Math.random() * W,
+            y: Math.random() * H,
+            vy: [10, 18, 30][layer] + Math.random() * 6,
+            drift: [4, 8, 12][layer],
+            phase: Math.random() * Math.PI * 2,
+            size: layer === 2 ? 2 : 1,
+            alpha: [0.5, 0.75, 0.95][layer],
+            tone: Math.floor(Math.random() * info.leaves.length),
+          };
+        })
+      : [];
+
+    function drawSnow(dt: number, t: number) {
+      for (const f of flakes) {
+        if (!reduced) {
+          f.y += f.vy * dt;
+          f.x += Math.sin(t * 0.9 + f.phase) * f.drift * dt - 4 * dt;
+          if (f.y > H + 2) {
+            f.y = -3;
+            f.x = Math.random() * W;
+          }
+          if (f.x < -3) f.x = W + 2;
+        }
+        ctx.globalAlpha = f.alpha;
+        ctx.fillStyle = info.leaves[f.tone];
+        ctx.fillRect(Math.round(f.x), Math.round(f.y), f.size, f.size);
+      }
+      ctx.globalAlpha = 1;
+    }
+
     function drawLeaves(dt: number, t: number) {
+      if (SEA.snow) return drawSnow(dt, t);
       for (const l of leaves) {
         if (!reduced) {
           l.y += l.vy * dt;
@@ -1030,13 +1126,14 @@ export default function PlazaScene({ className, phase, control }: PlazaSceneProp
       spr(`fall_${reduced ? 0 : Math.floor(t * 9) % 4}`, A.fall[0], A.fall[1]);
       spr(`flag_${reduced ? 0 : Math.floor(t * 6) % 4}`, A.flag[0], A.flag[1]);
       drawClock();
+      bulbs(SEA.bulbs.back, 0, 0, t, 0);
       drawSmoke(t);
       // 윗마당 사람들 — 난간이 다리를 가리도록 앞 배경보다 먼저 그린다
       const upper = agentDrawables.filter((d) => d.y < LAYER_Y).sort((a, b) => a.y - b.y);
       for (const d of upper) d.draw(t);
       ctx.drawImage(images.front, 0, A.frontY);
-      flame(fireA[0], fireA[1], t, 0);
-      flame(fireB[0], fireB[1], t, 3);
+      bulbs(SEA.bulbs.front, 0, 0, t, 500);
+      SEA.fires.forEach(([fx, fy], i) => flame(fx, fy, t, i * 3));
       const lower = [...statics, ...agentDrawables.filter((d) => d.y >= LAYER_Y)].sort((a, b) => a.y - b.y);
       for (const d of lower) d.draw(t);
       drawArrowFlight(dt);
@@ -1047,7 +1144,7 @@ export default function PlazaScene({ className, phase, control }: PlazaSceneProp
       if (!reduced) raf = requestAnimationFrame(frame);
     }
 
-    const base = `/art/plaza`;
+    const base = `/art/plaza/${seasonName}`;
     Promise.all([
       load(`${base}/sky-${active}.png`),
       load(`${base}/clouds-${active}.png`),
@@ -1058,7 +1155,7 @@ export default function PlazaScene({ className, phase, control }: PlazaSceneProp
     ])
       .then(([sky, clouds, back, front, sheet, peopleImg]) => {
         if (!alive) return;
-        const peopleG = recolor(peopleImg, PEOPLE.colors, info.people);
+        const peopleG = recolor(peopleImg, SEA.peopleColors, info.people);
         images = { sky, clouds, back, front, sheet, people: peopleImg, peopleG };
         last = performance.now();
         if (reduced) frame(last);
@@ -1084,7 +1181,7 @@ export default function PlazaScene({ className, phase, control }: PlazaSceneProp
       ro.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [phase, control]);
+  }, [phase, season, control]);
 
   return <canvas ref={canvasRef} className={className} aria-hidden="true" />;
 }

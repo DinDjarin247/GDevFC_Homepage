@@ -87,13 +87,75 @@ export const PHASE_LABEL: Record<DayPhase, { ko: string; en: string }> = {
   night: { ko: '심야', en: 'NIGHT' },
 };
 
-/** 접속한 기기의 현지 시각으로 광장의 시간대를 정한다 */
+/* ---------- 해 뜨고 지는 시각 ---------- */
+
+/** 동아리가 있는 곳 (충북대, 청주) — 해 뜨고 지는 시각을 이 자리 기준으로 셈한다 */
+const SITE = { lat: 36.63, lon: 127.49, tz: 9 };
+
+/** 한국 시각 기준의 그날 날짜 · 분(0~1439) */
+function kstParts(date: Date) {
+  const k = new Date(date.getTime() + SITE.tz * 3_600_000);
+  return { y: k.getUTCFullYear(), m: k.getUTCMonth(), d: k.getUTCDate(), min: k.getUTCHours() * 60 + k.getUTCMinutes() };
+}
+
+/**
+ * 그날의 해 뜨는 · 남중 · 지는 시각 (한국 시각, 자정부터 분).
+ * NOAA 의 간단한 태양 위치 식 — 몇 분 안쪽으로 맞는다.
+ */
+export function sunTimes(date: Date) {
+  const { y, m, d } = kstParts(date);
+  const n = Math.round((Date.UTC(y, m, d) - Date.UTC(y, 0, 1)) / 86_400_000) + 1;
+  const g = ((2 * Math.PI) / 365) * (n - 1 + 0.5);
+  const eqt = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const decl =
+    0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const lat = (SITE.lat * Math.PI) / 180;
+  const zenith = (90.833 * Math.PI) / 180;
+  const ha = Math.acos(Math.cos(zenith) / (Math.cos(lat) * Math.cos(decl)) - Math.tan(lat) * Math.tan(decl));
+  const noon = 720 - 4 * SITE.lon - eqt + SITE.tz * 60;
+  const half = (4 * ha * 180) / Math.PI;
+  return { sunrise: noon - half, noon, sunset: noon + half };
+}
+
+/** 분 → "17:16" */
+export const clockText = (min: number) => {
+  const m = ((Math.round(min) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+};
+
+/**
+ * 지금 광장의 시간대 — 그날 실제로 해가 뜨고 지는 시각에 맞춘다 (겨울엔 저녁이 일찍 온다).
+ *   새벽: 해 뜨기 50분 전 ~ 뜬 뒤 45분 · 아침 ~ 남중 100분 전 · 점심 ~ 남중 100분 뒤
+ *   오후 ~ 해 지기 1시간 전 · 저녁: 그때부터 진 뒤 45분 · 그 밖은 심야
+ */
+export function phaseAt(date: Date): DayPhase {
+  const { sunrise, noon, sunset } = sunTimes(date);
+  const t = kstParts(date).min;
+  if (t < sunrise - 50 || t >= sunset + 45) return 'night';
+  if (t < sunrise + 45) return 'dawn';
+  if (t < noon - 100) return 'morning';
+  if (t < noon + 100) return 'noon';
+  if (t < sunset - 60) return 'afternoon';
+  return 'evening';
+}
+
+/** 예전 방식 (시 단위) — 날짜를 모를 때만 쓴다 */
 export function phaseForHour(hour: number): DayPhase {
-  if (hour < 5) return 'night';
-  if (hour < 8) return 'dawn';
-  if (hour < 11) return 'morning';
-  if (hour < 14) return 'noon';
-  if (hour < 17) return 'afternoon';
-  if (hour < 20) return 'evening';
-  return 'night';
+  const d = new Date();
+  d.setHours(hour, 30, 0, 0);
+  return phaseAt(d);
+}
+
+/* ---------- 계절 옷 ---------- */
+
+export type Season = 'autumn' | 'christmas';
+
+export const SEASON_LABEL: Record<Season, string> = { autumn: '가을', christmas: '크리스마스' };
+
+/** 11월 15일부터 1월 말까지는 크리스마스, 그 밖은 가을. 주소 뒤에 ?season=autumn 처럼 붙이면 그 옷으로 본다 */
+export function seasonAt(date: Date, override?: string | null): Season {
+  if (override === 'autumn' || override === 'christmas') return override;
+  const { m, d } = kstParts(date);
+  if ((m === 10 && d >= 15) || m === 11 || m === 0) return 'christmas';
+  return 'autumn';
 }

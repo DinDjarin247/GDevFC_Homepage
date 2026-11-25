@@ -9,6 +9,7 @@ const { bounds } = require('./rig');
 const { buildHeroes } = require('./heroes');
 const { tint } = require('./grade');
 const { ZONES } = require('./nav');
+const { winterize, WINTER } = require('./season');
 
 /** 바라보는 쪽(8방향) → 구워 둔 방향과 좌우 뒤집기 */
 const FACE = { S: ['S', false], SE: ['SE', false], E: ['E', false], NE: ['NE', false], N: ['N', false], NW: ['NE', true], W: ['E', true], SW: ['SE', true] };
@@ -72,19 +73,29 @@ function pack(items, width) {
 }
 
 /**
- * 굽기. npcs · spots 는 placement.js 의 것.
- * 반환: sheet(Buf) · rects · anchors · heroes(대본) · kinds(사람별 구운 크기 단계) · colors(낮 색 목록)
+ * 굽기. npcs · spots 는 placement.js 의 것, seasons 는 계절 목록.
+ * 계절마다 옷이 달라도 프레임의 자리(rects)는 하나로 맞춘다 — 두 계절 그림을 모두 품는 상자로 잘라
+ * 같은 자리에 놓으므로, 화면은 계절과 상관없이 같은 좌표표를 쓴다.
+ * 반환: sheets(계절 → Buf) · rects · anchors · heroes(대본) · kinds(사람별 크기 단계) · colors(계절 → 낮 색 목록)
  */
-function buildPeople(npcs, spots, log = () => {}) {
+function buildPeople(npcs, spots, seasons, log = () => {}) {
   checkGait();
   const items = {};
   const anchors = {};
-  const trimmed = (name, r) => {
-    const bb = bounds(r.buf);
-    if (!bb) return;
-    const buf = P.crop(r.buf, bb.x0, bb.y0, bb.x1 - bb.x0 + 1, bb.y1 - bb.y0 + 1);
-    items[name] = { buf, w: buf.w, h: buf.h, ax: r.ax - bb.x0, ay: r.ay - bb.y0 };
-    const an = r.anchors && Object.keys(r.anchors).length ? r.anchors : null;
+  /** 이름 하나의 계절별 그림 → 모두를 품는 상자로 잘라 둔다 */
+  const put = (name, bySeason) => {
+    let box = null;
+    for (const r of Object.values(bySeason)) {
+      const bb = bounds(r.buf);
+      if (!bb) continue;
+      box = box ? { x0: Math.min(box.x0, bb.x0), y0: Math.min(box.y0, bb.y0), x1: Math.max(box.x1, bb.x1), y1: Math.max(box.y1, bb.y1) } : bb;
+    }
+    if (!box) return;
+    const first = Object.values(bySeason)[0];
+    const w = box.x1 - box.x0 + 1, h = box.y1 - box.y0 + 1;
+    items[name] = { w, h, ax: first.ax - box.x0, ay: first.ay - box.y0, bufs: {} };
+    for (const [season, r] of Object.entries(bySeason)) items[name].bufs[season] = P.crop(r.buf, box.x0, box.y0, w, h);
+    const an = first.anchors && Object.keys(first.anchors).length ? first.anchors : null;
     if (an) anchors[name] = an;
   };
 
@@ -93,29 +104,32 @@ function buildPeople(npcs, spots, log = () => {}) {
   let count = 0;
   for (const { kind, b, set } of need.values()) {
     (kinds[kind] ??= []).push(b);
+    const designs = Object.fromEntries(seasons.map((se) => [se, se === 'christmas' ? winterize(N.DESIGNS[kind], WINTER[kind]) : N.DESIGNS[kind]]));
     for (const key of set) {
       const [dir, anim] = key.split('_');
-      trimmed(`${kind}_${b}_${dir}_${anim}`, N.frame(kind, b, dir, anim));
+      put(`${kind}_${b}_${dir}_${anim}`, Object.fromEntries(seasons.map((se) => [se, N.frame(kind, b, dir, anim, designs[se])])));
       count++;
     }
   }
   for (const k of Object.keys(kinds)) kinds[k].sort();
-  log(`villagers: ${count} frames (${need.size} kind-size pairs)`);
+  log(`villagers: ${count} frames x ${seasons.length} seasons (${need.size} kind-size pairs)`);
 
-  const H = buildHeroes(spots);
-  for (const [name, f] of Object.entries(H.frames)) trimmed(name, f);
-  log(`heroes: ${Object.keys(H.frames).length} frames`);
+  const heroSets = Object.fromEntries(seasons.map((se) => [se, buildHeroes(spots, se)]));
+  for (const name of Object.keys(heroSets[seasons[0]].frames)) put(name, Object.fromEntries(seasons.map((se) => [se, heroSets[se].frames[name]])));
+  log(`heroes: ${Object.keys(heroSets[seasons[0]].frames).length} frames`);
 
   const WIDTH = 1024;
   const { rects, height } = pack(items, WIDTH);
-  const sheet = new P.Buf(WIDTH, height);
-  for (const [n, [x, y]] of Object.entries(rects)) sheet.sprite(items[n].buf, x, y);
-
-  // 쓰인 색 목록 (낮 색)
-  const set = new Set();
-  for (const c of sheet.px) if (c >>> 24) set.add(c & 0xffffff);
-  const colors = [...set].sort((a, b) => a - b);
-  return { sheet, rects, anchors, heroes: H.defs, kinds, colors };
+  const sheets = {}, colors = {};
+  for (const se of seasons) {
+    const sheet = new P.Buf(WIDTH, height);
+    for (const [n, [x, y]] of Object.entries(rects)) sheet.sprite(items[n].bufs[se], x, y);
+    sheets[se] = sheet;
+    const set = new Set();
+    for (const c of sheet.px) if (c >>> 24) set.add(c & 0xffffff);
+    colors[se] = [...set].sort((a, b) => a - b);
+  }
+  return { sheets, rects, anchors, heroes: heroSets[seasons[0]].defs, kinds, colors };
 }
 
 /** 시간대의 색 대응 — 낮 색 목록과 같은 순서의 색 목록. 밤에는 사람이 묻히지 않게 조금 밝힌다 */

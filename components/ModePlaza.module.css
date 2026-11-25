@@ -73,6 +73,12 @@
   color: #ffe9a0;
 }
 
+.phaseSun {
+  font-family: var(--font-mono);
+  font-size: clamp(6px, 1.2cqh, 9px);
+  color: rgba(255, 210, 150, 0.75);
+}
+
 .phaseEn {
   font-family: var(--font-mono);
   font-size: clamp(6px, 1.2cqh, 9px);

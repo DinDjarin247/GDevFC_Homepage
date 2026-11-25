@@ -55,6 +55,7 @@ function holdArm(d) {
     case 'basket':
       return { a: 0.06, b: 1.5, o: 0.26 };
     case 'mug':
+    case 'gift':
       return { a: 0.22, b: 1.32, o: 0.12 };
     case 'axe':
     case 'hammer':
@@ -412,6 +413,24 @@ function drawHat(fig, d, J, rr, HF) {
     fig.cap(headPt(J, [0, hr * 0.5, -hr * 0.9]), add(J.SC, [0, 1.6, -J.D.tw * 0.6]), hr * 0.9, J.D.tw * 0.9, hm, { g: G.hat, v: 0.42 });
   }
   if (!hat) return;
+  if (hat === 'santa') {
+    // 산타 모자 — 빨간 고깔이 뒤로 처지고, 흰 털 띠와 방울
+    const k = d.hatSmall ? 0.85 : 1;
+    const red = M.clothRed, white = M.clothWhite;
+    shell(0.8, red, (p, n) => (n[1] < -0.28 ? red : null), { v: 0.56 });
+    const a = headPt(J, [0, -hr * 0.7, -0.2]), b = headPt(J, [hr * 0.25, -hr * 1.55 * k, -hr * 0.55]), c = headPt(J, [hr * 0.5, -hr * 1.2 * k, -hr * 1.5 * k]);
+    fig.cap(a, b, hr * 0.92, hr * 0.42, red, { g: G.hat, v: 0.56 });
+    fig.cap(b, c, hr * 0.42, 0.5, red, { g: G.hat, v: 0.5, min: 0.6 });
+    fig.ell([0, -hr * 0.4, 0], [rr[0] + 1.0, hr * 0.2 + 0.55, rr[2] + 1.0], white, { F: HF, g: G.hat, v: 0.84, k: 0.35 });
+    fig.ell(c, [1.4, 1.4, 1.4], white, { g: G.hat, v: 0.9, k: 0.3 });
+    return;
+  }
+  if (hat === 'beanie') {
+    const bm = M[d.hatM ?? 'clothRed'];
+    shell(0.75, bm, (p, n) => (n[1] < -0.18 ? (n[1] > -0.36 ? [bm, -0.12] : (Math.round(p[0] * 1.6) % 2 ? [bm, 0.06] : bm)) : null), { v: 0.56 });
+    fig.ell(headPt(J, [0, -(rr[1] + 1.4), -0.3]), [1.5, 1.4, 1.5], M.clothWhite, { g: G.hat, v: 0.86, k: 0.35 });
+    return;
+  }
   const hm = M[d.hatM ?? (hat === 'cap' ? 'clothBrown' : hat === 'pointed' ? 'clothPurple' : hat === 'bandana' ? 'clothRed' : 'clothWhite')];
   if (hat === 'cap') {
     shell(0.6, hm, (p, n) => (n[1] < -0.42 + n[2] * 0.12 ? hm : null));
@@ -486,6 +505,14 @@ function drawItem(fig, d, J) {
     const c = add(h, [0, 2.6, 0.5]);
     fig.ell(c, [3.2, 2.2, 2.6], M.hay, { g: G.item, v: 0.56, paint: (p) => (p[1] < c[1] - 1.2 ? null : (Math.round(p[0] * 1.5) + Math.round(p[1] * 1.5)) % 2 ? [M.hay, 0.1] : M.hay) });
     [M.clothRed, M.leafGreen, M.leafGold, M.clothPurple].forEach((m, i) => fig.ell(add(c, [-1.8 + i * 1.2, -1.2, (i % 2) * 0.8 - 0.4]), [0.9, 0.9, 0.9], m, { g: G.item, v: 0.6 }));
+  } else if (it === 'gift') {
+    // 선물 상자 — 빨간 포장에 금빛 리본
+    const c = add(h, [0, -0.8, 1.7]);
+    fig.box(c, [2.4, 2.2, 2.2], M.clothRed, {
+      g: G.item, v: 0.58,
+      paint: (p) => (Math.abs(p[0] - c[0]) < 0.5 || Math.abs(p[2] - c[2]) < 0.5 ? [M.gold, 0.12] : M.clothRed),
+    });
+    fig.ell(add(c, [0, -2.6, 0]), [1.3, 0.8, 1.0], M.gold, { g: G.item, v: 0.7 });
   } else if (it === 'mug') {
     fig.box(add(h, [0, -1.2, 0.7]), [1.3, 1.7, 1.3], M.woodPale, { g: G.item, v: 0.58 });
     fig.ell(add(h, [0, -3.0, 0.7]), [1.2, 0.5, 1.2], M.clothWhite, { g: G.item, v: 0.86 });
@@ -562,8 +589,8 @@ function render(d, s, dir, spec, o = {}) {
 }
 
 /** 마을 사람 한 장 */
-function frame(kind, bucket, dir, anim) {
-  const d = DESIGNS[kind], s = SCALES[bucket];
+function frame(kind, bucket, dir, anim, design) {
+  const d = design ?? DESIGNS[kind], s = SCALES[bucket];
   const D = dims(d);
   return render(d, s, dir, specFor(D, d, anim, s));
 }

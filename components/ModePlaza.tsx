@@ -9,12 +9,17 @@ import {
   HERO_BOX,
   PHASE_LABEL,
   PLAZA_SPOTS,
+  SEASON_LABEL,
   STATUE,
+  clockText,
   fallbackSpot,
-  phaseForHour,
+  phaseAt,
   sceneFx,
   sceneFy,
+  seasonAt,
+  sunTimes,
   type DayPhase,
+  type Season,
 } from '@/lib/plazaLayout';
 import type { Mode } from '@/lib/types';
 import styles from './ModePlaza.module.css';
@@ -43,6 +48,8 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
    * 마운트 후에 계산해야 하이드레이션이 어긋나지 않는다.
    */
   const [phase, setPhase] = useState<DayPhase | null>(null);
+  const [season, setSeason] = useState<Season>('autumn');
+  const [sunset, setSunset] = useState('');
   const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   /** 키보드로 옮겼을 때만 화면을 따라 스크롤한다 (마우스 호버로는 움직이지 않게) */
   const keyboardMoveRef = useRef(false);
@@ -68,9 +75,16 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
     if (control.current) control.current.active = current?.id ?? null;
   }, [current]);
 
-  // 자정을 넘기거나 시간대가 바뀌면 광장도 따라 바뀐다 (1분마다 확인)
+  // 시간대는 그날 실제로 해 뜨고 지는 시각(청주 기준)으로 정한다 — 1분마다 확인.
+  // 계절 옷은 날짜로 정하고, 주소에 ?season=autumn 처럼 붙이면 그 옷으로 볼 수 있다
   useEffect(() => {
-    const update = () => setPhase(phaseForHour(new Date().getHours()));
+    const override = new URLSearchParams(window.location.search).get('season');
+    const update = () => {
+      const now = new Date();
+      setPhase(phaseAt(now));
+      setSeason(seasonAt(now, override));
+      setSunset(clockText(sunTimes(now).sunset));
+    };
     update();
     const id = setInterval(update, 60_000);
     return () => clearInterval(id);
@@ -112,15 +126,19 @@ export default function ModePlaza({ heading, hint, modes, comingSoonLabel }: Mod
     <div className={styles.wrap}>
       <div className={styles.stageScroll}>
         <div className={styles.stage} data-phase={phase ?? undefined}>
-          {phase && <PlazaScene key={phase} className={styles.scene} phase={phase} control={control} />}
+          {phase && <PlazaScene key={`${season}-${phase}`} className={styles.scene} phase={phase} season={season} control={control} />}
 
           {/* 제목·안내문은 광장 위에 얹는다 — 위아래 띠를 없애 화면을 꽉 채우기 위해 */}
           <h1 className={styles.heading}>{heading}</h1>
 
           {phase && (
             <span className={styles.phaseTag}>
-              <span className={styles.phaseKo}>{PHASE_LABEL[phase].ko}</span>
+              <span className={styles.phaseKo}>
+                {season === 'christmas' ? `${SEASON_LABEL[season]} · ` : ''}
+                {PHASE_LABEL[phase].ko}
+              </span>
               <span className={styles.phaseEn}>{PHASE_LABEL[phase].en}</span>
+              {sunset && <span className={styles.phaseSun}>일몰 {sunset}</span>}
             </span>
           )}
 

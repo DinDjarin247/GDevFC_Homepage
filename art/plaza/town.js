@@ -105,11 +105,15 @@ function buildTown() {
   const smoke = [];
   /** 1층 문의 가운데 x — 윗마당 사람이 드나든다 */
   const doors = [];
+  const doorBoxes = [];
   const put = (name) => {
     const [x, spec] = FRONT[name];
     const b = house(spec);
     main.blit(b.mat, x - b.ox, L.TERRACE_Y - b.oy);
-    for (const d of b.doors) doors.push(Math.round(x + d.x));
+    for (const d of b.doors) {
+      doors.push(Math.round(x + d.x));
+      doorBoxes.push({ x: Math.round(x + d.x), w: d.w, h: d.h });
+    }
     for (const [sx, sy] of b.smoke) smoke.push([x - b.ox + sx, L.TERRACE_Y - b.oy + sy]);
   };
   // 가운데에서 먼 집부터 — 가운데 쪽 집이 옆집의 옆벽을 가린다
@@ -119,7 +123,7 @@ function buildTown() {
   main.blit(hall.mat, hx, hy);
   const clock = [hx + hall.clock[0], hy + hall.clock[1], hall.clock[2]];
   const flag = [hx + hall.flag[0], hy + hall.flag[1]];
-  return { main, smoke, clock, flag, doors: doors.sort((a, b) => a - b) };
+  return { main, smoke, clock, flag, doors: doors.sort((a, b) => a - b), doorBoxes };
 }
 
 module.exports = { buildTown, FRONT };
