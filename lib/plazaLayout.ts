@@ -33,16 +33,10 @@ export type PlazaSpot = {
   /** 캐릭터 발이 닿는 지점 — 캔버스 픽셀 */
   x: number;
   y: number;
-  /** 원근감용 크기 배율 — 뒤쪽일수록 작게 */
+  /** 같은 자리의 마을 사람보다 얼마나 크게 그렸는지 */
   scale: number;
-  /** 스프라이트를 좌우 반전할지 (기본은 오른쪽을 보는 그림) */
-  flip?: boolean;
   /** 화면에 띄우는 장소 이름 */
   place: string;
-  /** 기본 프레임과 번갈아 보여줄 2프레임 스프라이트 (없으면 숨쉬기만) */
-  altSprite?: string;
-  /** idle 연출 종류 — CSS 클래스와 1:1 대응 */
-  idle: 'rest' | 'browse' | 'perch' | 'cook' | 'read' | 'shoot' | 'stroll' | 'hop';
 };
 
 /**
@@ -59,6 +53,17 @@ export type PlazaSpot = {
  */
 export const PLAZA_SPOTS: Record<string, PlazaSpot> = PLAZA_ART.spots;
 
+/**
+ * 주인공을 누를 수 있는 상자 (캔버스 픽셀) — 발밑 가운데가 기준.
+ * 그림은 캔버스가 그리고, 메뉴는 이 크기의 보이지 않는 버튼만 얹는다.
+ */
+export const HERO_BOX: Record<string, { w: number; h: number }> = Object.fromEntries(
+  Object.entries(PLAZA_ART.heroes as unknown as Record<string, { hero: string; height: number }>).map(([id, h]) => [
+    id,
+    { w: Math.round(h.height * (h.hero === 'rogue' || h.hero === 'woowang' ? 0.82 : 0.56)), h: h.height },
+  ]),
+);
+
 /** 자리가 지정되지 않은 모드를 위한 예비 배치 (큰 계단 아래에 일렬로) */
 export function fallbackSpot(order: number): PlazaSpot {
   return {
@@ -66,7 +71,6 @@ export function fallbackSpot(order: number): PlazaSpot {
     y: 424,
     scale: 0.8,
     place: '광장',
-    idle: 'rest',
   };
 }
 

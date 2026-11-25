@@ -50,9 +50,6 @@
   min-width: 860px;
   margin-inline: auto;
   container-type: size;
-  /* 캐릭터 한 칸의 키 = 광장 높이의 14.26% x 자리별 배율.
-     주인공 그림 한 칸이 77px 이고 광장이 540px 이라, 배율 1 일 때 그림 1픽셀 = 배경 1픽셀이다 */
-  --char-h: 14.26cqh;
 }
 
 /* 지금이 어느 시간대인지 — 접속 기기의 현지 시각 기준 */
@@ -127,15 +124,15 @@
   color: rgba(245, 215, 110, 0.6);
 }
 
-/* ---------- 캐릭터 ---------- */
+/* ---------- 캐릭터 ----------
+   주인공 그림은 배경 캔버스가 그린다. 여기 버튼은 그 자리에 얹는 보이지 않는 상자다
+   (크기는 ModePlaza 가 캔버스 픽셀 기준 % 로 정한다). 이름표 · 표식 · 발밑 빛만 보인다. */
 
 .char {
   position: absolute;
   /* 좌표는 캐릭터의 "발" 기준 */
   transform: translate(-50%, -100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: block;
   background: none;
   border: 0;
   padding: 0;
@@ -144,54 +141,21 @@
   font-family: inherit;
 }
 
+.char:focus-visible {
+  outline: 2px dashed var(--lime);
+  outline-offset: 2px;
+}
+
 .char.locked {
   cursor: default;
 }
 
-.body {
+/* 광장 그림이 아직 없는 모드 — 예전 격자 스프라이트로 대신 선다 */
+.fallback {
   display: block;
-  transform-origin: 50% 100%;
-}
-
-.sprite {
-  display: block;
-  height: calc(var(--char-h) * var(--scale, 1));
-  width: auto;
-  aspect-ratio: 16 / 22;
+  width: 100%;
+  height: 100%;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
-}
-
-/* 구워 둔 주인공 그림(HeroSprite) — 3배로 저장된 시트를 줄여 쓰므로 부드럽게 맞춘다.
-   svg 와 달리 스스로 폭을 갖지 못하므로 키에서 폭을 계산해 준다 */
-.sprite[data-hero] {
-  width: calc(var(--char-h) * var(--scale, 1) * 56 / 77);
-  aspect-ratio: 56 / 77;
-  image-rendering: auto;
-}
-
-/* 주인공은 배경과 따로 얹히므로, 어두운 시간대에는 살짝 가라앉혀 장면에 섞이게 한다
-   (완전히 어둡게 하지는 않는다 — 메뉴라서 늘 눈에 띄어야 한다) */
-.stage[data-phase='night'] .sprite[data-hero] {
-  filter: brightness(0.8) saturate(0.88) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
-}
-
-.stage[data-phase='dawn'] .sprite[data-hero],
-.stage[data-phase='evening'] .sprite[data-hero] {
-  filter: brightness(0.92) saturate(0.94) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
-}
-
-.stage[data-phase] .char.active .sprite[data-hero],
-.stage[data-phase] .char:hover .sprite[data-hero] {
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
-}
-
-.sprite[data-silhouette] {
-  filter: brightness(0) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
-  opacity: 0.82;
-}
-
-.flip {
-  transform: scaleX(-1);
 }
 
 /* 머리 위 표식 — 마을 사람이 많아, 어느 쪽이 메뉴 캐릭터인지 한눈에 보이게 한다.
@@ -199,8 +163,7 @@
 .marker {
   position: absolute;
   left: 50%;
-  /* 그림 한 칸의 위쪽 1/10 은 비어 있으므로(모자 · 깃털 자리) 머리 바로 위에 온다 */
-  bottom: calc(var(--char-h) * var(--scale, 1) * 0.9);
+  bottom: calc(100% + 3px);
   transform: translateX(-50%);
   width: 0;
   height: 0;
@@ -235,10 +198,11 @@
 /* 발밑 빛 — 선택/호버 시에만 */
 .glow {
   position: absolute;
-  bottom: -4px;
+  bottom: -5px;
   left: 50%;
-  width: calc(var(--char-h) * var(--scale, 1) * 0.9);
-  height: calc(var(--char-h) * var(--scale, 1) * 0.28);
+  width: 170%;
+  height: 0;
+  padding-bottom: 46%;
   transform: translateX(-50%);
   border-radius: 50%;
   background: radial-gradient(ellipse, rgba(201, 247, 61, 0.45), rgba(201, 247, 61, 0) 70%);
@@ -260,18 +224,20 @@
 /* ---------- 이름표 ---------- */
 
 .plate {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  margin-bottom: 6px;
   padding: 4px 8px;
   border: 1px solid var(--lime-soft);
   border-radius: var(--radius);
   background: rgba(11, 9, 20, 0.88);
   white-space: nowrap;
   opacity: 0;
-  transform: translateY(3px);
+  transform: translate(-50%, 3px);
   transition:
     opacity 0.18s ease,
     transform 0.18s ease;
@@ -281,7 +247,7 @@
 .char.active .plate,
 .char:hover .plate {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate(-50%, 0);
 }
 
 .char.locked .plate {
@@ -309,152 +275,6 @@
 .platePlace {
   font-size: clamp(6px, 1.35cqh, 10px);
   color: var(--muted);
-}
-
-/* ---------- idle 동작 ---------- */
-
-.rest {
-  animation: breathe 3.4s ease-in-out infinite;
-}
-
-.browse {
-  animation: browse 2.8s ease-in-out infinite;
-}
-
-.perch {
-  animation: perch 5s ease-in-out infinite;
-}
-
-.cook {
-  animation: cook 1.2s ease-in-out infinite;
-}
-
-.read {
-  animation: read 3s ease-in-out infinite;
-}
-
-.shoot {
-  animation: breathe 2.6s ease-in-out infinite;
-}
-
-/* 뛰어라 우왕이 — 웅크려 힘을 모았다가 폴짝 뛰고, 내려앉으며 찌그러진다 */
-.hop {
-  animation: hop 2.6s ease-in-out infinite;
-}
-
-/* 바드는 몸통에서 진행 방향만 뒤집고, 실제 이동은 버튼(.walking)이 맡는다 */
-.stroll {
-  animation: strollFace 9s ease-in-out infinite;
-}
-
-@keyframes breathe {
-  0%,
-  100% {
-    transform: translateY(0) scaleY(1);
-  }
-  50% {
-    transform: translateY(-1.5%) scaleY(1.012);
-  }
-}
-
-@keyframes browse {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-2%) rotate(-1.5deg);
-  }
-}
-
-@keyframes perch {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-1%);
-  }
-}
-
-@keyframes cook {
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(-2deg);
-  }
-  50% {
-    transform: translate(2%, -2%) rotate(2deg);
-  }
-}
-
-@keyframes read {
-  0%,
-  100% {
-    transform: translateY(0) rotate(1deg);
-  }
-  50% {
-    transform: translateY(-1.8%) rotate(-1deg);
-  }
-}
-
-@keyframes hop {
-  0%,
-  20% {
-    transform: translateY(0) scale(1, 1);
-  }
-  42%,
-  52% {
-    transform: translateY(0) scale(1.1, 0.82);
-  }
-  64% {
-    transform: translateY(-36%) scale(0.94, 1.08);
-  }
-  76% {
-    transform: translateY(0) scale(1.1, 0.86);
-  }
-  86%,
-  100% {
-    transform: translateY(0) scale(1, 1);
-  }
-}
-
-@keyframes strollFace {
-  0%,
-  45% {
-    transform: scaleX(1);
-  }
-  48%,
-  93% {
-    transform: scaleX(-1);
-  }
-  96%,
-  100% {
-    transform: scaleX(1);
-  }
-}
-
-/* 바드가 광장 앞을 오간다 — 버튼째 움직여야 클릭 판정도 같이 따라온다.
-   translate 의 % 는 버튼 자기 크기 기준이라 -50%/-100% 기본 위치를 포함해 계산한다 */
-.char.walking {
-  animation: walkAround 9s ease-in-out infinite;
-}
-
-@keyframes walkAround {
-  0% {
-    transform: translate(-230%, -100%);
-  }
-  45% {
-    transform: translate(130%, -100%);
-  }
-  50% {
-    transform: translate(130%, -100%);
-  }
-  93% {
-    transform: translate(-230%, -100%);
-  }
-  100% {
-    transform: translate(-230%, -100%);
-  }
 }
 
 /* 안내문도 광장 위에 얹는다 — 바닥 포석 위에 살짝 떠 있는 자막처럼 */
@@ -485,16 +305,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rest,
-  .browse,
-  .perch,
-  .cook,
-  .read,
-  .shoot,
-  .stroll,
-  .hop,
-  .marker,
-  .char.walking {
+  .marker {
     animation: none;
   }
 }
@@ -511,7 +322,6 @@
   .stage {
     height: auto;
     aspect-ratio: 480 / 270;
-    --char-h: 16cqh;
   }
 }
 

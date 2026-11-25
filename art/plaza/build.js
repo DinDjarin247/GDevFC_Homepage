@@ -5,7 +5,8 @@
 //   clouds-*  흘러가는 구름 한 겹 (가로로 이어 붙는다)
 //   back-*    먼 산 · 성 · 윗마을 · 윗마당 건물 (하늘 자리는 비어 있다)
 //   front-*   난간 · 옹벽 · 큰 계단 · 아래 광장 바닥
-//   sprites-* 소품 · 마을 사람 · 움직이는 것들을 한 장에 모은 시트
+//   sprites-* 소품 · 움직이는 것들을 한 장에 모은 시트
+// 사람(마을 사람 · 주인공)은 시간대와 상관없이 people.png 한 장에 모으고, 시간대 색은 대응표로 내보낸다.
 // 그리고 그 시트의 좌표와 배치를 lib/plazaArt.ts 로 내보낸다 (손으로 고치지 않는다).
 // art/preview/plaza-<시간대>.png 는 화면을 그대로 흉내 낸 미리보기다.
 const fs = require('fs');
@@ -17,10 +18,12 @@ const { buildFar, buildHill } = require('./backdrop');
 const { buildTerrace, buildFront } = require('./ground');
 const props = require('./props');
 const fx = require('./effects');
-const npc = require('./npcs');
 const { PHASES, grade, sky, lightMap, tint } = require('./grade');
-const { PROPS, NPCS, SPOTS } = require('./placement');
-const { buildHeroes, CELL: HERO_CELL } = require('./heroes');
+const { PROPS, NPCS, POIS, BLOCKS, SPOTS } = require('./placement');
+const { buildPeople, gradeColors, recolor, FACE } = require('./people');
+const { buildNav, walkable } = require('./nav');
+const N = require('./npcs');
+const { YC } = require('./rig');
 
 const ROOT = path.join(__dirname, '..', '..');
 const OUT = path.join(ROOT, 'public', 'art', 'plaza');
@@ -97,18 +100,17 @@ fx.waterfallFrames(far.fall, 4).forEach((mt, f) => {
   add(`fall_${f}`, mt.resolve(), 0, 0, { haze: 0.44 });
 });
 
-// 마을 사람 — 쓰이는 생김새 · 크기만 굽는다
-const sizeOf = (n) => n.size ?? (n.layer === 'terrace' ? 'far' : n.y < 450 ? 'mid' : 'near');
-const npcCells = {};
-for (const n of NPCS) {
-  const size = sizeOf(n), key = `${n.kind}_${size}`;
-  if (npcCells[key]) continue;
-  const f = npc.frames(n.kind, size);
-  npcCells[key] = { ax: f.ax, ay: f.ay, w: f.cell.w, h: f.cell.h };
-  f.walk.forEach((mt, i) => add(`${key}_w${i}`, mt.resolve(), f.ax, f.ay, { npc: true }));
-  f.idle.forEach((mt, i) => add(`${key}_i${i}`, mt.resolve(), f.ax, f.ay, { npc: true }));
-}
-log(`npcs drawn (${Object.keys(npcCells).length} kinds)`);
+// 사람 — 마을 사람 · 주인공을 한 장에 (art/plaza/people.js)
+const people = buildPeople(NPCS, SPOTS, log);
+P.save(people.sheet, path.join(OUT, 'people.png'));
+log(`people sheet ${people.sheet.w}x${people.sheet.h}, ${people.colors.length} colors`);
+
+// 걸을 수 있는 곳 — 제자리에 선 사람의 발밑도 막는다
+const nav = buildNav([...BLOCKS, ...NPCS.filter((n) => n.mode === 'post').map((n) => ({ ell: [n.x, n.y, 7, 3.5] }))]);
+const pois = [...POIS, ...town.doors.map((x) => ({ x, y: 304, zone: 'terrace', face: 'N', tag: 'door' }))];
+for (const p of pois) if (!walkable(nav, p.x, p.y)) throw new Error(`POI not walkable: ${p.x},${p.y}`);
+for (const n of NPCS) if (n.mode === 'walk' && !walkable(nav, n.x, n.y)) throw new Error(`NPC starts off the walk map: ${n.kind} ${n.x},${n.y}`);
+log(`nav ${nav.cols}x${nav.rows}, ${pois.length} pois`);
 
 /* ---------- 2. 자리 잡기: 그림자 · 빛 ---------- */
 
@@ -190,33 +192,24 @@ const over = (dst, src, ox = 0, oy = 0) => {
 };
 const hexOf = (c) => '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
 
-// 주인공 — 광장에서는 DOM 으로 얹히므로 시간대와 상관없이 한 장만 굽는다.
-// 화면에서 크기를 자유롭게 바꾸므로 3배로 키워 저장한다 (줄일 때는 부드럽게, 키울 일은 거의 없다)
-const heroes = buildHeroes();
-const HERO_NAMES = Object.keys(heroes);
-const HERO_SCALE = 3;
-{
-  const sheet = new P.Buf(HERO_CELL.w * HERO_NAMES.length, HERO_CELL.h);
-  HERO_NAMES.forEach((n, i) => sheet.sprite(heroes[n], i * HERO_CELL.w, 0));
-  P.save(sheet.scaled(HERO_SCALE), path.join(OUT, 'heroes.png'));
-}
-const MODE_SPRITE = (() => {
-  const modes = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes.json'), 'utf8'));
-  const list = Array.isArray(modes) ? modes : modes.modes ?? Object.values(modes).find(Array.isArray) ?? [];
-  return Object.fromEntries(list.map((m) => [m.id, m.sprite]));
-})();
-/** 미리보기에 주인공을 세운다 (화면의 DOM 과 같은 크기 · 자리) */
-function drawHero(dst, id, spot) {
-  const src = heroes[MODE_SPRITE[id]];
-  if (!src) return;
-  const hgt = Math.round(HERO_CELL.h * spot.scale), wid = Math.round(HERO_CELL.w * spot.scale);
-  for (let y = 0; y < hgt; y++)
-    for (let x = 0; x < wid; x++) {
-      const sx = Math.floor((x * HERO_CELL.w) / wid), sy = Math.floor((y * HERO_CELL.h) / hgt);
-      const c = src.px[sy * HERO_CELL.w + (spot.flip ? HERO_CELL.w - 1 - sx : sx)];
-      if (c >>> 24) dst.pset(spot.x - Math.floor(wid / 2) + x, spot.y - hgt + y, c);
+/** 사람 한 명을 미리보기에 — 시간대 색으로 칠한 사람 시트에서 잘라 붙인다 */
+function drawPersonTo(dst, sheet, name, x, y, flip) {
+  const r = people.rects[name];
+  if (!r) throw new Error(`no person frame ${name}`);
+  const [sx, sy, w, h, ax, ay] = r;
+  for (let j = 0; j < h; j++)
+    for (let i = 0; i < w; i++) {
+      const c = sheet.px[(sy + j) * sheet.w + sx + i];
+      if (!(c >>> 24)) continue;
+      const X = flip ? x + ax - i : x - ax + i;
+      dst.pset(X, y - ay + j, c);
     }
 }
+const npcFrame = (n) => {
+  const b = N.bucketAtY(n.y);
+  const [dir, flip] = FACE[n.face ?? 'S'];
+  return [`${n.kind}_${b}_${dir}_i0`, flip];
+};
 
 const phaseInfo = {};
 for (const [name, ph] of Object.entries(PHASES)) {
@@ -247,7 +240,6 @@ for (const [name, ph] of Object.entries(PHASES)) {
   for (const [n, s] of Object.entries(sprites)) {
     let g;
     if (s.emissive) g = s.r.col;
-    else if (s.npc) g = grade(s.r, ph, 0, 0, { lift: ph.lamps > 0.3 ? 1.22 : 1 });
     else {
       const base = n.replace(/_\d+$/, '');
       const at = placedAt[base] ?? placedAt[n];
@@ -267,7 +259,9 @@ for (const [name, ph] of Object.entries(PHASES)) {
     smoke: hexOf(tint([226, 222, 214], ph)),
     shadow: ph.lamps > 0.9 ? 0.34 : 0.24,
     stars,
+    people: gradeColors(people.colors, ph),
   };
+  const peopleG = recolor(people.sheet, people.colors, phaseInfo[name].people);
 
   // ----- 미리보기: 화면과 같은 순서로 겹쳐 본다 -----
   const pv = new P.Buf(W, H);
@@ -279,26 +273,23 @@ for (const [name, ph] of Object.entries(PHASES)) {
   over(pv, graded.fall_0, far.fall.x - 2, far.fall.y0);
   over(pv, graded.flag_0, town.flag[0], town.flag[1] - 2);
   const drawNpc = (n) => {
-    const key = `${n.kind}_${sizeOf(n)}_${n.from !== undefined && n.speed ? 'w0' : 'i0'}`, s = sprites[key], g = graded[key];
-    if (n.dir === -1) {
-      const f = new P.Buf(g.w, g.h);
-      for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) f.px[y * g.w + x] = g.px[y * g.w + g.w - 1 - x];
-      over(pv, f, n.x - (g.w - 1 - s.ax), n.y - s.ay);
-    } else over(pv, g, n.x - s.ax, n.y - s.ay);
+    const [fname, flip] = npcFrame(n);
+    drawPersonTo(pv, peopleG, fname, n.x, n.y, flip);
   };
-  NPCS.filter((n) => n.layer === 'terrace').forEach(drawNpc);
+  const isTerrace = (y) => y < L.STAIR.topY;
+  NPCS.filter((n) => isTerrace(n.y)).forEach(drawNpc);
   over(pv, frontG);
   for (const [bx, by] of front.braziers) over(pv, graded.flame_2, bx - 15, by - 42);
   const items = [
     ...PROPS.map((p) => ({ y: p.y, draw: () => { const n = p.frames ? `${p.sprite}_0` : p.sprite; over(pv, graded[n], p.x - sprites[n].ax, p.y - sprites[n].ay); } })),
-    ...NPCS.filter((n) => n.layer === 'court').map((n) => ({ y: n.y, draw: () => drawNpc(n) })),
+    ...NPCS.filter((n) => !isTerrace(n.y)).map((n) => ({ y: n.y, draw: () => drawNpc(n) })),
+    ...Object.entries(people.heroes).map(([id, h]) => ({ y: h.sortY ?? SPOTS[id].y, draw: () => drawPersonTo(pv, peopleG, h.script[0][0], SPOTS[id].x, SPOTS[id].y, false) })),
   ].sort((a, b) => a.y - b.y);
   for (const it of items) it.draw();
   {
     const bp = PROPS.find((p) => p.id === 'brazier'), s = sprites.brazier;
     over(pv, graded.flame_4, bp.x - s.ax + brazierP.fire[0] - 15, bp.y - s.ay + brazierP.fire[1] - 42);
   }
-  for (const [id, spot] of Object.entries(SPOTS)) drawHero(pv, id, spot);
   P.save(pv, path.join(PREVIEW, `plaza-${name}.png`));
   log(`${name} baked`);
 }
@@ -315,11 +306,26 @@ if (!only) {
   const te = at('tent'), teS = spr('tent');
   const art = {
     w: W, h: H, backH: BACK_H, frontY: FRONT_Y, skyH: SKY_H, sheet: [SHEET_W, SHEET_H],
+    /** 이 y 보다 위(윗마당)에 선 사람은 난간 뒤에 그린다 */
+    layerY: L.STAIR.topY,
     sprites: rects,
     props: PROPS,
-    npcs: NPCS.map((n) => ({ ...n, size: sizeOf(n) })),
+    npcs: NPCS,
+    pois,
+    nav: { cell: nav.cell, cols: nav.cols, rows: nav.rows, bits: nav.bits },
+    people: {
+      sheet: [people.sheet.w, people.sheet.h],
+      rects: people.rects,
+      anchors: people.anchors,
+      kinds: people.kinds,
+      colors: people.colors,
+      scales: N.SCALES,
+      cycle: N.CYCLE,
+      yc: +YC.toFixed(4),
+      face: FACE,
+    },
     spots: SPOTS,
-    heroes: { cell: [HERO_CELL.w, HERO_CELL.h], names: HERO_NAMES },
+    heroes: people.heroes,
     clock: town.clock,
     flag: [town.flag[0], town.flag[1] - 2],
     smoke: town.smoke,
