@@ -1,0 +1,29 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/index.txt",
+      "has": [{ "type": "header", "key": "sec-fetch-dest", "value": "document" }],
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/:path*/index.txt",
+      "has": [{ "type": "header", "key": "sec-fetch-dest", "value": "document" }],
+      "destination": "/:path*/",
+      "permanent": false
+    },
+    {
+      "source": "/index.txt",
+      "has": [{ "type": "header", "key": "accept", "value": "text/html.*" }],
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/:path*/index.txt",
+      "has": [{ "type": "header", "key": "accept", "value": "text/html.*" }],
+      "destination": "/:path*/",
+      "permanent": false
+    }
+  ]
+}

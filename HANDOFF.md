@@ -152,6 +152,7 @@ git clone https://github.com/mankidev/codixel ~/.claude/skills/codixel
 | 이 PC 의 로컬 서버 · 빌드 | 저장소가 OneDrive 폴더 아래 있는 지금 PC 에서는 `npm run dev` 가 "Starting..." 에서 멈추고 `next build` 도 9분 넘게 출력 없이 끝나지 않는다. 확인은 `npx tsc --noEmit` → 푸시 → 배포 사이트로 한다. 캔버스 코드만 따로 보고 싶으면 `PlazaScene.tsx` 를 `typescript` 로 변환해 `python -m http.server` 로 띄운 정적 페이지에서 돌릴 수 있다 |
 | 게임 빌드 주소 | `data/weekly-gg.json` 의 `src` 는 **폴더 주소**(`/wgg-builds/<id>/`)로. Vercel 은 `…/index.html` 을 404 로 돌린다. 반대로 `next dev` 는 폴더 주소를 못 열어서 `GamePlayer` 가 개발 서버에서만 `index.html` 을 붙인다 |
 | 빌드 폴더 위치 | 빌드는 `public/wgg-builds/` 에. `public/weekly-gg/<id>/` 에 두면 페이지와 같은 파일로 export 돼 서로 덮어쓴다 (개발 서버에선 안 보임) |
+| 배포 뒤 `…/index.txt` 로 튕김 | Next.js 15.5 정적 export 버그: 배포 전에 열어 둔 탭에서 사이트 안 링크를 누르면, 빌드 번호가 달라 전체 이동을 하는데 그 주소가 페이지가 아니라 데이터 파일(`index.txt`)이라 글자만 보인다. `vercel.json` 에서 브라우저가 `index.txt` 를 페이지로 열 때만 원래 페이지로 돌려보낸다 (라우터의 데이터 요청은 그대로). 지우지 말 것 |
 | 배포 확인 | **푸시 후 반드시 배포 사이트에서 직접 확인.** 개발 서버에서 되는 것과 Vercel 에서 되는 것이 다르다. curl 은 Vercel 봇 차단(403)에 막히므로 브라우저로 본다 |
 | `npm run build` | 개발 서버가 켜진 채로 돌리면 `.next` 가 꼬여 흰 화면. 개발 서버를 끄고 → 빌드 → 다시 켠다 |
 | Unity WebGL | 압축 끈(Compression: Disabled) 빌드를 쓴다. GitHub "Download ZIP" 은 Git LFS 파일이 빈 껍데기라 빌드에 못 쓴다 — LFS 포함해 클론할 것. 다른 사본의 `Library` 캐시를 옮겨 쓰면 스크립트가 전부 missing 이 된다 |
